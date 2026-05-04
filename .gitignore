@@ -1,0 +1,98 @@
+# ========================
+# Python
+# ========================
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+*.egg
+*.egg-info/
+dist/
+build/
+eggs/
+parts/
+var/
+sdist/
+develop-eggs/
+.installed.cfg
+lib/
+lib64/
+
+# ========================
+# Virtual Environment
+# ========================
+.venv/
+venv/
+env/
+ENV/
+env.bak/
+venv.bak/
+
+# ========================
+# Environment Variables
+# ========================
+.env
+!.env.example
+
+# ========================
+# Flask / SQLAlchemy
+# ========================
+instance/
+.webassets-cache
+
+# ========================
+# Flask-Migrate
+# ========================
+migrations/versions/*.py
+# Hapus baris di atas jika ingin commit migrations
+
+# ========================
+# Uploads (file PDF mahasiswa)
+# ========================
+uploads/
+
+# ========================
+# Database
+# ========================
+*.db
+*.sqlite3
+
+# ========================
+# Logs
+# ========================
+*.log
+logs/
+
+# ========================
+# IDE / Editor
+# ========================
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# ========================
+# macOS
+# ========================
+.DS_Store
+.AppleDouble
+.LSOverride
+Icon?
+._*
+.Spotlight-V100
+.Trashes
+
+# ========================
+# Testing
+# ========================
+.pytest_cache/
+.coverage
+htmlcov/
+.tox/
+
+# ========================
+# Misc
+# ========================
+*.bak
+*.tmp

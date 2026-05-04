@@ -1,0 +1,87 @@
+{% extends "base.html" %}
+{% block title %}Pemantauan Pengajuan{% endblock %}
+
+{% block content %}
+<div class="container page-content">
+    <div class="page-header">
+        <h1 class="page-title">Pemantauan Pengajuan</h1>
+        <a href="{{ url_for('admin.export_csv') }}" class="btn btn-outline" id="btnExportCsv">⬇ Export CSV</a>
+    </div>
+
+    <!-- Filter -->
+    <div class="card mb-4">
+        <div class="card-body">
+            <form method="GET" class="filter-form">
+                <div class="form-row">
+                    <div class="form-group">
+                        <input type="text" name="search" class="form-input" placeholder="NIM atau nama" value="{{ search }}">
+                    </div>
+                    <div class="form-group">
+                        <select name="status" class="form-input form-select">
+                            <option value="">Semua Status</option>
+                            <option value="menunggu_review" {{ 'selected' if status_filter == 'menunggu_review' }}>Menunggu Review</option>
+                            <option value="sedang_diproses" {{ 'selected' if status_filter == 'sedang_diproses' }}>Sedang Diproses</option>
+                            <option value="disetujui" {{ 'selected' if status_filter == 'disetujui' }}>Disetujui</option>
+                            <option value="ditolak" {{ 'selected' if status_filter == 'ditolak' }}>Ditolak</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <select name="fakultas_id" class="form-input form-select">
+                            <option value="">Semua Fakultas</option>
+                            {% for f in fakultas_list %}
+                            <option value="{{ f.id }}" {{ 'selected' if fakultas_filter == f.id }}>{{ f.nama_fakultas }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="form-group form-group-action">
+                        <button type="submit" class="btn btn-primary">Filter</button>
+                        <a href="{{ url_for('admin.pengajuan') }}" class="btn btn-outline">Reset</a>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <div class="card">
+        <div class="card-body">
+            <div class="table-wrapper">
+                <table class="table" id="adminPengajuanTable">
+                    <thead>
+                        <tr>
+                            <th>No.</th><th>NIM</th><th>Nama</th><th>Fakultas</th>
+                            <th>Prodi</th><th>Tgl Pengajuan</th><th>Status</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for p in pagination.items %}
+                        <tr>
+                            <td>{{ (pagination.page-1)*pagination.per_page + loop.index }}</td>
+                            <td>{{ p.nim }}</td>
+                            <td>{{ p.nama }}</td>
+                            <td>{{ p.fakultas.nama_fakultas if p.fakultas else '-' }}</td>
+                            <td>{{ p.program_studi.nama_prodi if p.program_studi else '-' }}</td>
+                            <td>{{ p.created_at.strftime('%d %b %Y') }}</td>
+                            <td><span class="badge {{ p.get_status_badge_class() }}">{{ p.get_status_label() }}</span></td>
+                        </tr>
+                        {% else %}
+                        <tr><td colspan="7" class="text-center text-muted">Tidak ada data.</td></tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+
+            {% if pagination.pages > 1 %}
+            <div class="pagination-wrapper">
+                {% if pagination.has_prev %}
+                <a href="{{ url_for('admin.pengajuan', page=pagination.prev_num, status=status_filter, fakultas_id=fakultas_filter, search=search) }}" class="btn btn-sm btn-outline">← Sebelumnya</a>
+                {% endif %}
+                <span class="pagination-info">Halaman {{ pagination.page }} dari {{ pagination.pages }}</span>
+                {% if pagination.has_next %}
+                <a href="{{ url_for('admin.pengajuan', page=pagination.next_num, status=status_filter, fakultas_id=fakultas_filter, search=search) }}" class="btn btn-sm btn-outline">Selanjutnya →</a>
+                {% endif %}
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}

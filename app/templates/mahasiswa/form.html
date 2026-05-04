@@ -1,0 +1,94 @@
+{% extends "base.html" %}
+{% block title %}Form Pengajuan Bebas Pustaka{% endblock %}
+
+{% block content %}
+<div class="container page-content">
+    <div class="page-header">
+        <div>
+            <h1 class="page-title">Form Pengajuan Bebas Pustaka</h1>
+            <p class="page-subtitle">Lengkapi data dan upload dokumen persyaratan</p>
+        </div>
+        <a href="{{ url_for('mahasiswa.dashboard') }}" class="btn btn-outline">← Kembali</a>
+    </div>
+
+    <div class="card">
+        <div class="card-body">
+            <form method="POST" action="{{ url_for('mahasiswa.form_bebas_pustaka') }}" enctype="multipart/form-data" id="formPengajuan" novalidate>
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+
+                <h2 class="section-divider">Data Mahasiswa (Auto-fill)</h2>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label class="form-label">NIM</label>
+                        <input type="text" class="form-input" value="{{ current_user.nim }}" disabled>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Nama Lengkap</label>
+                        <input type="text" class="form-input" value="{{ current_user.name }}" disabled>
+                    </div>
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label class="form-label">Fakultas</label>
+                        <input type="text" class="form-input" value="{{ current_user.fakultas.nama_fakultas if current_user.fakultas else '-' }}" disabled>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Program Studi</label>
+                        <input type="text" class="form-input" value="{{ current_user.program_studi.nama_prodi if current_user.program_studi else '-' }}" disabled>
+                    </div>
+                </div>
+
+                <h2 class="section-divider">Data Pengajuan</h2>
+
+                <div class="form-group">
+                    <label for="alamat" class="form-label">Alamat Lengkap <span class="required">*</span></label>
+                    <textarea id="alamat" name="alamat" class="form-input form-textarea" rows="3" placeholder="Masukkan alamat tempat tinggal saat ini" required></textarea>
+                </div>
+
+                <h2 class="section-divider">Upload Dokumen</h2>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="file_bebas_pustaka" class="form-label">
+                            Surat Bebas dari Fakultas <span class="required">*</span>
+                        </label>
+                        <div class="file-upload-area" id="dropzone1">
+                            <input type="file" id="file_bebas_pustaka" name="file_bebas_pustaka" accept=".pdf" required class="file-input">
+                            <div class="file-upload-content">
+                                <span class="file-upload-icon">📂</span>
+                                <p>Klik atau drag & drop file PDF</p>
+                                <p class="file-upload-hint">Maks. 5MB, format PDF</p>
+                            </div>
+                        </div>
+                        <p class="file-selected-name" id="file1Name"></p>
+                    </div>
+                    <div class="form-group">
+                        <label for="file_kartu_mahasiswa" class="form-label">
+                            Kartu Tanda Mahasiswa (KTM) <span class="required">*</span>
+                        </label>
+                        <div class="file-upload-area" id="dropzone2">
+                            <input type="file" id="file_kartu_mahasiswa" name="file_kartu_mahasiswa" accept=".pdf" required class="file-input">
+                            <div class="file-upload-content">
+                                <span class="file-upload-icon">🪪</span>
+                                <p>Klik atau drag & drop file PDF</p>
+                                <p class="file-upload-hint">Maks. 5MB, format PDF</p>
+                            </div>
+                        </div>
+                        <p class="file-selected-name" id="file2Name"></p>
+                    </div>
+                </div>
+
+                <div class="alert alert-info">
+                    <strong>ℹ️ Catatan:</strong> File yang Anda upload akan disimpan selama 30 hari setelah pengajuan disetujui. Surat bebas pustaka tetap bisa dicetak ulang kapan saja.
+                </div>
+
+                <div class="form-actions">
+                    <a href="{{ url_for('mahasiswa.dashboard') }}" class="btn btn-outline">Batal</a>
+                    <button type="submit" class="btn btn-primary" id="btnSubmit">Kirim Pengajuan</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}

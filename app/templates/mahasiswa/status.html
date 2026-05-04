@@ -1,0 +1,139 @@
+{% extends "base.html" %}
+{% block title %}Status Pengajuan{% endblock %}
+
+{% block content %}
+<div class="container page-content">
+    <div class="page-header">
+        <div>
+            <h1 class="page-title">Status Pengajuan Bebas Pustaka</h1>
+        </div>
+        <a href="{{ url_for('mahasiswa.dashboard') }}" class="btn btn-outline">← Dashboard</a>
+    </div>
+
+    {% if not pengajuan %}
+    <div class="empty-state card">
+        <div class="empty-icon">📭</div>
+        <h2>Belum Ada Pengajuan</h2>
+        <p>Anda belum pernah mengajukan surat bebas pustaka.</p>
+        <a href="{{ url_for('mahasiswa.form_bebas_pustaka') }}" class="btn btn-primary mt-2">Ajukan Sekarang</a>
+    </div>
+    {% else %}
+
+    <!-- Status Badge -->
+    <div class="status-timeline card mb-4">
+        <div class="card-body">
+            <div class="status-steps">
+                <div class="status-step {{ 'active' if pengajuan.status in ['menunggu_review','sedang_diproses','disetujui','ditolak'] }}">
+                    <div class="status-step-dot">1</div>
+                    <p>Dikirim</p>
+                </div>
+                <div class="status-step-line {{ 'active' if pengajuan.status in ['sedang_diproses','disetujui','ditolak'] }}"></div>
+                <div class="status-step {{ 'active' if pengajuan.status in ['sedang_diproses','disetujui','ditolak'] }}">
+                    <div class="status-step-dot">2</div>
+                    <p>Ditinjau</p>
+                </div>
+                <div class="status-step-line {{ 'active' if pengajuan.status in ['disetujui','ditolak'] }}"></div>
+                <div class="status-step {{ 'active done' if pengajuan.status == 'disetujui' }} {{ 'active rejected' if pengajuan.status == 'ditolak' }}">
+                    <div class="status-step-dot">3</div>
+                    <p>{{ 'Disetujui' if pengajuan.status == 'disetujui' else ('Ditolak' if pengajuan.status == 'ditolak' else 'Selesai') }}</p>
+                </div>
+            </div>
+
+            <div class="status-current mt-3">
+                <span class="badge {{ pengajuan.get_status_badge_class() }} badge-lg">{{ pengajuan.get_status_label() }}</span>
+                <span class="text-muted ml-2">Diajukan: {{ pengajuan.created_at.strftime('%d %b %Y, %H:%M') }}</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- Alasan Penolakan -->
+    {% if pengajuan.status == 'ditolak' and pengajuan.catatan_penolakan %}
+    <div class="alert alert-danger mb-4">
+        <strong>❌ Alasan Penolakan:</strong> {{ pengajuan.catatan_penolakan }}
+        {% if current_user.can_submit() %}
+        <div class="mt-2">
+            <a href="{{ url_for('mahasiswa.form_bebas_pustaka') }}" class="btn btn-sm btn-primary">Ajukan Ulang</a>
+        </div>
+        {% endif %}
+    </div>
+    {% endif %}
+
+    <!-- Tombol Cetak PDF -->
+    {% if pengajuan.status == 'disetujui' %}
+    <div class="card card-success mb-4">
+        <div class="card-body text-center">
+            <h2 class="card-title">✅ Pengajuan Disetujui</h2>
+            <p class="text-muted">Disetujui pada: {{ pengajuan.approved_at.strftime('%d %B %Y') if pengajuan.approved_at }}</p>
+
+            {% if pengajuan.is_approved_over_retention() %}
+                <p class="alert alert-info">File upload Anda sudah dihapus (lebih dari 30 hari), namun surat tetap dapat dicetak ulang.</p>
+                <button class="btn btn-warning btn-lg" id="btnCetakUlang" onclick="generatePDF()">🖨 Cetak Ulang Surat Bebas Pustaka</button>
+            {% else %}
+                <button class="btn btn-success btn-lg" id="btnCetak" onclick="generatePDF()">📄 Cetak Surat Bebas Pustaka</button>
+            {% endif %}
+
+            <p class="form-hint mt-2">Surat di-generate langsung oleh server. Aman dari manipulasi.</p>
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- Detail Pengajuan -->
+    <div class="card">
+        <div class="card-body">
+            <h2 class="card-title">Detail Pengajuan</h2>
+            <table class="table table-detail">
+                <tbody>
+                    <tr><th>NIM</th><td>{{ pengajuan.nim }}</td></tr>
+                    <tr><th>Nama</th><td>{{ pengajuan.nama }}</td></tr>
+                    <tr><th>Alamat</th><td>{{ pengajuan.alamat }}</td></tr>
+                    <tr><th>Fakultas</th><td>{{ pengajuan.fakultas.nama_fakultas if pengajuan.fakultas else '-' }}</td></tr>
+                    <tr><th>Program Studi</th><td>{{ pengajuan.program_studi.nama_prodi if pengajuan.program_studi else '-' }}</td></tr>
+                    <tr><th>Tanggal Pengajuan</th><td>{{ pengajuan.created_at.strftime('%d %B %Y, %H:%M') }}</td></tr>
+                    {% if pengajuan.nomor_surat %}
+                    <tr><th>Nomor Surat</th><td>{{ pengajuan.nomor_surat }}</td></tr>
+                    {% endif %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}
+
+{% block extra_js %}
+{% if pengajuan and pengajuan.status == 'disetujui' %}
+<script>
+function generatePDF() {
+    const btn = document.getElementById('btnCetak') || document.getElementById('btnCetakUlang');
+    const originalText = btn.innerHTML;
+    btn.disabled = true;
+    btn.innerHTML = '⏳ Menyiapkan PDF...';
+
+    fetch('{{ url_for("api.generate_pdf", id=pengajuan.id) }}', {
+        method: 'GET'
+    })
+    .then(response => {
+        if (!response.ok) throw new Error('Gagal generate PDF.');
+        return response.blob();
+    })
+    .then(blob => {
+        const url = window.URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = 'surat_bebas_pustaka_{{ pengajuan.nim }}.pdf';
+        document.body.appendChild(a);
+        a.click();
+        window.URL.revokeObjectURL(url);
+        a.remove();
+        btn.innerHTML = '✅ PDF Berhasil Diunduh';
+        setTimeout(() => { btn.innerHTML = originalText; btn.disabled = false; }, 3000);
+    })
+    .catch(err => {
+        alert('Gagal membuat PDF: ' + err.message);
+        btn.innerHTML = originalText;
+        btn.disabled = false;
+    });
+}
+</script>
+{% endif %}
+{% endblock %}

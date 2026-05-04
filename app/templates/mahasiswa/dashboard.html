@@ -1,0 +1,81 @@
+{% extends "base.html" %}
+{% block title %}Dashboard Mahasiswa{% endblock %}
+
+{% block content %}
+<div class="container page-content">
+    <div class="page-header">
+        <div>
+            <h1 class="page-title">Selamat Datang, {{ current_user.name }}</h1>
+            <p class="page-subtitle">NIM: {{ current_user.nim }} &mdash;
+                {% if current_user.fakultas %}{{ current_user.fakultas.nama_fakultas }}{% endif %}
+                {% if current_user.program_studi %} / {{ current_user.program_studi.nama_prodi }}{% endif %}
+            </p>
+        </div>
+        {% if current_user.can_submit() %}
+            <a href="{{ url_for('mahasiswa.form_bebas_pustaka') }}" class="btn btn-primary" id="btnAjukan">
+                + Ajukan Bebas Pustaka
+            </a>
+        {% endif %}
+    </div>
+
+    <!-- Status Terkini -->
+    {% if pengajuan_terbaru %}
+    <div class="card card-status mb-4">
+        <div class="card-body">
+            <h2 class="card-title">Status Pengajuan Terkini</h2>
+            <div class="status-row">
+                <div>
+                    <span class="badge {{ pengajuan_terbaru.get_status_badge_class() }} badge-lg">
+                        {{ pengajuan_terbaru.get_status_label() }}
+                    </span>
+                    <p class="text-muted mt-1">Diajukan: {{ pengajuan_terbaru.created_at.strftime('%d %b %Y, %H:%M') }}</p>
+                </div>
+                <a href="{{ url_for('mahasiswa.status') }}" class="btn btn-outline">Lihat Detail →</a>
+            </div>
+            {% if pengajuan_terbaru.status == 'ditolak' and pengajuan_terbaru.catatan_penolakan %}
+            <div class="alert alert-danger mt-3">
+                <strong>Alasan penolakan:</strong> {{ pengajuan_terbaru.catatan_penolakan }}
+            </div>
+            {% endif %}
+        </div>
+    </div>
+    {% else %}
+    <div class="empty-state card mb-4">
+        <div class="empty-icon">📋</div>
+        <h2>Belum Ada Pengajuan</h2>
+        <p>Klik tombol di atas untuk mulai mengajukan surat bebas pustaka.</p>
+    </div>
+    {% endif %}
+
+    <!-- Riwayat -->
+    {% if riwayat | length > 1 %}
+    <div class="card">
+        <div class="card-body">
+            <h2 class="card-title">Riwayat Pengajuan</h2>
+            <div class="table-wrapper">
+                <table class="table" id="riwayatTable">
+                    <thead>
+                        <tr>
+                            <th>No.</th>
+                            <th>Tanggal Pengajuan</th>
+                            <th>Status</th>
+                            <th>Keterangan</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for p in riwayat %}
+                        <tr>
+                            <td>{{ loop.index }}</td>
+                            <td>{{ p.created_at.strftime('%d %b %Y') }}</td>
+                            <td><span class="badge {{ p.get_status_badge_class() }}">{{ p.get_status_label() }}</span></td>
+                            <td>{{ p.catatan_penolakan or '-' }}</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

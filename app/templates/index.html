@@ -1,0 +1,144 @@
+{% extends "base.html" %}
+
+{% block title %}Beranda{% endblock %}
+{% block meta_description %}Urus surat bebas pustaka secara digital, cepat, dan aman.{% endblock %}
+
+{% block content %}
+<!-- Hero -->
+<section class="hero">
+    <div class="container hero-inner">
+        <div class="hero-text">
+            <span class="hero-badge">Layanan Digital</span>
+            <h1 class="hero-title">Bebas Pustaka<br><span class="gradient-text">Lebih Mudah & Cepat</span></h1>
+            <p class="hero-desc">Ajukan surat keterangan bebas pustaka secara online tanpa perlu datang ke perpustakaan. Proses lebih cepat, aman, dan bisa dilacak kapan saja.</p>
+            <div class="hero-actions">
+                {% if current_user.is_authenticated %}
+                    {% if current_user.role == 'mahasiswa' %}
+                        <a href="{{ url_for('mahasiswa.dashboard') }}" class="btn btn-primary btn-lg">Ke Dashboard →</a>
+                    {% elif current_user.role == 'staff' %}
+                        <a href="{{ url_for('staff.dashboard') }}" class="btn btn-primary btn-lg">Dashboard Staff →</a>
+                    {% else %}
+                        <a href="{{ url_for('admin.dashboard') }}" class="btn btn-primary btn-lg">Dashboard Admin →</a>
+                    {% endif %}
+                {% else %}
+                    <a href="{{ url_for('auth.register') }}" class="btn btn-primary btn-lg">Ajukan Bebas Pustaka</a>
+                    <a href="{{ url_for('auth.login') }}" class="btn btn-outline btn-lg">Login</a>
+                {% endif %}
+            </div>
+        </div>
+        <div class="hero-visual" aria-hidden="true">
+            <div class="hero-card-float">
+                <div class="float-card card-1">
+                    <span class="float-icon">✅</span>
+                    <div>
+                        <p class="float-label">Status Pengajuan</p>
+                        <p class="float-value" style="color:var(--success)">Disetujui</p>
+                    </div>
+                </div>
+                <div class="float-card card-2">
+                    <span class="float-icon">📄</span>
+                    <div>
+                        <p class="float-label">Surat Tersedia</p>
+                        <p class="float-value">Siap Cetak</p>
+                    </div>
+                </div>
+                <div class="float-card card-3">
+                    <span class="float-icon">🔒</span>
+                    <div>
+                        <p class="float-label">Keamanan</p>
+                        <p class="float-value">Server-side Verified</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Persyaratan -->
+<section class="section section-alt" id="persyaratan">
+    <div class="container">
+        <div class="section-header">
+            <h2 class="section-title">Persyaratan Pengajuan</h2>
+            <p class="section-desc">Siapkan dokumen berikut sebelum mengajukan</p>
+        </div>
+        <div class="grid grid-3">
+            <div class="card card-feature">
+                <div class="card-icon">🎓</div>
+                <h3>Status Mahasiswa Aktif</h3>
+                <p>Pastikan NIM dan email terdaftar sebagai mahasiswa aktif di institusi.</p>
+            </div>
+            <div class="card card-feature">
+                <div class="card-icon">📋</div>
+                <h3>Surat Bebas dari Fakultas</h3>
+                <p>Surat keterangan bebas tanggungan dari fakultas dalam format PDF (maks 5MB).</p>
+            </div>
+            <div class="card card-feature">
+                <div class="card-icon">🪪</div>
+                <h3>Kartu Tanda Mahasiswa</h3>
+                <p>Scan atau foto KTM yang jelas dalam format PDF (maks 5MB).</p>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Alur -->
+<section class="section" id="alur">
+    <div class="container">
+        <div class="section-header">
+            <h2 class="section-title">Alur Pengajuan</h2>
+            <p class="section-desc">4 langkah mudah untuk mendapatkan surat bebas pustaka</p>
+        </div>
+        <div class="steps">
+            <div class="step">
+                <div class="step-num">1</div>
+                <h3>Daftar & Login</h3>
+                <p>Buat akun menggunakan NIM dan email, lalu login ke sistem.</p>
+            </div>
+            <div class="step-arrow">→</div>
+            <div class="step">
+                <div class="step-num">2</div>
+                <h3>Isi Formulir</h3>
+                <p>Upload dokumen persyaratan dan lengkapi data pengajuan.</p>
+            </div>
+            <div class="step-arrow">→</div>
+            <div class="step">
+                <div class="step-num">3</div>
+                <h3>Tunggu Review</h3>
+                <p>Staff perpustakaan meninjau berkas pengajuan Anda.</p>
+            </div>
+            <div class="step-arrow">→</div>
+            <div class="step">
+                <div class="step-num">4</div>
+                <h3>Cetak Surat</h3>
+                <p>Setelah disetujui, unduh surat bebas pustaka digital Anda.</p>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Kontak -->
+<section class="section section-alt" id="kontak">
+    <div class="container">
+        <div class="section-header">
+            <h2 class="section-title">Hubungi Kami</h2>
+        </div>
+        <div class="grid grid-3">
+            <div class="contact-card">
+                <span class="contact-icon">📍</span>
+                <h3>Alamat</h3>
+                <p>Gedung Perpustakaan Lt. 1<br>Kampus Utama</p>
+            </div>
+            <div class="contact-card">
+                <span class="contact-icon">📞</span>
+                <h3>Telepon</h3>
+                <p>(021) 000-0000</p>
+            </div>
+            <div class="contact-card">
+                <span class="contact-icon">📧</span>
+                <h3>Email</h3>
+                <p>perpustakaan@institusi.ac.id</p>
+            </div>
+        </div>
+    </div>
+</section>
+{% endblock %}

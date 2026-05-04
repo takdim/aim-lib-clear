@@ -1,0 +1,83 @@
+{% extends "base.html" %}
+{% block title %}Dashboard Staff{% endblock %}
+
+{% block content %}
+<div class="container page-content">
+    <div class="page-header">
+        <div>
+            <h1 class="page-title">Dashboard Staff</h1>
+            <p class="page-subtitle">Selamat datang, {{ current_user.name }}</p>
+        </div>
+        <a href="{{ url_for('staff.pengajuan_list') }}" class="btn btn-primary">Lihat Semua Pengajuan →</a>
+    </div>
+
+    <!-- Statistik -->
+    <div class="stats-grid mb-4">
+        <div class="stat-card">
+            <div class="stat-icon stat-icon-warning">📥</div>
+            <div class="stat-body">
+                <p class="stat-label">Masuk Hari Ini</p>
+                <p class="stat-value">{{ stats.masuk_hari_ini }}</p>
+            </div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-icon stat-icon-info">⏳</div>
+            <div class="stat-body">
+                <p class="stat-label">Menunggu Review</p>
+                <p class="stat-value">{{ stats.menunggu_review }}</p>
+            </div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-icon stat-icon-success">✅</div>
+            <div class="stat-body">
+                <p class="stat-label">Disetujui Bulan Ini</p>
+                <p class="stat-value">{{ stats.disetujui_bulan_ini }}</p>
+            </div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-icon stat-icon-danger">❌</div>
+            <div class="stat-body">
+                <p class="stat-label">Ditolak Bulan Ini</p>
+                <p class="stat-value">{{ stats.ditolak_bulan_ini }}</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Pengajuan Terbaru -->
+    <div class="card">
+        <div class="card-body">
+            <h2 class="card-title">Pengajuan Terbaru</h2>
+            {% if pengajuan_terbaru %}
+            <div class="table-wrapper">
+                <table class="table" id="staffRecentTable">
+                    <thead>
+                        <tr>
+                            <th>NIM</th>
+                            <th>Nama</th>
+                            <th>Tgl Pengajuan</th>
+                            <th>Status</th>
+                            <th>Aksi</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for p in pengajuan_terbaru %}
+                        <tr>
+                            <td>{{ p.nim }}</td>
+                            <td>{{ p.nama }}</td>
+                            <td>{{ p.created_at.strftime('%d %b %Y') }}</td>
+                            <td><span class="badge {{ p.get_status_badge_class() }}">{{ p.get_status_label() }}</span></td>
+                            <td>
+                                <a href="{{ url_for('staff.pengajuan_detail', id=p.id) }}" class="btn btn-sm btn-outline">Detail</a>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            {% else %}
+            <p class="text-muted">Belum ada pengajuan.</p>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}

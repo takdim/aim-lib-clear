@@ -1,0 +1,151 @@
+{% extends "base.html" %}
+{% block title %}Manajemen Pengguna{% endblock %}
+
+{% block content %}
+<div class="container page-content">
+    <div class="page-header">
+        <h1 class="page-title">Manajemen Pengguna</h1>
+        <button class="btn btn-primary" onclick="document.getElementById('modalTambah').style.display='flex'" id="btnTambahUser">
+            + Tambah Pengguna
+        </button>
+    </div>
+
+    <!-- Filter -->
+    <div class="card mb-4">
+        <div class="card-body">
+            <form method="GET" class="filter-form">
+                <div class="form-row">
+                    <div class="form-group">
+                        <input type="text" name="search" class="form-input" placeholder="Cari nama / email / NIM" value="{{ search }}">
+                    </div>
+                    <div class="form-group">
+                        <select name="role" class="form-input form-select">
+                            <option value="">Semua Role</option>
+                            <option value="mahasiswa" {{ 'selected' if role_filter == 'mahasiswa' }}>Mahasiswa</option>
+                            <option value="staff" {{ 'selected' if role_filter == 'staff' }}>Staff</option>
+                            <option value="admin" {{ 'selected' if role_filter == 'admin' }}>Admin</option>
+                        </select>
+                    </div>
+                    <div class="form-group form-group-action">
+                        <button type="submit" class="btn btn-primary">Filter</button>
+                        <a href="{{ url_for('admin.users') }}" class="btn btn-outline">Reset</a>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Tabel -->
+    <div class="card">
+        <div class="card-body">
+            <div class="table-wrapper">
+                <table class="table" id="usersTable">
+                    <thead>
+                        <tr>
+                            <th>No.</th><th>Nama</th><th>Email / NIM</th>
+                            <th>Role</th><th>Status</th><th>Tgl Daftar</th><th>Aksi</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for u in pagination.items %}
+                        <tr>
+                            <td>{{ (pagination.page-1)*pagination.per_page + loop.index }}</td>
+                            <td>{{ u.name }}</td>
+                            <td>{{ u.email }}<br><small class="text-muted">{{ u.nim or '' }}</small></td>
+                            <td><span class="badge badge-role badge-{{ u.role }}">{{ u.role | capitalize }}</span></td>
+                            <td>
+                                {% if u.is_active %}<span class="badge badge-success">Aktif</span>
+                                {% else %}<span class="badge badge-danger">Nonaktif</span>{% endif %}
+                            </td>
+                            <td>{{ u.created_at.strftime('%d %b %Y') }}</td>
+                            <td class="actions-cell">
+                                <!-- Toggle Aktif -->
+                                <form method="POST" action="{{ url_for('admin.toggle_aktif', id=u.id) }}" style="display:inline">
+                                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                                    <button type="submit" class="btn btn-sm {{ 'btn-warning' if u.is_active else 'btn-success' }}" title="{{ 'Nonaktifkan' if u.is_active else 'Aktifkan' }}">
+                                        {{ '🔒' if u.is_active else '🔓' }}
+                                    </button>
+                                </form>
+                                <!-- Hapus -->
+                                <form method="POST" action="{{ url_for('admin.hapus_user', id=u.id) }}" style="display:inline"
+                                    onsubmit="return confirm('Hapus pengguna {{ u.name }}?')">
+                                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                                    <button type="submit" class="btn btn-sm btn-danger" title="Hapus">🗑</button>
+                                </form>
+                            </td>
+                        </tr>
+                        {% else %}
+                        <tr><td colspan="7" class="text-center text-muted">Tidak ada pengguna.</td></tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+
+            {% if pagination.pages > 1 %}
+            <div class="pagination-wrapper">
+                {% if pagination.has_prev %}
+                <a href="{{ url_for('admin.users', page=pagination.prev_num, role=role_filter, search=search) }}" class="btn btn-sm btn-outline">← Sebelumnya</a>
+                {% endif %}
+                <span class="pagination-info">Halaman {{ pagination.page }} dari {{ pagination.pages }}</span>
+                {% if pagination.has_next %}
+                <a href="{{ url_for('admin.users', page=pagination.next_num, role=role_filter, search=search) }}" class="btn btn-sm btn-outline">Selanjutnya →</a>
+                {% endif %}
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+<!-- Modal Tambah Pengguna -->
+<div class="modal-overlay" id="modalTambah" style="display:none">
+    <div class="modal-box modal-box-wide">
+        <h3 class="modal-title">Tambah Pengguna Baru</h3>
+        <form method="POST" action="{{ url_for('admin.tambah_user') }}" id="formTambahUser">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+            <div class="form-row">
+                <div class="form-group">
+                    <label class="form-label">Nama <span class="required">*</span></label>
+                    <input type="text" name="name" class="form-input" required>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Email <span class="required">*</span></label>
+                    <input type="email" name="email" class="form-input" required>
+                </div>
+            </div>
+            <div class="form-row">
+                <div class="form-group">
+                    <label class="form-label">NIM (jika mahasiswa)</label>
+                    <input type="text" name="nim" class="form-input">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Password <span class="required">*</span></label>
+                    <input type="password" name="password" class="form-input" required>
+                </div>
+            </div>
+            <div class="form-row">
+                <div class="form-group">
+                    <label class="form-label">Role <span class="required">*</span></label>
+                    <select name="role" class="form-input form-select" required>
+                        <option value="mahasiswa">Mahasiswa</option>
+                        <option value="staff">Staff</option>
+                        <option value="admin">Admin</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Fakultas</label>
+                    <select name="fakultas_id" class="form-input form-select" id="modalFakultasId">
+                        <option value="">-- Pilih Fakultas --</option>
+                        {% for f in fakultas_list %}
+                        <option value="{{ f.id }}">{{ f.nama_fakultas }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+            </div>
+            <div class="modal-actions">
+                <button type="button" class="btn btn-outline" onclick="document.getElementById('modalTambah').style.display='none'">Batal</button>
+                <button type="submit" class="btn btn-primary">Tambah Pengguna</button>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}

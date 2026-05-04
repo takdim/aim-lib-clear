@@ -1,0 +1,111 @@
+{% extends "base.html" %}
+{% block title %}Manajemen Referensi{% endblock %}
+
+{% block content %}
+<div class="container page-content">
+    <div class="page-header">
+        <h1 class="page-title">Manajemen Referensi</h1>
+    </div>
+
+    <div class="grid grid-2">
+        <!-- FAKULTAS -->
+        <div class="card">
+            <div class="card-body">
+                <h2 class="card-title">Daftar Fakultas</h2>
+                <form method="POST" action="{{ url_for('admin.tambah_fakultas') }}" class="form-inline mb-3" id="formTambahFakultas">
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                    <div class="form-row">
+                        <div class="form-group">
+                            <input type="text" name="kode_fakultas" class="form-input" placeholder="Kode (mis: FTIF)" required>
+                        </div>
+                        <div class="form-group flex-grow">
+                            <input type="text" name="nama_fakultas" class="form-input" placeholder="Nama Fakultas" required>
+                        </div>
+                        <div class="form-group">
+                            <button type="submit" class="btn btn-primary">+ Tambah</button>
+                        </div>
+                    </div>
+                </form>
+
+                <div class="table-wrapper">
+                    <table class="table" id="fakultasTable">
+                        <thead><tr><th>Kode</th><th>Nama Fakultas</th><th>Aksi</th></tr></thead>
+                        <tbody>
+                            {% for f in fakultas_list %}
+                            <tr>
+                                <td>{{ f.kode_fakultas }}</td>
+                                <td>{{ f.nama_fakultas }}</td>
+                                <td>
+                                    <form method="POST" action="{{ url_for('admin.hapus_fakultas', id=f.id) }}"
+                                        onsubmit="return confirm('Hapus fakultas {{ f.nama_fakultas }}?')">
+                                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                                        <button type="submit" class="btn btn-sm btn-danger">🗑</button>
+                                    </form>
+                                </td>
+                            </tr>
+                            {% else %}
+                            <tr><td colspan="3" class="text-center text-muted">Belum ada data.</td></tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- PROGRAM STUDI -->
+        <div class="card">
+            <div class="card-body">
+                <h2 class="card-title">Daftar Program Studi</h2>
+                <form method="POST" action="{{ url_for('admin.tambah_prodi') }}" class="mb-3" id="formTambahProdi">
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                    <div class="form-row">
+                        <div class="form-group">
+                            <input type="text" name="kode_prodi" class="form-input" placeholder="Kode Prodi" required>
+                        </div>
+                        <div class="form-group flex-grow">
+                            <input type="text" name="nama_prodi" class="form-input" placeholder="Nama Program Studi" required>
+                        </div>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group flex-grow">
+                            <select name="fakultas_id" class="form-input form-select" required>
+                                <option value="">-- Pilih Fakultas --</option>
+                                {% for f in fakultas_list %}
+                                <option value="{{ f.id }}">{{ f.nama_fakultas }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <button type="submit" class="btn btn-primary">+ Tambah</button>
+                        </div>
+                    </div>
+                </form>
+
+                <div class="table-wrapper">
+                    <table class="table" id="prodiTable">
+                        <thead><tr><th>Kode</th><th>Nama Prodi</th><th>Fakultas</th><th>Aksi</th></tr></thead>
+                        <tbody>
+                            {% for p in prodi_list %}
+                            <tr>
+                                <td>{{ p.kode_prodi }}</td>
+                                <td>{{ p.nama_prodi }}</td>
+                                <td>{{ p.fakultas.nama_fakultas if p.fakultas else '-' }}</td>
+                                <td>
+                                    <form method="POST" action="{{ url_for('admin.hapus_prodi', id=p.id) }}"
+                                        onsubmit="return confirm('Hapus prodi {{ p.nama_prodi }}?')">
+                                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                                        <button type="submit" class="btn btn-sm btn-danger">🗑</button>
+                                    </form>
+                                </td>
+                            </tr>
+                            {% else %}
+                            <tr><td colspan="4" class="text-center text-muted">Belum ada data.</td></tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

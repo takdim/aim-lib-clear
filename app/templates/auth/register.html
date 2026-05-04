@@ -1,0 +1,110 @@
+{% extends "base.html" %}
+{% block title %}Daftar Akun{% endblock %}
+
+{% block body_class %}auth-page{% endblock %}
+
+{% block content %}
+<div class="auth-container auth-container-wide">
+    <div class="auth-card">
+        <div class="auth-header">
+            <span class="auth-icon">🎓</span>
+            <h1 class="auth-title">Buat Akun Mahasiswa</h1>
+            <p class="auth-subtitle">Daftar untuk mengajukan bebas pustaka</p>
+        </div>
+
+        <form method="POST" action="{{ url_for('auth.register') }}" class="auth-form" id="registerForm" novalidate>
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+
+            <div class="form-row">
+                <div class="form-group">
+                    <label for="nim" class="form-label">NIM <span class="required">*</span></label>
+                    <input type="text" id="nim" name="nim" class="form-input" placeholder="Nomor Induk Mahasiswa" required pattern="[0-9]+" inputmode="numeric">
+                    <span class="form-hint">Hanya angka</span>
+                </div>
+                <div class="form-group">
+                    <label for="name" class="form-label">Nama Lengkap <span class="required">*</span></label>
+                    <input type="text" id="name" name="name" class="form-input" placeholder="Nama sesuai KTM" required minlength="3">
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label for="email" class="form-label">Email <span class="required">*</span></label>
+                <input type="email" id="email" name="email" class="form-input" placeholder="email@contoh.com" required>
+            </div>
+
+            <div class="form-row">
+                <div class="form-group">
+                    <label for="password" class="form-label">Password <span class="required">*</span></label>
+                    <div class="input-password-wrapper">
+                        <input type="password" id="password" name="password" class="form-input" placeholder="Min. 8 karakter" required minlength="8" autocomplete="new-password">
+                        <button type="button" class="toggle-password" data-target="password" aria-label="Tampilkan password">👁</button>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label for="confirm_password" class="form-label">Konfirmasi Password <span class="required">*</span></label>
+                    <div class="input-password-wrapper">
+                        <input type="password" id="confirm_password" name="confirm_password" class="form-input" placeholder="Ulangi password" required autocomplete="new-password">
+                        <button type="button" class="toggle-password" data-target="confirm_password" aria-label="Tampilkan password">👁</button>
+                    </div>
+                </div>
+            </div>
+
+            <div class="form-row">
+                <div class="form-group">
+                    <label for="fakultas_id" class="form-label">Fakultas <span class="required">*</span></label>
+                    <select id="fakultas_id" name="fakultas_id" class="form-input form-select" required>
+                        <option value="">-- Pilih Fakultas --</option>
+                        {% for f in fakultas_list %}
+                            <option value="{{ f.id }}">{{ f.nama_fakultas }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="prodi_id" class="form-label">Program Studi <span class="required">*</span></label>
+                    <select id="prodi_id" name="prodi_id" class="form-input form-select" required disabled>
+                        <option value="">-- Pilih Fakultas dulu --</option>
+                    </select>
+                </div>
+            </div>
+
+            <button type="submit" class="btn btn-primary btn-block" id="btnRegister">Daftar Sekarang</button>
+        </form>
+
+        <div class="auth-footer">
+            <p>Sudah punya akun? <a href="{{ url_for('auth.login') }}" class="link">Masuk di sini</a></p>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+// Dropdown prodi dinamis
+document.getElementById('fakultas_id').addEventListener('change', function() {
+    const fakultasId = this.value;
+    const prodiSelect = document.getElementById('prodi_id');
+
+    if (!fakultasId) {
+        prodiSelect.innerHTML = '<option value="">-- Pilih Fakultas dulu --</option>';
+        prodiSelect.disabled = true;
+        return;
+    }
+
+    prodiSelect.innerHTML = '<option value="">Memuat...</option>';
+    prodiSelect.disabled = true;
+
+    fetch(`/api/prodi-by-fakultas/${fakultasId}`)
+        .then(r => r.json())
+        .then(data => {
+            prodiSelect.innerHTML = '<option value="">-- Pilih Program Studi --</option>';
+            data.forEach(p => {
+                prodiSelect.innerHTML += `<option value="${p.id}">${p.nama_prodi}</option>`;
+            });
+            prodiSelect.disabled = false;
+        })
+        .catch(() => {
+            prodiSelect.innerHTML = '<option value="">Gagal memuat. Coba lagi.</option>';
+        });
+});
+</script>
+{% endblock %}

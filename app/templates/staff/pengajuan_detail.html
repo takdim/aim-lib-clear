@@ -1,0 +1,229 @@
+{% extends "base.html" %}
+{% block title %}Detail Pengajuan #{{ pengajuan.id }}{% endblock %}
+
+{% block content %}
+<div class="container page-content">
+    <div class="page-header">
+        <div>
+            <h1 class="page-title">Detail Pengajuan</h1>
+            <p class="page-subtitle">ID: #{{ pengajuan.id }} &mdash;
+                <span class="badge {{ pengajuan.get_status_badge_class() }}">{{ pengajuan.get_status_label() }}</span>
+            </p>
+        </div>
+        <a href="{{ url_for('staff.pengajuan_list') }}" class="btn btn-outline">← Kembali</a>
+    </div>
+
+    <div class="grid grid-detail">
+        <!-- Kolom Kiri: Data -->
+        <div>
+            <!-- Info Mahasiswa -->
+            <div class="card mb-4">
+                <div class="card-body">
+                    <h2 class="card-title">Data Mahasiswa</h2>
+                    <table class="table table-detail">
+                        <tbody>
+                            <tr><th>NIM</th><td>{{ pengajuan.nim }}</td></tr>
+                            <tr><th>Nama</th><td>{{ pengajuan.nama }}</td></tr>
+                            <tr><th>Alamat</th><td>{{ pengajuan.alamat }}</td></tr>
+                            <tr><th>Fakultas</th><td>{{ pengajuan.fakultas.nama_fakultas if pengajuan.fakultas else '-' }}</td></tr>
+                            <tr><th>Program Studi</th><td>{{ pengajuan.program_studi.nama_prodi if pengajuan.program_studi else '-' }}</td></tr>
+                            <tr><th>Tgl Pengajuan</th><td>{{ pengajuan.created_at.strftime('%d %B %Y, %H:%M') }}</td></tr>
+                            {% if pengajuan.approved_at %}
+                            <tr><th>Tgl Disetujui</th><td>{{ pengajuan.approved_at.strftime('%d %B %Y, %H:%M') }}</td></tr>
+                            {% endif %}
+                            {% if pengajuan.catatan_penolakan %}
+                            <tr><th>Alasan Tolak</th><td class="text-danger">{{ pengajuan.catatan_penolakan }}</td></tr>
+                            {% endif %}
+                            {% if pengajuan.reviewer %}
+                            <tr><th>Diproses oleh</th><td>{{ pengajuan.reviewer.name }}</td></tr>
+                            {% endif %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- File Dokumen -->
+            <div class="card mb-4">
+                <div class="card-body">
+                    <h2 class="card-title">Dokumen Upload Mahasiswa</h2>
+
+                    {% if pengajuan.file_deleted %}
+                    <div class="alert alert-warning" id="fileDeletedAlert">
+                        <strong>⚠️ File Dihapus</strong><br>
+                        File PDF ini telah dihapus dari sistem karena telah melewati masa penyimpanan 1 bulan.
+                        Surat bebas pustaka mahasiswa yang bersangkutan tetap dapat dicetak ulang oleh mahasiswa.
+                    </div>
+                    {% else %}
+                    <div class="file-actions">
+                        <button type="button" class="btn btn-outline" onclick="openPDFModal('{{ url_for('staff.view_file', id=pengajuan.id, jenis='bebas_pustaka') }}', 'Surat Bebas Pustaka Fakultas')">
+                            📋 Lihat Surat Bebas dari Fakultas
+                        </button>
+                        <button type="button" class="btn btn-outline" onclick="openPDFModal('{{ url_for('staff.view_file', id=pengajuan.id, jenis='kartu_mahasiswa') }}', 'Kartu Tanda Mahasiswa')">
+                            🪪 Lihat Kartu Mahasiswa
+                        </button>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        <!-- Kolom Kanan: Aksi -->
+        <div>
+            <!-- Aksi -->
+            {% if pengajuan.status in ['menunggu_review', 'sedang_diproses'] %}
+            <div class="card mb-4">
+                <div class="card-body">
+                    <h2 class="card-title">Aksi Pengajuan</h2>
+
+                    <!-- Setujui -->
+                    <form method="POST" action="{{ url_for('staff.pengajuan_detail', id=pengajuan.id) }}" id="formSetujui">
+                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                        <input type="hidden" name="action" value="setujui">
+                        <button type="button" class="btn btn-success btn-block mb-2"
+                            onclick="confirmAction('setujui', '{{ pengajuan.nama }}')">
+                            ✅ Setujui Pengajuan
+                        </button>
+                    </form>
+
+                    <!-- Proses -->
+                    {% if pengajuan.status == 'menunggu_review' %}
+                    <form method="POST" action="{{ url_for('staff.pengajuan_detail', id=pengajuan.id) }}" id="formProses">
+                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                        <input type="hidden" name="action" value="proses">
+                        <button type="submit" class="btn btn-info btn-block mb-2">🔵 Tandai Sedang Diproses</button>
+                    </form>
+                    {% endif %}
+
+                    <!-- Tolak -->
+                    <button type="button" class="btn btn-danger btn-block"
+                        onclick="toggleTolakForm()">
+                        ❌ Tolak Pengajuan
+                    </button>
+
+                    <div id="tolakForm" class="tolak-form" style="display:none;">
+                        <form method="POST" action="{{ url_for('staff.pengajuan_detail', id=pengajuan.id) }}">
+                            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                            <input type="hidden" name="action" value="tolak">
+                            <div class="form-group mt-3">
+                                <label class="form-label">Alasan Penolakan <span class="required">*</span></label>
+                                <textarea name="catatan_penolakan" class="form-input form-textarea" rows="3" placeholder="Jelaskan alasan penolakan..." required></textarea>
+                            </div>
+                            <button type="submit" class="btn btn-danger btn-block">Konfirmasi Penolakan</button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+            {% endif %}
+
+            <!-- Edit Data -->
+            <div class="card">
+                <div class="card-body">
+                    <h2 class="card-title">Edit Data Pengajuan</h2>
+                    <p class="text-muted small">Koreksi jika ada kesalahan data (file PDF tidak dapat diedit).</p>
+                    <form method="POST" action="{{ url_for('staff.pengajuan_detail', id=pengajuan.id) }}">
+                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                        <input type="hidden" name="action" value="edit">
+                        <div class="form-group">
+                            <label class="form-label">Nama</label>
+                            <input type="text" name="nama" class="form-input" value="{{ pengajuan.nama }}">
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Alamat</label>
+                            <textarea name="alamat" class="form-input form-textarea" rows="2">{{ pengajuan.alamat }}</textarea>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Fakultas</label>
+                            <select name="fakultas_id" class="form-input form-select" id="editFakultasId">
+                                {% for f in fakultas_list %}
+                                <option value="{{ f.id }}" {{ 'selected' if f.id == pengajuan.fakultas_id }}>{{ f.nama_fakultas }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Program Studi</label>
+                            <select name="prodi_id" class="form-input form-select" id="editProdiId">
+                                {% if pengajuan.program_studi %}
+                                <option value="{{ pengajuan.prodi_id }}" selected>{{ pengajuan.program_studi.nama_prodi }}</option>
+                                {% endif %}
+                            </select>
+                        </div>
+                        <button type="submit" class="btn btn-outline btn-block mt-2">💾 Simpan Perubahan</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal Konfirmasi Setuju -->
+<div class="modal-overlay" id="modalConfirm" style="display:none;">
+    <div class="modal-box">
+        <h3 class="modal-title">Konfirmasi Persetujuan</h3>
+        <p id="modalMessage"></p>
+        <div class="modal-actions">
+            <button class="btn btn-outline" onclick="closeModal()">Batal</button>
+            <button class="btn btn-success" id="modalConfirmBtn">Ya, Setujui</button>
+        </div>
+    </div>
+</div>
+
+<!-- Modal PDF Preview -->
+<div class="modal-overlay" id="modalPDF" style="display:none;">
+    <div class="modal-box modal-box-wide" style="max-width: 90%; height: 90vh; display: flex; flex-direction: column;">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
+            <h3 class="modal-title" id="pdfModalTitle" style="margin-bottom: 0;">Preview Dokumen</h3>
+            <button class="btn btn-sm btn-outline" onclick="closePDFModal()">Tutup (X)</button>
+        </div>
+        <div style="flex: 1; background: #eee; border-radius: 8px; overflow: hidden;">
+            <iframe id="pdfFrame" src="" style="width: 100%; height: 100%; border: none;"></iframe>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+function confirmAction(action, nama) {
+    document.getElementById('modalMessage').textContent =
+        `Apakah Anda yakin ingin menyetujui pengajuan bebas pustaka atas nama ${nama}?`;
+    document.getElementById('modalConfirm').style.display = 'flex';
+    document.getElementById('modalConfirmBtn').onclick = function() {
+        document.getElementById('formSetujui').submit();
+    };
+}
+function closeModal() {
+    document.getElementById('modalConfirm').style.display = 'none';
+}
+
+function openPDFModal(url, title) {
+    document.getElementById('pdfModalTitle').textContent = title;
+    document.getElementById('pdfFrame').src = url;
+    document.getElementById('modalPDF').style.display = 'flex';
+}
+
+function closePDFModal() {
+    document.getElementById('modalPDF').style.display = 'none';
+    document.getElementById('pdfFrame').src = '';
+}
+
+function toggleTolakForm() {
+    const f = document.getElementById('tolakForm');
+    f.style.display = f.style.display === 'none' ? 'block' : 'none';
+}
+
+// Dropdown prodi dinamis untuk edit
+document.getElementById('editFakultasId').addEventListener('change', function() {
+    const fakultasId = this.value;
+    const prodiSelect = document.getElementById('editProdiId');
+    prodiSelect.innerHTML = '<option>Memuat...</option>';
+    fetch(`/api/prodi-by-fakultas/${fakultasId}`)
+        .then(r => r.json())
+        .then(data => {
+            prodiSelect.innerHTML = '';
+            data.forEach(p => {
+                prodiSelect.innerHTML += `<option value="${p.id}">${p.nama_prodi}</option>`;
+            });
+        });
+});
+</script>
+{% endblock %}

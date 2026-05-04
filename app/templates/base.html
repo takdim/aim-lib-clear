@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="{% block meta_description %}Sistem Manajemen Surat Keterangan Bebas Pustaka Digital{% endblock %}">
+    <title>{% block title %}Bebas Pustaka{% endblock %} — {{ config.NAMA_PERPUSTAKAAN }}</title>
+
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+
+    <!-- CSS -->
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+
+    {% block extra_css %}{% endblock %}
+</head>
+<body class="{% block body_class %}{% endblock %}">
+
+    <!-- Navbar -->
+    <nav class="navbar">
+        <div class="container navbar-inner">
+            <a href="{{ url_for('main.index') }}" class="navbar-brand">
+                <span class="brand-icon">📚</span>
+                <span class="brand-text">Bebas Pustaka</span>
+            </a>
+
+            <button class="navbar-toggle" id="navbarToggle" aria-label="Toggle navigation">
+                <span></span><span></span><span></span>
+            </button>
+
+            <div class="navbar-menu" id="navbarMenu">
+                {% if current_user.is_authenticated %}
+                    {% if current_user.role == 'mahasiswa' %}
+                        <a href="{{ url_for('mahasiswa.dashboard') }}" class="nav-link {% if request.endpoint and 'mahasiswa' in request.endpoint %}active{% endif %}">Dashboard</a>
+                        <a href="{{ url_for('mahasiswa.status') }}" class="nav-link {% if request.endpoint == 'mahasiswa.status' %}active{% endif %}">Status Pengajuan</a>
+                    {% elif current_user.role == 'staff' %}
+                        <a href="{{ url_for('staff.dashboard') }}" class="nav-link {% if request.endpoint == 'staff.dashboard' %}active{% endif %}">Dashboard</a>
+                        <a href="{{ url_for('staff.pengajuan_list') }}" class="nav-link {% if request.endpoint == 'staff.pengajuan_list' %}active{% endif %}">Pengajuan</a>
+                    {% elif current_user.role == 'admin' %}
+                        <a href="{{ url_for('admin.dashboard') }}" class="nav-link {% if request.endpoint == 'admin.dashboard' %}active{% endif %}">Dashboard</a>
+                        <a href="{{ url_for('admin.users') }}" class="nav-link {% if request.endpoint == 'admin.users' %}active{% endif %}">Pengguna</a>
+                        <a href="{{ url_for('admin.pengajuan') }}" class="nav-link {% if request.endpoint == 'admin.pengajuan' %}active{% endif %}">Pengajuan</a>
+                        <a href="{{ url_for('admin.referensi') }}" class="nav-link {% if request.endpoint == 'admin.referensi' %}active{% endif %}">Referensi</a>
+                        <a href="{{ url_for('admin.settings') }}" class="nav-link {% if request.endpoint == 'admin.settings' %}active{% endif %}">Pengaturan</a>
+                    {% endif %}
+
+                    <div class="nav-user-info">
+                        <span class="badge badge-role badge-{{ current_user.role }}">{{ current_user.role | capitalize }}</span>
+                        <span class="nav-username">{{ current_user.name }}</span>
+                        <a href="{{ url_for('auth.logout') }}" class="btn btn-sm btn-outline-danger">Logout</a>
+                    </div>
+                {% else %}
+                    <a href="{{ url_for('auth.login') }}" class="nav-link">Login</a>
+                    <a href="{{ url_for('auth.register') }}" class="btn btn-sm btn-primary">Daftar</a>
+                {% endif %}
+            </div>
+        </div>
+    </nav>
+
+    <!-- Flash Messages -->
+    {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+            <div class="flash-container" id="flashContainer">
+                {% for category, message in messages %}
+                    <div class="alert alert-{{ category }} alert-dismissible" role="alert">
+                        <span>{{ message }}</span>
+                        <button class="alert-close" onclick="this.parentElement.remove()" aria-label="Tutup">&times;</button>
+                    </div>
+                {% endfor %}
+            </div>
+        {% endif %}
+    {% endwith %}
+
+    <!-- Main Content -->
+    <main class="main-content">
+        {% block content %}{% endblock %}
+    </main>
+
+    <!-- Footer -->
+    <footer class="footer">
+        <div class="container footer-inner">
+            <p>&copy; {{ now.year if now else 2026 }} {{ config.NAMA_PERPUSTAKAAN }}. Semua hak dilindungi.</p>
+        </div>
+    </footer>
+
+    <!-- JS -->
+    <script src="{{ url_for('static', filename='js/main.js') }}"></script>
+    {% block extra_js %}{% endblock %}
+</body>
+</html>

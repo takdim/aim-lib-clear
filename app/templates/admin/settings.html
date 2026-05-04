@@ -1,0 +1,54 @@
+{% extends "base.html" %}
+{% block title %}Pengaturan Sistem{% endblock %}
+
+{% block content %}
+<div class="container page-content">
+    <div class="page-header">
+        <h1 class="page-title">Pengaturan Sistem</h1>
+    </div>
+
+    <div class="card">
+        <div class="card-body">
+            <div class="alert alert-info mb-4">
+                <strong>ℹ️ Catatan:</strong> Pengaturan sistem dikonfigurasi melalui file <code>.env</code> di root proyek.
+                Ubah file tersebut dan restart server untuk menerapkan perubahan.
+            </div>
+
+            <h2 class="card-title">Konfigurasi Aktif</h2>
+            <table class="table table-detail">
+                <tbody>
+                    <tr>
+                        <th>Nama Institusi</th>
+                        <td>{{ config.NAMA_INSTITUSI }}</td>
+                    </tr>
+                    <tr>
+                        <th>Nama Perpustakaan</th>
+                        <td>{{ config.NAMA_PERPUSTAKAAN }}</td>
+                    </tr>
+                    <tr>
+                        <th>Prefix Nomor Surat</th>
+                        <td><code>{{ config.NOMOR_SURAT_PREFIX }}</code></td>
+                    </tr>
+                    <tr>
+                        <th>Masa Simpan File Upload</th>
+                        <td>{{ config.FILE_RETENTION_DAYS }} hari</td>
+                    </tr>
+                    <tr>
+                        <th>Maks. Ukuran Upload</th>
+                        <td>{{ (config.MAX_CONTENT_LENGTH / 1024 / 1024) | int }} MB</td>
+                    </tr>
+                </tbody>
+            </table>
+
+            <div class="mt-4">
+                <h3 class="card-title">Cara Mengubah Pengaturan</h3>
+                <ol class="info-list">
+                    <li>Buka file <code>.env</code> di root direktori proyek.</li>
+                    <li>Ubah nilai variabel yang diinginkan.</li>
+                    <li>Restart server Flask (<code>python run.py</code> atau sesuai deployment).</li>
+                </ol>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
