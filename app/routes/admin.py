@@ -313,6 +313,36 @@ def hapus_prodi(id):
 @login_required
 @admin_required
 def settings():
+    from app.models.sistem_setting import SistemSetting
+    setting = SistemSetting.get()
+
     if request.method == 'POST':
-        flash('Pengaturan sistem hanya dapat diubah melalui file .env.', 'info')
-    return render_template('admin/settings.html')
+        try:
+            nomor_urut = request.form.get('nomor_urut', type=int)
+            nomor_bagian_tengah = request.form.get('nomor_bagian_tengah', '').strip()
+            nomor_tahun = request.form.get('nomor_tahun', type=int)
+            pejabat_jabatan = request.form.get('pejabat_jabatan', '').strip()
+            pejabat_nama = request.form.get('pejabat_nama', '').strip()
+            pejabat_nip = request.form.get('pejabat_nip', '').strip()
+
+            if nomor_urut is not None and nomor_urut > 0:
+                setting.nomor_urut = nomor_urut
+            if nomor_bagian_tengah:
+                setting.nomor_bagian_tengah = nomor_bagian_tengah
+            if nomor_tahun is not None and nomor_tahun > 0:
+                setting.nomor_tahun = nomor_tahun
+            if pejabat_jabatan:
+                setting.pejabat_jabatan = pejabat_jabatan
+            if pejabat_nama:
+                setting.pejabat_nama = pejabat_nama
+            if pejabat_nip:
+                setting.pejabat_nip = pejabat_nip
+
+            db.session.commit()
+            flash('Pengaturan berhasil disimpan.', 'success')
+        except Exception as e:
+            db.session.rollback()
+            flash(f'Gagal menyimpan pengaturan: {e}', 'danger')
+        return redirect(url_for('admin.settings'))
+
+    return render_template('admin/settings.html', setting=setting)

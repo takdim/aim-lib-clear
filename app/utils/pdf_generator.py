@@ -1,180 +1,198 @@
-import io
-from datetime import datetime
+import os
+import qrcode
+from io import BytesIO
+from datetime import datetime, timedelta
 from reportlab.lib.pagesizes import A4
-from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
 from reportlab.lib.units import cm
-from reportlab.lib import colors
-from reportlab.platypus import (
-    SimpleDocTemplate, Paragraph, Spacer, Table, TableStyle, HRFlowable
-)
-from reportlab.lib.enums import TA_CENTER, TA_LEFT, TA_JUSTIFY
+from reportlab.lib.enums import TA_JUSTIFY, TA_CENTER
+from reportlab.lib.utils import ImageReader
+from reportlab.pdfgen import canvas
+from reportlab.lib.styles import ParagraphStyle
+from reportlab.platypus import Paragraph
+from flask import current_app
+
+
+def format_indo_date(date_obj):
+    if not date_obj:
+        return "-"
+    months = [
+        "Januari", "Februari", "Maret", "April", "Mei", "Juni",
+        "Juli", "Agustus", "September", "Oktober", "November", "Desember"
+    ]
+    day = date_obj.strftime("%d")
+    month = months[date_obj.month - 1]
+    year = date_obj.strftime("%Y")
+    return f"{day} {month} {year}"
+
+
+def _make_qr_image(data):
+    qr = qrcode.QRCode(
+        version=1,
+        error_correction=qrcode.constants.ERROR_CORRECT_L,
+        box_size=4,
+        border=2,
+    )
+    qr.add_data(data)
+    qr.make(fit=True)
+    img = qr.make_image(fill_color="black", back_color="white")
+    buf = BytesIO()
+    img.save(buf, format='PNG')
+    buf.seek(0)
+    return buf
 
 
 def generate_surat_bebas_pustaka(pengajuan, nama_institusi, nama_perpustakaan):
-    """
-    Generate PDF surat bebas pustaka secara on-demand dari data database.
-    Returns bytes dari PDF yang dihasilkan.
-    """
-    buffer = io.BytesIO()
+    from app.models.sistem_setting import SistemSetting
+    setting = SistemSetting.get()
 
-    doc = SimpleDocTemplate(
-        buffer,
-        pagesize=A4,
-        rightMargin=2.5 * cm,
-        leftMargin=2.5 * cm,
-        topMargin=2 * cm,
-        bottomMargin=2 * cm,
+    buffer = BytesIO()
+    c = canvas.Canvas(buffer, pagesize=A4)
+    width, height = A4
+
+    static_img_path = os.path.abspath(os.path.join(current_app.root_path, 'static', 'img'))
+    logo_unhas_path = os.path.join(static_img_path, 'logo_unhas.png')
+    logo_iso_path = os.path.join(static_img_path, 'iso_9001-2015.png')
+
+    # ─── HEADER ───────────────────────────────────────────
+    if os.path.exists(logo_unhas_path):
+        c.drawImage(logo_unhas_path, 1.5*cm, height - 3.5*cm,
+                    width=2.2*cm, height=2.8*cm, mask='auto')
+
+    c.setFont("Times-Bold", 11)
+    c.drawString(4.2*cm, height - 1.75*cm, "KEMENTERIAN PENDIDIKAN TINGGI, SAINS,")
+    c.drawString(4.2*cm, height - 2.2*cm,  "DAN TEKNOLOGI")
+    c.setFont("Times-Bold", 13)
+    c.drawString(4.2*cm, height - 2.75*cm, "UNIVERSITAS HASANUDDIN")
+    c.drawString(4.2*cm, height - 3.25*cm, "PERPUSTAKAAN")
+
+    c.setFont("Times-Roman", 7)
+    c.drawRightString(width - 1.5*cm, height - 1.55*cm, "Jalan Perintis Kemerdekaan Km. 10")
+    c.drawRightString(width - 1.5*cm, height - 1.9*cm,  "Tamalanrea, Makassar 90245")
+    c.drawRightString(width - 1.5*cm, height - 2.25*cm, "Telepon (0411) 586200")
+    c.drawRightString(width - 1.5*cm, height - 2.6*cm,  "Laman https://library.unhas.ac.id")
+    c.drawRightString(width - 1.5*cm, height - 2.95*cm, "email : library@unhas.ac.id")
+
+    c.setLineWidth(2)
+    c.line(1.5*cm, height - 3.8*cm, width - 1.5*cm, height - 3.8*cm)
+
+    # ─── JUDUL SURAT ──────────────────────────────────────
+    c.setFont("Helvetica-Bold", 12)
+    c.drawCentredString(width / 2, height - 4.8*cm, "SURAT KETERANGAN BEBAS PUSTAKA")
+    c.setFont("Helvetica", 11)
+    nomor_surat = (
+        pengajuan.nomor_surat or
+        f"..../{setting.nomor_bagian_tengah}/{setting.nomor_tahun}"
+    )
+    c.drawCentredString(width / 2, height - 5.3*cm, f"Nomor: {nomor_surat}")
+
+    # ─── ISI SURAT ────────────────────────────────────────
+    margin_left = 1.5*cm
+    margin_right = 1.5*cm
+    text_width = width - margin_left - margin_right
+
+    p_style = ParagraphStyle(
+        'body', fontName='Helvetica', fontSize=11, leading=16, alignment=TA_JUSTIFY
     )
 
-    story = []
-    styles = getSampleStyleSheet()
+    y = height - 6.5*cm
+    c.setFont("Helvetica", 11)
+    c.drawString(margin_left, y,
+                 "Perpustakaan Universitas Hasanuddin dengan ini menerangkan bahwa :")
 
-    # ─── KOP SURAT ───────────────────────────────────────────────
-    style_kop_institusi = ParagraphStyle(
-        'KopInstitusi',
-        parent=styles['Normal'],
-        fontSize=14,
-        fontName='Helvetica-Bold',
-        alignment=TA_CENTER,
-        leading=18,
-    )
-    style_kop_sub = ParagraphStyle(
-        'KopSub',
-        parent=styles['Normal'],
-        fontSize=11,
-        fontName='Helvetica',
-        alignment=TA_CENTER,
-        leading=14,
-    )
-    style_kop_alamat = ParagraphStyle(
-        'KopAlamat',
-        parent=styles['Normal'],
-        fontSize=9,
-        fontName='Helvetica',
-        alignment=TA_CENTER,
-        leading=12,
-    )
-
-    story.append(Paragraph(nama_institusi.upper(), style_kop_institusi))
-    story.append(Paragraph(nama_perpustakaan.upper(), style_kop_sub))
-    story.append(Paragraph(
-        'Jl. Contoh No. 1, Kota Contoh | Telp. (021) 000-0000 | perpustakaan@institusi.ac.id',
-        style_kop_alamat
-    ))
-    story.append(HRFlowable(width='100%', thickness=2, color=colors.black))
-    story.append(HRFlowable(width='100%', thickness=0.5, color=colors.black, spaceAfter=12))
-
-    # ─── JUDUL ───────────────────────────────────────────────────
-    style_judul = ParagraphStyle(
-        'Judul',
-        parent=styles['Normal'],
-        fontSize=14,
-        fontName='Helvetica-Bold',
-        alignment=TA_CENTER,
-        spaceAfter=4,
-    )
-    style_nomor = ParagraphStyle(
-        'Nomor',
-        parent=styles['Normal'],
-        fontSize=11,
-        alignment=TA_CENTER,
-        spaceAfter=16,
-    )
-
-    story.append(Paragraph('SURAT KETERANGAN BEBAS PUSTAKA', style_judul))
-    story.append(Paragraph(f'Nomor: {pengajuan.nomor_surat}', style_nomor))
-
-    # ─── PEMBUKA ─────────────────────────────────────────────────
-    style_body = ParagraphStyle(
-        'Body',
-        parent=styles['Normal'],
-        fontSize=11,
-        fontName='Helvetica',
-        leading=16,
-        alignment=TA_JUSTIFY,
-    )
-
-    tanggal_terbit = pengajuan.approved_at.strftime('%d %B %Y') if pengajuan.approved_at else datetime.utcnow().strftime('%d %B %Y')
-
-    story.append(Paragraph(
-        f'Yang bertanda tangan di bawah ini, Kepala {nama_perpustakaan}, '
-        f'menerangkan bahwa mahasiswa berikut:',
-        style_body
-    ))
-    story.append(Spacer(1, 12))
-
-    # ─── DATA MAHASISWA ───────────────────────────────────────────
-    data = [
-        ['NIM', ':', pengajuan.nim],
-        ['Nama', ':', pengajuan.nama],
-        ['Fakultas', ':', pengajuan.fakultas.nama_fakultas if pengajuan.fakultas else '-'],
-        ['Program Studi', ':', pengajuan.program_studi.nama_prodi if pengajuan.program_studi else '-'],
-        ['Alamat', ':', pengajuan.alamat],
+    y -= 0.9*cm
+    rows = [
+        ("Nama",         f": {pengajuan.nama}"),
+        ("Nomor Pokok",  f": {pengajuan.nim}"),
+        ("Program Studi",
+         f": {pengajuan.program_studi.nama_prodi if pengajuan.program_studi else '-'}"),
+        ("Jenjang",      ": S1"),
+        ("Fakultas",
+         f": {pengajuan.fakultas.nama_fakultas if pengajuan.fakultas else '-'}"),
+        ("Alamat",       f": {pengajuan.alamat}"),
     ]
+    for label, val in rows:
+        c.setFont("Helvetica", 11)
+        c.drawString(2.5*cm, y, label)
+        c.drawString(5.5*cm, y, val)
+        y -= 0.6*cm
 
-    table = Table(data, colWidths=[3.5 * cm, 0.5 * cm, 11 * cm])
-    table.setStyle(TableStyle([
-        ('FONTNAME', (0, 0), (-1, -1), 'Helvetica'),
-        ('FONTSIZE', (0, 0), (-1, -1), 11),
-        ('VALIGN', (0, 0), (-1, -1), 'TOP'),
-        ('TOPPADDING', (0, 0), (-1, -1), 3),
-        ('BOTTOMPADDING', (0, 0), (-1, -1), 3),
-    ]))
-    story.append(table)
-    story.append(Spacer(1, 16))
-
-    # ─── ISI SURAT ───────────────────────────────────────────────
-    story.append(Paragraph(
-        f'<b>DINYATAKAN BEBAS PUSTAKA</b> dari {nama_perpustakaan}. '
-        f'Mahasiswa tersebut di atas tidak mempunyai tanggungan buku/koleksi '
-        f'yang dipinjam maupun denda keterlambatan.',
-        style_body
-    ))
-    story.append(Spacer(1, 8))
-    story.append(Paragraph(
-        'Surat keterangan ini diterbitkan untuk digunakan sebagai syarat '
-        'pengajuan yudisium / kelulusan.',
-        style_body
-    ))
-    story.append(Spacer(1, 24))
-
-    # ─── TANDA TANGAN ────────────────────────────────────────────
-    style_ttd = ParagraphStyle(
-        'TTD',
-        parent=styles['Normal'],
-        fontSize=11,
-        alignment=TA_LEFT,
+    y -= 0.5*cm
+    p1 = Paragraph(
+        "Mahasiswa tersebut diatas benar tidak mempunyai pinjaman bahan pustaka pada Perpustakaan "
+        "Universitas Hasanuddin, dan surat keterangan ini berlaku sampai dengan :",
+        p_style,
     )
+    p1_w, p1_h = p1.wrap(text_width, 5*cm)
+    p1.drawOn(c, margin_left, y - p1_h)
+    y -= p1_h + 0.6*cm
 
-    # Ambil kota dari config atau default
-    kota = 'Kota Contoh'
-    story.append(Paragraph(
-        f'{kota}, {tanggal_terbit}',
-        style_ttd
-    ))
-    story.append(Spacer(1, 4))
-    story.append(Paragraph(f'Kepala {nama_perpustakaan}', style_ttd))
-    story.append(Spacer(1, 60))
-    story.append(Paragraph('(_________________________)', style_ttd))
-    story.append(Paragraph('NIP. ..............................', style_ttd))
+    # Tanggal berlaku (tebal, tengah)
+    tgl_disetujui = pengajuan.approved_at or datetime.utcnow()
+    tgl_berlaku = tgl_disetujui + timedelta(days=90)
+    c.setFont("Helvetica-Bold", 11)
+    c.drawCentredString(width / 2, y, format_indo_date(tgl_berlaku))
+    y -= 1.0*cm
 
-    # ─── FOOTER ──────────────────────────────────────────────────
-    story.append(Spacer(1, 24))
-    story.append(HRFlowable(width='100%', thickness=0.5, color=colors.grey))
-    style_footer = ParagraphStyle(
-        'Footer',
-        parent=styles['Normal'],
-        fontSize=8,
-        alignment=TA_CENTER,
-        textColor=colors.grey,
-        spaceBefore=4,
+    # Paragraf penutup
+    p2 = Paragraph(
+        "Demikian keterangan ini kami berikan kepada yang bersangkutan untuk digunakan "
+        "sebagaimana mestinya.",
+        p_style,
     )
-    story.append(Paragraph(
-        f'Dokumen ini digenerate secara digital oleh sistem pada {datetime.utcnow().strftime("%d-%m-%Y %H:%M")} WIB. '
-        'Keabsahan dokumen dapat diverifikasi melalui sistem.',
-        style_footer
-    ))
+    p2_w, p2_h = p2.wrap(text_width, 5*cm)
+    p2.drawOn(c, margin_left, y - p2_h)
+    y -= p2_h + 0.3*cm
 
-    doc.build(story)
-    buffer.seek(0)
-    return buffer.getvalue()
+    # ─── TANDA TANGAN ─────────────────────────────────────
+    tgl_cetak = pengajuan.approved_at or datetime.utcnow()
+    y_sign = y - 1.2*cm
+    c.setFont("Helvetica", 11)
+    c.drawRightString(width - margin_right, y_sign, f"Makassar, {format_indo_date(tgl_cetak)}")
+    y_sign -= 0.7*cm
+    c.drawRightString(width - margin_right, y_sign, "Kepala,")
+    y_sign -= 0.5*cm
+    # Tulis baris-baris jabatan dari setting
+    for baris in setting.pejabat_jabatan.splitlines():
+        c.drawRightString(width - margin_right, y_sign, baris.strip())
+        y_sign -= 0.5*cm
+    y_sign -= 0.1*cm
+
+    # QR Code verifikasi
+    qr_size = 2.5*cm
+    qr_data = (
+        f"Nomor: {pengajuan.nomor_surat or 'N/A'} | "
+        f"Nama: {pengajuan.nama} | NIM: {pengajuan.nim}"
+    )
+    try:
+        qr_buf = _make_qr_image(qr_data)
+        qr_x = width - margin_right - qr_size
+        qr_y = y_sign - qr_size
+        c.drawImage(ImageReader(qr_buf), qr_x, qr_y, width=qr_size, height=qr_size)
+        y_sign = qr_y - 0.4*cm
+    except Exception:
+        y_sign -= qr_size + 0.4*cm
+
+    c.setFont("Helvetica-Bold", 11)
+    c.drawRightString(width - margin_right, y_sign, setting.pejabat_nama)
+    y_sign -= 0.5*cm
+    c.setFont("Helvetica", 11)
+    c.drawRightString(width - margin_right, y_sign, f"NIP. {setting.pejabat_nip}")
+
+    # ─── TEMBUSAN ─────────────────────────────────────────
+    y_tem = 3.5*cm
+    c.setFont("Helvetica", 9)
+    c.drawString(margin_left, y_tem, "Tembusan yth:")
+    c.drawString(margin_left, y_tem - 0.45*cm, "1. Kepala Perpustakaan Unhas")
+    c.drawString(margin_left, y_tem - 0.9*cm,  "2. Arsip.")
+
+    # ─── LOGO ISO (Kanan Bawah) ───────────────────────────
+    if os.path.exists(logo_iso_path):
+        c.drawImage(logo_iso_path, width - 3.5*cm, -10.0*cm,
+                    width=2.5*cm, preserveAspectRatio=True, mask='auto')
+
+    c.showPage()
+    c.save()
+
+    pdf_bytes = buffer.getvalue()
+    buffer.close()
+    return pdf_bytes

@@ -68,11 +68,10 @@ class BebasPustaka(db.Model):
         return classes.get(self.status, 'badge-secondary')
 
     def generate_nomor_surat(self):
-        """Generate nomor surat otomatis."""
-        prefix = current_app.config.get('NOMOR_SURAT_PREFIX', 'PERPUS')
-        now = datetime.utcnow()
-        nomor = f"{prefix}/{now.year}/{now.month:02d}/{self.id:04d}"
-        return nomor
+        """Generate nomor surat dari SistemSetting lalu naikkan counter."""
+        from app.models.sistem_setting import SistemSetting
+        setting = SistemSetting.get()
+        return setting.generate_and_increment()
 
     def delete_files(self):
         """Hapus file fisik dari disk."""

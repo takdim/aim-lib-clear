@@ -111,8 +111,9 @@ def pengajuan_detail(id):
             pengajuan.status = 'ditolak'
             pengajuan.reviewed_by = current_user.id
             pengajuan.catatan_penolakan = catatan
+            pengajuan.delete_files()  # Hapus file untuk menghemat storage
             db.session.commit()
-            flash(f'Pengajuan atas nama {pengajuan.nama} telah ditolak.', 'warning')
+            flash(f'Pengajuan atas nama {pengajuan.nama} telah ditolak. File telah dihapus.', 'warning')
             return redirect(url_for('staff.pengajuan_list'))
 
         elif action == 'proses':
@@ -131,6 +132,9 @@ def pengajuan_detail(id):
                 pengajuan.fakultas_id = fakultas_id
             if prodi_id:
                 pengajuan.prodi_id = prodi_id
+            nomor_surat_baru = request.form.get('nomor_surat', '').strip()
+            if nomor_surat_baru:
+                pengajuan.nomor_surat = nomor_surat_baru
             db.session.commit()
             flash('Data pengajuan berhasil diperbarui.', 'success')
             return redirect(url_for('staff.pengajuan_detail', id=id))

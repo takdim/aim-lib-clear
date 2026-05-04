@@ -57,7 +57,7 @@ def create_app(config_name=None):
 
     # Import models agar Migrate mengenali
     with app.app_context():
-        from app.models import user, fakultas, program_studi, bebas_pustaka  # noqa
+        from app.models import user, fakultas, program_studi, bebas_pustaka, sistem_setting  # noqa
 
     # Jalankan scheduler
     from app.utils.scheduler import start_scheduler

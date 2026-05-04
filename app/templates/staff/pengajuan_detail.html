@@ -147,6 +147,13 @@
                                 {% endif %}
                             </select>
                         </div>
+                        {% if pengajuan.nomor_surat %}
+                        <div class="form-group">
+                            <label class="form-label">Nomor Surat</label>
+                            <input type="text" name="nomor_surat" class="form-input" value="{{ pengajuan.nomor_surat }}">
+                            <small class="text-muted">Kosongkan jika tidak ingin mengubah nomor surat.</small>
+                        </div>
+                        {% endif %}
                         <button type="submit" class="btn btn-outline btn-block mt-2">💾 Simpan Perubahan</button>
                     </form>
                 </div>
