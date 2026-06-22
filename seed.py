@@ -32,6 +32,8 @@ def seed():
             {"kode": "FIKP",  "nama": "Fakultas Ilmu Kelautan dan Perikanan"},
             {"kode": "FPET",  "nama": "Fakultas Peternakan"},
             {"kode": "FHUT",  "nama": "Fakultas Kehutanan"},
+            {"kode": "FTP",   "nama": "Fakultas Teknologi Pertanian"},
+            {"kode": "SPS",   "nama": "Sekolah Pascasarjana"},
         ]
 
         fakultas_objs = {}
@@ -129,6 +131,166 @@ def seed():
             {"kode": "PTR",    "nama": "S1 Peternakan", "fak": "FPET"},
             # FHUT
             {"kode": "HUT",    "nama": "S1 Kehutanan", "fak": "FHUT"},
+
+            # ─── FK S2/S3 ───────────────────────────────────────
+            {"kode": "S2.FK.IPKK",  "nama": "S2 Ilmu Pendidikan Kedokteran dan Kesehatan", "fak": "FK"},
+            {"kode": "S3.FK.IK",    "nama": "S3 Ilmu Kedokteran", "fak": "FK"},
+
+            # ─── FKG S2/S3 ──────────────────────────────────────
+            {"kode": "S2.FKG.KG",   "nama": "S2 Kedokteran Gigi", "fak": "FKG"},
+            {"kode": "S3.FKG.IKG",  "nama": "S3 Ilmu Kedokteran Gigi", "fak": "FKG"},
+
+            # ─── FKM S2/S3 ──────────────────────────────────────
+            {"kode": "S2.FKM.IKM",  "nama": "S2 Ilmu Kesehatan Masyarakat", "fak": "FKM"},
+            {"kode": "S2.FKM.ARS",  "nama": "S2 Administrasi Rumah Sakit", "fak": "FKM"},
+            {"kode": "S2.FKM.K3",   "nama": "S2 Keselamatan dan Kesehatan Kerja", "fak": "FKM"},
+            {"kode": "S2.FKM.AKK",  "nama": "S2 Administrasi dan Kebijakan Kesehatan", "fak": "FKM"},
+            {"kode": "S2.FKM.GZ",   "nama": "S2 Ilmu Gizi", "fak": "FKM"},
+            {"kode": "S2.FKM.KL",   "nama": "S2 Kesehatan Lingkungan", "fak": "FKM"},
+            {"kode": "S3.FKM.KM",   "nama": "S3 Kesehatan Masyarakat", "fak": "FKM"},
+
+            # ─── FKEP S1 missing + S2 ───────────────────────────
+            {"kode": "FISIO",        "nama": "S1 Fisioterapi", "fak": "FKEP"},
+            {"kode": "S2.FKEP.IK",  "nama": "S2 Ilmu Keperawatan", "fak": "FKEP"},
+
+            # ─── FF S2/S3 ───────────────────────────────────────
+            {"kode": "S2.FF.FR",    "nama": "S2 Farmasi", "fak": "FF"},
+            {"kode": "S3.FF.IFR",   "nama": "S3 Ilmu Farmasi", "fak": "FF"},
+
+            # ─── FT S1 missing ──────────────────────────────────
+            {"kode": "TPKP",        "nama": "S1 Teknik Perkapalan", "fak": "FT"},
+            {"kode": "TE",          "nama": "S1 Teknik Elektro", "fak": "FT"},
+            {"kode": "ARS",         "nama": "S1 Arsitektur", "fak": "FT"},
+            {"kode": "TGEO",        "nama": "S1 Teknik Geologi", "fak": "FT"},
+            # FT S2
+            {"kode": "S2.FT.TM",    "nama": "S2 Teknik Mesin", "fak": "FT"},
+            {"kode": "S2.FT.TS",    "nama": "S2 Teknik Sipil", "fak": "FT"},
+            {"kode": "S2.FT.TE",    "nama": "S2 Teknik Elektro", "fak": "FT"},
+            {"kode": "S2.FT.TGEO",  "nama": "S2 Teknik Geologi", "fak": "FT"},
+            {"kode": "S2.FT.TPKP",  "nama": "S2 Teknik Perkapalan", "fak": "FT"},
+            {"kode": "S2.FT.ARS",   "nama": "S2 Arsitektur", "fak": "FT"},
+            {"kode": "S2.FT.TI",    "nama": "S2 Teknik Industri", "fak": "FT"},
+            {"kode": "S2.FT.TINF",  "nama": "S2 Teknik Informatika", "fak": "FT"},
+            {"kode": "S2.FT.TLIN",  "nama": "S2 Teknik Lingkungan", "fak": "FT"},
+            {"kode": "S2.FT.PWK",   "nama": "S2 Teknik Perencanaan Wilayah dan Kota", "fak": "FT"},
+            {"kode": "S2.FT.TP",    "nama": "S2 Teknik Pertambangan", "fak": "FT"},
+            {"kode": "S2.FT.TKL",   "nama": "S2 Teknik Kelautan", "fak": "FT"},
+            # FT S3
+            {"kode": "S3.FT.TS",    "nama": "S3 Teknik Sipil", "fak": "FT"},
+            {"kode": "S3.FT.ARS",   "nama": "S3 Ilmu Arsitektur", "fak": "FT"},
+            {"kode": "S3.FT.TBL",   "nama": "S3 Teknologi Kebumian dan Lingkungan", "fak": "FT"},
+            {"kode": "S3.FT.TE",    "nama": "S3 Teknik Elektro", "fak": "FT"},
+            {"kode": "S3.FT.TM",    "nama": "S3 Teknik Mesin", "fak": "FT"},
+            {"kode": "S3.FT.INF",   "nama": "S3 Informatika", "fak": "FT"},
+
+            # ─── FMIPA S1 missing + S2/S3 ───────────────────────
+            {"kode": "SINFO",           "nama": "S1 Sistem Informasi", "fak": "FMIPA"},
+            {"kode": "S2.FMIPA.KIM",    "nama": "S2 Kimia", "fak": "FMIPA"},
+            {"kode": "S2.FMIPA.MTK",    "nama": "S2 Matematika", "fak": "FMIPA"},
+            {"kode": "S2.FMIPA.GFI",    "nama": "S2 Geofisika", "fak": "FMIPA"},
+            {"kode": "S2.FMIPA.FIS",    "nama": "S2 Fisika", "fak": "FMIPA"},
+            {"kode": "S2.FMIPA.BIO",    "nama": "S2 Biologi", "fak": "FMIPA"},
+            {"kode": "S2.FMIPA.STA",    "nama": "S2 Statistika", "fak": "FMIPA"},
+            {"kode": "S2.FMIPA.SD",     "nama": "S2 Sains Data", "fak": "FMIPA"},
+            {"kode": "S3.FMIPA.KIM",    "nama": "S3 Kimia", "fak": "FMIPA"},
+            {"kode": "S3.FMIPA.MTK",    "nama": "S3 Matematika", "fak": "FMIPA"},
+            {"kode": "S3.FMIPA.FIS",    "nama": "S3 Fisika", "fak": "FMIPA"},
+            {"kode": "S3.FMIPA.BIO",    "nama": "S3 Biologi", "fak": "FMIPA"},
+
+            # ─── FEB S2/S3 ──────────────────────────────────────
+            {"kode": "S2.FEB.ESD",  "nama": "S2 Ekonomi Sumber Daya", "fak": "FEB"},
+            {"kode": "S2.FEB.EPP",  "nama": "S2 Ekonomi Pembangunan dan Perencanaan", "fak": "FEB"},
+            {"kode": "S2.FEB.SM",   "nama": "S2 Sains Manajemen", "fak": "FEB"},
+            {"kode": "S2.FEB.MNJ",  "nama": "S2 Manajemen", "fak": "FEB"},
+            {"kode": "S2.FEB.KD",   "nama": "S2 Keuangan Daerah", "fak": "FEB"},
+            {"kode": "S2.FEB.AKN",  "nama": "S2 Akuntansi", "fak": "FEB"},
+            {"kode": "S2.FEB.KMI",  "nama": "S2 Keuangan Mikro", "fak": "FEB"},
+            {"kode": "S3.FEB.IE",   "nama": "S3 Ilmu Ekonomi", "fak": "FEB"},
+            {"kode": "S3.FEB.IAKN", "nama": "S3 Ilmu Akuntansi", "fak": "FEB"},
+            {"kode": "S3.FEB.MNJ",  "nama": "S3 Manajemen", "fak": "FEB"},
+
+            # ─── FH S2/S3 ───────────────────────────────────────
+            {"kode": "S2.FH.IH",    "nama": "S2 Ilmu Hukum", "fak": "FH"},
+            {"kode": "S2.FH.KN",    "nama": "S2 Kenotariatan", "fak": "FH"},
+            {"kode": "S3.FH.IH",    "nama": "S3 Ilmu Hukum", "fak": "FH"},
+
+            # ─── FISIP S1 missing + S2/S3 ───────────────────────
+            {"kode": "ILPSI",           "nama": "S1 Ilmu Perpustakaan dan Sains Informasi", "fak": "FISIP"},
+            {"kode": "S2.FISIP.IKOM",   "nama": "S2 Ilmu Komunikasi", "fak": "FISIP"},
+            {"kode": "S2.FISIP.SOS",    "nama": "S2 Sosiologi", "fak": "FISIP"},
+            {"kode": "S2.FISIP.ANT",    "nama": "S2 Antropologi", "fak": "FISIP"},
+            {"kode": "S2.FISIP.IP",     "nama": "S2 Ilmu Politik", "fak": "FISIP"},
+            {"kode": "S2.FISIP.IPEM",   "nama": "S2 Ilmu Pemerintahan", "fak": "FISIP"},
+            {"kode": "S2.FISIP.AP",     "nama": "S2 Administrasi Publik", "fak": "FISIP"},
+            {"kode": "S2.FISIP.HI",     "nama": "S2 Hubungan Internasional", "fak": "FISIP"},
+            {"kode": "S3.FISIP.AP",     "nama": "S3 Administrasi Publik", "fak": "FISIP"},
+            {"kode": "S3.FISIP.ANT",    "nama": "S3 Ilmu Antropologi", "fak": "FISIP"},
+            {"kode": "S3.FISIP.IKOM",   "nama": "S3 Ilmu Komunikasi", "fak": "FISIP"},
+            {"kode": "S3.FISIP.SOS",    "nama": "S3 Sosiologi", "fak": "FISIP"},
+            {"kode": "S3.FISIP.IP",     "nama": "S3 Ilmu Politik", "fak": "FISIP"},
+
+            # ─── FIB S1 missing + S2/S3 ─────────────────────────
+            {"kode": "BMT",         "nama": "S1 Bahasa Mandarin dan Kebudayaan Tiongkok", "fak": "FIB"},
+            {"kode": "PAR",         "nama": "S1 Pariwisata", "fak": "FIB"},
+            {"kode": "S2.FIB.LNG",  "nama": "S2 Linguistik", "fak": "FIB"},
+            {"kode": "S2.FIB.BE",   "nama": "S2 Bahasa Inggris", "fak": "FIB"},
+            {"kode": "S2.FIB.BI",   "nama": "S2 Bahasa Indonesia", "fak": "FIB"},
+            {"kode": "S2.FIB.ARK",  "nama": "S2 Arkeologi", "fak": "FIB"},
+            {"kode": "S2.FIB.SEJ",  "nama": "S2 Sejarah", "fak": "FIB"},
+            {"kode": "S2.FIB.KB",   "nama": "S2 Kajian Budaya", "fak": "FIB"},
+            {"kode": "S3.FIB.LNG",  "nama": "S3 Linguistik", "fak": "FIB"},
+            {"kode": "S3.FIB.BE",   "nama": "S3 Bahasa Inggris", "fak": "FIB"},
+            {"kode": "S3.FIB.SI",   "nama": "S3 Sastra Indonesia", "fak": "FIB"},
+
+            # ─── FPER S1 missing + S2 ───────────────────────────
+            {"kode": "ITAN",            "nama": "S1 Ilmu Tanah", "fak": "FPER"},
+            {"kode": "PTAN",            "nama": "S1 Proteksi Tanaman", "fak": "FPER"},
+            {"kode": "S2.FPER.HPT",     "nama": "S2 Ilmu Hama dan Penyakit Tumbuhan", "fak": "FPER"},
+            {"kode": "S2.FPER.AGT",     "nama": "S2 Agroteknologi", "fak": "FPER"},
+
+            # ─── FIKP S1 missing + S2/S3 ────────────────────────
+            {"kode": "AGBP",            "nama": "S1 Agrobisnis Perikanan", "fak": "FIKP"},
+            {"kode": "THP",             "nama": "S1 Teknologi Hasil Perikanan", "fak": "FIKP"},
+            {"kode": "S2.FIKP.IPER",    "nama": "S2 Ilmu Perikanan", "fak": "FIKP"},
+            {"kode": "S2.FIKP.IKL",     "nama": "S2 Ilmu Kelautan", "fak": "FIKP"},
+            {"kode": "S3.FIKP.IPER",    "nama": "S3 Ilmu Perikanan", "fak": "FIKP"},
+
+            # ─── FPET S2/S3 ─────────────────────────────────────
+            {"kode": "S2.FPET.ITP",     "nama": "S2 Ilmu dan Teknologi Peternakan", "fak": "FPET"},
+            {"kode": "S3.FPET.PTR",     "nama": "S3 Peternakan", "fak": "FPET"},
+
+            # ─── FHUT S1 missing + S2/S3 ────────────────────────
+            {"kode": "RKHUT",           "nama": "S1 Rekayasa Kehutanan", "fak": "FHUT"},
+            {"kode": "KHUT",            "nama": "S1 Konservasi Hutan", "fak": "FHUT"},
+            {"kode": "S2.FHUT.HUT",     "nama": "S2 Kehutanan", "fak": "FHUT"},
+            {"kode": "S3.FHUT.HUT",     "nama": "S3 Kehutanan", "fak": "FHUT"},
+
+            # ─── FTP (Fakultas Teknologi Pertanian) ─────────────
+            {"kode": "FTP.ITP",         "nama": "S1 Ilmu dan Teknologi Pangan", "fak": "FTP"},
+            {"kode": "FTP.TPRT",        "nama": "S1 Teknik Pertanian", "fak": "FTP"},
+            {"kode": "FTP.TIP",         "nama": "S1 Teknologi Industri Pertanian", "fak": "FTP"},
+            {"kode": "S2.FTP.ITP",      "nama": "S2 Ilmu dan Teknologi Pangan", "fak": "FTP"},
+            {"kode": "S2.FTP.KTP",      "nama": "S2 Keteknikan Pertanian", "fak": "FTP"},
+            {"kode": "S2.FTP.TAI",      "nama": "S2 Teknik Agroindustri", "fak": "FTP"},
+
+            # ─── SPS (Sekolah Pascasarjana) ──────────────────────
+            {"kode": "SPS.SSP",         "nama": "S2 Sistem-Sistem Pertanian", "fak": "SPS"},
+            {"kode": "SPS.PPW",         "nama": "S2 Perencanaan dan Pengembangan Wilayah", "fak": "SPS"},
+            {"kode": "SPS.PLH",         "nama": "S2 Pengelolaan Lingkungan Hidup", "fak": "SPS"},
+            {"kode": "SPS.AGB",         "nama": "S2 Agribisnis", "fak": "SPS"},
+            {"kode": "SPS.MPK",         "nama": "S2 Manajemen Perkotaan", "fak": "SPS"},
+            {"kode": "SPS.IBM",         "nama": "S2 Ilmu Biomedik", "fak": "SPS"},
+            {"kode": "SPS.GND",         "nama": "S2 Jender dan Pembangunan", "fak": "SPS"},
+            {"kode": "SPS.TPP",         "nama": "S2 Teknik Perencanaan Prasarana", "fak": "SPS"},
+            {"kode": "SPS.TTR",         "nama": "S2 Teknik Transportasi", "fak": "SPS"},
+            {"kode": "SPS.PST",         "nama": "S2 Pengelolaan Sumberdaya Pesisir Terpadu", "fak": "SPS"},
+            {"kode": "SPS.IBD",         "nama": "S2 Ilmu Kebidanan", "fak": "SPS"},
+            {"kode": "SPS.MB",          "nama": "S2 Manajemen Bencana", "fak": "SPS"},
+            {"kode": "SPS.KRM",         "nama": "S2 Kriminologi", "fak": "SPS"},
+            {"kode": "SPS.TBM",         "nama": "S2 Teknik Biomedik", "fak": "SPS"},
+            {"kode": "S3.SPS.IPT",      "nama": "S3 Ilmu Pertanian", "fak": "SPS"},
+            {"kode": "S3.SPS.SPB",      "nama": "S3 Studi Pembangunan", "fak": "SPS"},
+            {"kode": "S3.SPS.ILH",      "nama": "S3 Ilmu Lingkungan", "fak": "SPS"},
         ]
 
         for p in prodi_data:

@@ -797,6 +797,19 @@ body {
 }
 
 /* ─── MISC ───────────────────────────────────────────────── */
+.brand-logo {
+    height: 40px;
+    width: auto;
+    object-fit: contain;
+}
+
+.brand-text {
+    font-size: 1.25rem;
+    font-weight: 800;
+    color: var(--text-primary);
+    letter-spacing: -0.025em;
+}
+
 .small   { font-size: 0.8rem; }
 .ml-2    { margin-left: 0.5rem; }
 .mt-3    { margin-top: 0.75rem; }
