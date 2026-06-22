@@ -9,8 +9,8 @@
 |---|---|
 | **Nama Produk** | Website Bebas Pustaka |
 | **Versi** | 1.0.0 |
-| **Status** | Draft |
-| **Tanggal** | Mei 2026 |
+| **Status** | In Development |
+| **Tanggal** | Juni 2026 |
 | **Tipe** | Web Application |
 
 ---
@@ -95,8 +95,9 @@ Sistem mencakup tiga jenis pengguna: **Mahasiswa**, **Staff**, dan **Admin**, ma
   - Mahasiswa → `/mahasiswa/dashboard`
   - Staff → `/staff/dashboard`
   - Admin → `/admin/dashboard`
-- Fitur "Lupa Password" dengan verifikasi melalui email
 - Proteksi terhadap brute force (maksimal 5 percobaan login, lalu dikunci sementara 15 menit)
+
+> **Catatan:** Fitur "Lupa Password" belum diimplementasi pada versi ini.
 
 ---
 
@@ -168,13 +169,14 @@ Sistem mencakup tiga jenis pengguna: **Mahasiswa**, **Staff**, dan **Admin**, ma
 
 **Alur Cetak PDF (Aman dari Manipulasi):**
 1. Mahasiswa klik tombol cetak
-2. Frontend mengirim request ke endpoint server: `POST /api/generate-pdf`
+2. Frontend mengirim request ke endpoint server: `GET /api/bebas-pustaka/generate-pdf/<id>`
 3. Server memverifikasi:
-   - Session/token login valid
+   - Session login valid (Flask-Login)
    - Status pengajuan di database = "Disetujui"
-   - Mahasiswa yang request adalah pemilik pengajuan tersebut
+   - Mahasiswa yang request adalah pemilik pengajuan tersebut (atau role staff/admin)
 4. Jika semua valid, server meng-generate PDF secara dinamis dan mengirimkan file ke browser
 5. PDF dibuat on-demand dari data di database — tidak disimpan permanen di server
+6. PDF dilengkapi **QR Code** yang dapat dipindai untuk verifikasi keaslian dokumen
 
 ---
 
@@ -311,8 +313,8 @@ Sistem mencakup tiga jenis pengguna: **Mahasiswa**, **Staff**, dan **Admin**, ma
 
 #### 4.3.3 Pemantauan Pengajuan (`/admin/pengajuan`)
 
-- Melihat semua pengajuan dari semua mahasiswa (read-only dengan filter lengkap)
-- Export data ke format Excel/CSV
+- Melihat semua pengajuan dari semua mahasiswa (read-only dengan filter lengkap: status, fakultas, nama/NIM)
+- Export data ke format **CSV** (`/admin/pengajuan/export-csv`)
 
 ---
 
@@ -325,10 +327,15 @@ Sistem mencakup tiga jenis pengguna: **Mahasiswa**, **Staff**, dan **Admin**, ma
 
 #### 4.3.5 Pengaturan Sistem (`/admin/settings`)
 
-- Konfigurasi nama institusi
-- Konfigurasi logo yang tampil di PDF surat
-- Konfigurasi durasi masa simpan file upload (default: 1 bulan)
-- Konfigurasi template nomor surat
+Konfigurasi yang dapat diubah melalui antarmuka admin (disimpan di tabel `sistem_setting`):
+- **Nomor surat**: nomor urut, bagian tengah (kode unit), dan tahun
+- **Data pejabat penanda tangan**: jabatan, nama, dan NIP
+
+Konfigurasi yang diatur melalui file `.env` (tidak melalui UI):
+- Nama institusi (`NAMA_INSTITUSI`)
+- Nama perpustakaan (`NAMA_PERPUSTAKAAN`)
+- Logo PDF (file gambar di `app/static/img/`)
+- Durasi retensi file upload (`FILE_RETENTION_DAYS`, default: 30 hari)
 
 ---
 
@@ -385,12 +392,12 @@ Sistem mencakup tiga jenis pengguna: **Mahasiswa**, **Staff**, dan **Admin**, ma
 **Mekanisme Server-Side Only:**
 
 1. Frontend hanya menampilkan tombol cetak — tidak menyimpan data PDF
-2. Klik tombol → request ke `POST /api/bebas-pustaka/generate-pdf`
+2. Klik tombol → request ke `GET /api/bebas-pustaka/generate-pdf/<id>`
 3. Server melakukan validasi:
    ```
-   - Apakah user sudah login? (cek session/JWT)
-   - Apakah user adalah pemilik pengajuan? (cek user_id vs pengajuan.mahasiswa_id)
-   - Apakah status pengajuan di database = "Disetujui"? (bukan dari request body)
+   - Apakah user sudah login? (cek session Flask-Login)
+   - Apakah user adalah pemilik pengajuan atau berperan staff/admin?
+   - Apakah status pengajuan di database = "disetujui"? (bukan dari request body)
    ```
 4. Jika lolos validasi → server generate PDF dari template + data database → kirim sebagai response binary
 5. Jika gagal validasi → server return 403 Forbidden
@@ -408,7 +415,14 @@ Sistem mencakup tiga jenis pengguna: **Mahasiswa**, **Staff**, dan **Admin**, ma
 ### Tabel Utama
 
 **users**
-- id, nim, nama, email, password_hash, peran (mahasiswa/staff/admin), fakultas_id, prodi_id, status_akun, created_at, updated_at
+- id, nim, name, email, password (bcrypt hash), role (admin/staff/mahasiswa)
+- fakultas_id (FK fakultas, nullable), prodi_id (FK program_studi, nullable)
+- is_active (boolean), login_attempts (integer, default 0), locked_until (datetime, nullable)
+- created_at, updated_at
+
+**sistem_setting** *(singleton)*
+- id, nomor_urut, nomor_bagian_tengah, nomor_tahun
+- pejabat_jabatan, pejabat_nama, pejabat_nip
 
 **fakultas**
 - id, nama_fakultas, kode_fakultas
@@ -416,13 +430,15 @@ Sistem mencakup tiga jenis pengguna: **Mahasiswa**, **Staff**, dan **Admin**, ma
 **program_studi**
 - id, nama_prodi, kode_prodi, fakultas_id
 
-**pengajuan_bebas_pustaka**
-- id, mahasiswa_id (FK users), nim, nama, alamat, fakultas_id, prodi_id
-- file_bebas_pustaka_path, file_kartu_mahasiswa_path
+**bebas_pustaka**
+- id, user_id (FK users), nim, nama, alamat
+- fakultas_id (FK fakultas), prodi_id (FK program_studi)
+- file_bebas_pustaka (path relatif), file_kartu_mahasiswa (path relatif)
 - file_deleted (boolean, default false), file_deleted_at
 - status (menunggu_review / sedang_diproses / disetujui / ditolak)
 - catatan_penolakan (nullable)
 - reviewed_by (FK users, staff yang memproses)
+- nomor_surat (nullable, di-generate saat disetujui)
 - approved_at (nullable, timestamp saat disetujui — digunakan sebagai tanggal terbit di PDF)
 - created_at, updated_at
 
@@ -437,10 +453,11 @@ Sistem mencakup tiga jenis pengguna: **Mahasiswa**, **Staff**, dan **Admin**, ma
 | **ORM** | Flask-SQLAlchemy |
 | **Database** | MySQL |
 | **File Storage** | Local server (`/uploads/`) |
-| **PDF Generator** | WeasyPrint / ReportLab / xhtml2pdf |
-| **Autentikasi** | Flask-Login + Flask-Bcrypt (session-based) |
-| **Scheduler** | APScheduler / Flask-APScheduler |
-| **Notifikasi** | Email via SMTP menggunakan Flask-Mail |
+| **PDF Generator** | ReportLab |
+| **QR Code** | qrcode[pil] (tertanam di PDF untuk verifikasi dokumen) |
+| **Autentikasi** | Flask-Login + bcrypt (session-based) |
+| **Scheduler** | APScheduler (BackgroundScheduler, cron pukul 02:00 WIB) |
+| **Notifikasi Email** | *Belum diimplementasi* |
 | **Migrasi Database** | Flask-Migrate (Alembic) |
 | **Form Handling** | Flask-WTF (WTForms) |
 
@@ -508,12 +525,10 @@ masa penyimpanan 1 bulan."
 
 ---
 
-## 11. Perkiraan Model
+## 11. Model (Implementasi Aktual)
 
-from datetime import datetime
-from . import db  # sesuaikan import-mu
-
-class User(db.Model):
+```python
+class User(UserMixin, db.Model):
     __tablename__ = 'users'
 
     id = db.Column(db.Integer, primary_key=True)
@@ -523,21 +538,15 @@ class User(db.Model):
     password = db.Column(db.String(255), nullable=False)
     role = db.Column(
         db.Enum('admin', 'staff', 'mahasiswa', name='user_roles'),
-        nullable=False
+        nullable=False, default='mahasiswa'
     )
-    is_active = db.Column(db.Boolean, default=True, nullable=False)  # ← tambahan
+    fakultas_id = db.Column(db.Integer, db.ForeignKey('fakultas.id'), nullable=True)
+    prodi_id = db.Column(db.Integer, db.ForeignKey('program_studi.id'), nullable=True)
+    is_active = db.Column(db.Boolean, default=True, nullable=False)
+    login_attempts = db.Column(db.Integer, default=0, nullable=False)
+    locked_until = db.Column(db.DateTime, nullable=True)
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
-
-    # relasi
-    submissions = db.relationship(
-        'BebasPustaka',
-        foreign_keys='BebasPustaka.user_id',
-        backref='user',
-        lazy=True
-    )
-
-    def __repr__(self):
-        return f"<User {self.email}>"
+    updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
 
 
 class BebasPustaka(db.Model):
@@ -545,49 +554,37 @@ class BebasPustaka(db.Model):
 
     id = db.Column(db.Integer, primary_key=True)
     user_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
-
     nim = db.Column(db.String(20), nullable=False)
     nama = db.Column(db.String(100), nullable=False)
     alamat = db.Column(db.Text, nullable=False)
-    fakultas = db.Column(db.String(100), nullable=False)
-    prodi = db.Column(db.String(100), nullable=False)
-
+    fakultas_id = db.Column(db.Integer, db.ForeignKey('fakultas.id'), nullable=False)
+    prodi_id = db.Column(db.Integer, db.ForeignKey('program_studi.id'), nullable=False)
     file_bebas_pustaka = db.Column(db.String(255), nullable=True)
     file_kartu_mahasiswa = db.Column(db.String(255), nullable=True)
-    file_deleted = db.Column(db.Boolean, default=False, nullable=False)      # ← tambahan
-    file_deleted_at = db.Column(db.DateTime, nullable=True)                  # ← tambahan
-
+    file_deleted = db.Column(db.Boolean, default=False, nullable=False)
+    file_deleted_at = db.Column(db.DateTime, nullable=True)
     status = db.Column(
-        db.Enum('pending', 'approved', 'rejected', name='status_enum'),
-        default='pending',
-        nullable=False
+        db.Enum('menunggu_review', 'sedang_diproses', 'disetujui', 'ditolak', name='status_enum'),
+        default='menunggu_review', nullable=False
     )
-    catatan_penolakan = db.Column(db.Text, nullable=True)                    # ← tambahan
-    reviewed_by = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=True)  # ← tambahan
-
+    catatan_penolakan = db.Column(db.Text, nullable=True)
+    reviewed_by = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=True)
+    nomor_surat = db.Column(db.String(100), nullable=True)
     approved_at = db.Column(db.DateTime, nullable=True)
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
-    updated_at = db.Column(                                                  # ← tambahan
-        db.DateTime,
-        default=datetime.utcnow,
-        onupdate=datetime.utcnow
-    )
+    updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
 
-    # relasi ke reviewer (staff/admin yang memproses)
-    reviewer = db.relationship(                                              # ← tambahan
-        'User',
-        foreign_keys=[reviewed_by],
-        backref='reviewed_submissions'
-    )
 
-    def is_file_available(self):
-        if self.file_deleted:
-            return False
-        if not self.approved_at:
-            return True
-        return (datetime.utcnow() - self.approved_at).days <= 30
+class SistemSetting(db.Model):
+    __tablename__ = 'sistem_setting'
 
-    def __repr__(self):
-        return f"<BebasPustaka {self.nim} - {self.status}>"
+    id = db.Column(db.Integer, primary_key=True)
+    nomor_urut = db.Column(db.Integer, default=1, nullable=False)
+    nomor_bagian_tengah = db.Column(db.String(100), default='UN4.1.1.5/TA.01.02', nullable=False)
+    nomor_tahun = db.Column(db.Integer, default=2026, nullable=False)
+    pejabat_jabatan = db.Column(db.String(200), nullable=False)
+    pejabat_nama = db.Column(db.String(150), nullable=False)
+    pejabat_nip = db.Column(db.String(50), nullable=False)
+```
 
 *Dokumen ini dapat diperbarui seiring perkembangan kebutuhan. Versi terbaru selalu menjadi acuan pengembangan.*

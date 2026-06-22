@@ -32,8 +32,8 @@ def register():
 
         errors = []
 
-        if not nim or not nim.isdigit():
-            errors.append('NIM wajib diisi dan hanya boleh berisi angka.')
+        if not nim or not nim.replace(' ', '') or not nim.isalnum():
+            errors.append('NIM wajib diisi dan hanya boleh berisi huruf dan angka.')
         if len(name) < 3:
             errors.append('Nama lengkap minimal 3 karakter.')
         if not email or '@' not in email:
