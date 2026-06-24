@@ -11,30 +11,34 @@ Jalankan test:
     # Tampilkan browser (tidak headless)
     pytest tests/ --no-headless
 """
+import os
 import pytest
+from dotenv import load_dotenv
 from selenium import webdriver
 from selenium.webdriver.chrome.options import Options
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 
+load_dotenv()
+
 DEFAULT_BASE_URL = "http://127.0.0.1:5000"
 
-# ─── Kredensial default (dari seed.py) ───────────────────────────────────────
+# ─── Kredensial dari environment variable (.env) ─────────────────────────────
 CREDENTIALS = {
     "admin": {
-        "email": "admin@perpus.ac.id",
-        "password": "Admin@123",
+        "email": os.environ.get("TEST_ADMIN_EMAIL", "admin@perpus.ac.id"),
+        "password": os.environ.get("TEST_ADMIN_PASSWORD", ""),
         "dashboard_url": "/admin/dashboard",
     },
     "staff": {
-        "email": "staff@perpus.ac.id",
-        "password": "Staff@123",
+        "email": os.environ.get("TEST_STAFF_EMAIL", "staff@perpus.ac.id"),
+        "password": os.environ.get("TEST_STAFF_PASSWORD", ""),
         "dashboard_url": "/staff/dashboard",
     },
     "mahasiswa": {
-        "email": "budi@mahasiswa.ac.id",
-        "password": "Mahasiswa@123",
+        "email": os.environ.get("TEST_MAHASISWA_EMAIL", "budi@mahasiswa.ac.id"),
+        "password": os.environ.get("TEST_MAHASISWA_PASSWORD", ""),
         "dashboard_url": "/mahasiswa/dashboard",
     },
 }
