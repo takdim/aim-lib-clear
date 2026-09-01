@@ -1,0 +1,66 @@
+{% extends "base.html" %}
+{% block title %}Pengajuan Saya{% endblock %}
+
+{% block content %}
+<div class="container page-content">
+    <div class="page-header">
+        <div>
+            <h1 class="page-title">Pengajuan Saya</h1>
+            <p class="page-subtitle">Riwayat pengajuan bebas pustaka atas nama Anda</p>
+        </div>
+        <div style="display:flex;gap:0.5rem;">
+            {% if not riwayat or riwayat[0].status in ['ditolak'] %}
+            <a href="{{ url_for('staff.form_bebas_pustaka') }}" class="btn btn-primary">+ Buat Pengajuan Baru</a>
+            {% endif %}
+            <a href="{{ url_for('staff.dashboard') }}" class="btn btn-outline">← Dashboard</a>
+        </div>
+    </div>
+
+    {% if riwayat %}
+    <div class="card">
+        <div class="card-body">
+            <div class="table-wrapper">
+                <table class="table">
+                    <thead>
+                        <tr>
+                            <th>#</th>
+                            <th>NIM/NIP</th>
+                            <th>Tgl Pengajuan</th>
+                            <th>Status</th>
+                            <th>Nomor Surat</th>
+                            <th>Aksi</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for p in riwayat %}
+                        <tr>
+                            <td>{{ p.id }}</td>
+                            <td>{{ p.nim }}</td>
+                            <td>{{ p.created_at.strftime('%d %b %Y, %H:%M') }}</td>
+                            <td><span class="badge {{ p.get_status_badge_class() }}">{{ p.get_status_label() }}</span></td>
+                            <td>{{ p.nomor_surat or '-' }}</td>
+                            <td style="display:flex;gap:0.4rem;flex-wrap:wrap;">
+                                <a href="{{ url_for('staff.pengajuan_detail', id=p.id) }}" class="btn btn-sm btn-outline">
+                                    {% if p.status in ['menunggu_review', 'sedang_diproses'] %}Detail / Setujui{% else %}Detail{% endif %}
+                                </a>
+                                {% if p.status == 'disetujui' %}
+                                <a href="{{ url_for('api.generate_pdf', id=p.id) }}" class="btn btn-sm btn-primary" target="_blank">🖨 Cetak Surat</a>
+                                {% endif %}
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+    {% else %}
+    <div class="card">
+        <div class="card-body" style="text-align:center;padding:3rem;">
+            <p class="text-muted">Anda belum memiliki pengajuan bebas pustaka.</p>
+            <a href="{{ url_for('staff.form_bebas_pustaka') }}" class="btn btn-primary mt-2">Buat Pengajuan Sekarang</a>
+        </div>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

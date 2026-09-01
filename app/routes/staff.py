@@ -1,4 +1,6 @@
 import os
+import hashlib
+import uuid
 from datetime import datetime
 from flask import (
     Blueprint, render_template, redirect, url_for,
@@ -12,6 +14,107 @@ from app.models.fakultas import Fakultas
 from app.utils.decorators import staff_required
 
 staff_bp = Blueprint('staff', __name__)
+
+ALLOWED_EXTENSIONS = {'pdf'}
+
+
+def allowed_file(filename):
+    return '.' in filename and filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
+
+
+def save_upload(file, pengajuan_id, suffix):
+    """Simpan file upload dan kembalikan relative path."""
+    upload_folder = current_app.config['UPLOAD_FOLDER']
+    now = datetime.utcnow()
+    sub_dir = os.path.join(str(now.year), f'{now.month:02d}', str(pengajuan_id))
+    full_dir = os.path.join(upload_folder, sub_dir)
+    os.makedirs(full_dir, exist_ok=True)
+
+    unique = hashlib.sha256(f'{uuid.uuid4()}{suffix}'.encode()).hexdigest()[:16]
+    filename = f'{unique}_{suffix}.pdf'
+    file_path = os.path.join(full_dir, filename)
+    file.save(file_path)
+
+    return os.path.join(sub_dir, filename)
+
+
+@staff_bp.route('/form-bebas-pustaka', methods=['GET', 'POST'])
+@login_required
+@staff_required
+def form_bebas_pustaka():
+    if not current_user.can_submit():
+        flash('Anda masih memiliki pengajuan yang aktif.', 'warning')
+        return redirect(url_for('staff.pengajuan_saya'))
+
+    fakultas_list = Fakultas.query.order_by(Fakultas.nama_fakultas).all()
+
+    if request.method == 'POST':
+        nim = request.form.get('nim', '').strip()
+        nama = request.form.get('nama', '').strip()
+        alamat = request.form.get('alamat', '').strip()
+        fakultas_id = request.form.get('fakultas_id', type=int)
+        prodi_id = request.form.get('prodi_id', type=int)
+        file_bebas = request.files.get('file_bebas_pustaka')
+        file_kartu = request.files.get('file_kartu_mahasiswa')
+
+        errors = []
+        if not nim:
+            errors.append('NIM wajib diisi.')
+        if not nama:
+            errors.append('Nama Lengkap wajib diisi.')
+        if not alamat:
+            errors.append('Alamat wajib diisi.')
+        if not fakultas_id:
+            errors.append('Fakultas wajib dipilih.')
+        if not prodi_id:
+            errors.append('Program Studi wajib dipilih.')
+        if not file_bebas or not allowed_file(file_bebas.filename):
+            errors.append('File Bebas Pustaka dari Fakultas wajib diupload (PDF).')
+        if not file_kartu or not allowed_file(file_kartu.filename):
+            errors.append('File Kartu Tanda Mahasiswa wajib diupload (PDF).')
+
+        if errors:
+            for e in errors:
+                flash(e, 'danger')
+            return render_template('staff/form.html', fakultas_list=fakultas_list)
+
+        pengajuan = BebasPustaka(
+            user_id=current_user.id,
+            nim=nim,
+            nama=nama,
+            alamat=alamat,
+            fakultas_id=fakultas_id,
+            prodi_id=prodi_id,
+            status='menunggu_review',
+        )
+        db.session.add(pengajuan)
+        db.session.flush()
+
+        try:
+            path_bebas = save_upload(file_bebas, pengajuan.id, 'bebas_pustaka')
+            path_kartu = save_upload(file_kartu, pengajuan.id, 'kartu_mahasiswa')
+            pengajuan.file_bebas_pustaka = path_bebas
+            pengajuan.file_kartu_mahasiswa = path_kartu
+            db.session.commit()
+        except Exception as e:
+            db.session.rollback()
+            flash(f'Gagal mengupload file: {str(e)}', 'danger')
+            return render_template('staff/form.html', fakultas_list=fakultas_list)
+
+        flash('Pengajuan berhasil dibuat. Anda dapat langsung menyetujuinya di halaman detail.', 'success')
+        return redirect(url_for('staff.pengajuan_detail', id=pengajuan.id))
+
+    return render_template('staff/form.html', fakultas_list=fakultas_list)
+
+
+@staff_bp.route('/pengajuan-saya')
+@login_required
+@staff_required
+def pengajuan_saya():
+    riwayat = BebasPustaka.query.filter_by(user_id=current_user.id).order_by(
+        BebasPustaka.created_at.desc()
+    ).all()
+    return render_template('staff/pengajuan_saya.html', riwayat=riwayat)
 
 
 @staff_bp.route('/dashboard')
@@ -44,7 +147,11 @@ def dashboard():
         BebasPustaka.created_at.desc()
     ).limit(10).all()
 
-    return render_template('staff/dashboard.html', stats=stats, pengajuan_terbaru=pengajuan_terbaru)
+    pengajuan_saya = BebasPustaka.query.filter_by(user_id=current_user.id).order_by(
+        BebasPustaka.created_at.desc()
+    ).all()
+
+    return render_template('staff/dashboard.html', stats=stats, pengajuan_terbaru=pengajuan_terbaru, pengajuan_saya=pengajuan_saya)
 
 
 @staff_bp.route('/pengajuan')

@@ -487,6 +487,8 @@ body {
     padding: 2rem;
     text-align: center;
     transition: transform 0.2s, box-shadow 0.2s;
+    display: flex;
+    flex-direction: column;
 }
 
 .card-feature:hover {
@@ -496,6 +498,17 @@ body {
 
 .card-icon { font-size: 2.5rem; margin-bottom: 1rem; }
 .card-feature h3 { font-size: 1.1rem; margin-bottom: 0.5rem; }
+
+.card-link {
+    display: inline-block;
+    margin-top: auto;
+    padding-top: 1rem;
+    color: var(--primary);
+    font-weight: 600;
+    font-size: 0.9rem;
+    text-decoration: none;
+}
+.card-link:hover { color: var(--primary-hover); text-decoration: underline; }
 
 /* Hero visual floats */
 .hero-badge {
@@ -581,6 +594,8 @@ body {
     background: white;
     border-radius: var(--radius);
     border: 1px solid var(--border);
+    display: flex;
+    flex-direction: column;
 }
 
 .contact-icon { font-size: 2rem; display: block; margin-bottom: 1rem; }

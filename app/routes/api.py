@@ -1,5 +1,5 @@
 import io
-from flask import Blueprint, jsonify, make_response, abort, current_app, send_file, flash, redirect, url_for
+from flask import Blueprint, jsonify, make_response, abort, current_app, send_file, flash, redirect, url_for, request
 from flask_login import login_required, current_user
 
 from app.models.bebas_pustaka import BebasPustaka
@@ -34,10 +34,11 @@ def generate_pdf(id):
     nim = pengajuan.nim
     filename = f'surat_bebas_pustaka_{nim}.pdf'
 
+    as_attachment = request.args.get('download') == '1'
     return send_file(
         io.BytesIO(pdf_bytes),
         mimetype='application/pdf',
-        as_attachment=False,
+        as_attachment=as_attachment,
         download_name=filename
     )
 

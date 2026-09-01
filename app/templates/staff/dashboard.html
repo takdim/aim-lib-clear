@@ -8,7 +8,10 @@
             <h1 class="page-title">Dashboard Staff</h1>
             <p class="page-subtitle">Selamat datang, {{ current_user.name }}</p>
         </div>
-        <a href="{{ url_for('staff.pengajuan_list') }}" class="btn btn-primary">Lihat Semua Pengajuan →</a>
+        <div style="display:flex;gap:0.5rem;flex-wrap:wrap;">
+            <a href="{{ url_for('staff.form_bebas_pustaka') }}" class="btn btn-primary">+ Buat Pengajuan Saya</a>
+            <a href="{{ url_for('staff.pengajuan_list') }}" class="btn btn-outline">Lihat Semua Pengajuan →</a>
+        </div>
     </div>
 
     <!-- Statistik -->
@@ -76,6 +79,49 @@
             </div>
             {% else %}
             <p class="text-muted">Belum ada pengajuan.</p>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- Pengajuan Saya -->
+    <div class="card mt-4">
+        <div class="card-body">
+            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:1rem;">
+                <h2 class="card-title" style="margin-bottom:0;">Pengajuan Saya</h2>
+                {% if current_user.can_submit() %}
+                <a href="{{ url_for('staff.form_bebas_pustaka') }}" class="btn btn-sm btn-primary">+ Buat Pengajuan</a>
+                {% endif %}
+            </div>
+            {% if pengajuan_saya %}
+            <div class="table-wrapper">
+                <table class="table">
+                    <thead>
+                        <tr>
+                            <th>Tgl Pengajuan</th>
+                            <th>Status</th>
+                            <th>Nomor Surat</th>
+                            <th>Aksi</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for p in pengajuan_saya %}
+                        <tr>
+                            <td>{{ p.created_at.strftime('%d %b %Y') }}</td>
+                            <td><span class="badge {{ p.get_status_badge_class() }}">{{ p.get_status_label() }}</span></td>
+                            <td>{{ p.nomor_surat or '-' }}</td>
+                            <td>
+                                <a href="{{ url_for('staff.pengajuan_detail', id=p.id) }}" class="btn btn-sm btn-outline">Detail / Setujui</a>
+                                {% if p.status == 'disetujui' %}
+                                <a href="{{ url_for('api.generate_pdf', id=p.id) }}" class="btn btn-sm btn-primary" target="_blank">🖨 Cetak Surat</a>
+                                {% endif %}
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            {% else %}
+            <p class="text-muted">Anda belum memiliki pengajuan. <a href="{{ url_for('staff.form_bebas_pustaka') }}">Buat sekarang →</a></p>
             {% endif %}
         </div>
     </div>

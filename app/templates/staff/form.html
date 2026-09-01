@@ -1,0 +1,151 @@
+{% extends "base.html" %}
+{% block title %}Buat Pengajuan Bebas Pustaka Mahasiswa{% endblock %}
+
+{% block content %}
+<div class="container page-content">
+    <div class="page-header">
+        <div>
+            <h1 class="page-title">Buat Pengajuan Bebas Pustaka</h1>
+            <p class="page-subtitle">Input data mahasiswa dan upload dokumen persyaratan</p>
+        </div>
+        <a href="{{ url_for('staff.dashboard') }}" class="btn btn-outline">← Kembali</a>
+    </div>
+
+    <div class="card">
+        <div class="card-body">
+            <form method="POST" action="{{ url_for('staff.form_bebas_pustaka') }}" enctype="multipart/form-data" id="formPengajuan" novalidate>
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+
+                <h2 class="section-divider">Data Mahasiswa</h2>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="nim" class="form-label">NIM <span class="required">*</span></label>
+                        <input type="text" id="nim" name="nim" class="form-input"
+                               value=""
+                               placeholder="Masukkan NIM mahasiswa" required maxlength="20">
+                    </div>
+                    <div class="form-group">
+                        <label for="nama" class="form-label">Nama Lengkap <span class="required">*</span></label>
+                        <input type="text" id="nama" name="nama" class="form-input"
+                               value="" placeholder="Masukkan nama lengkap mahasiswa" required maxlength="100">
+                    </div>
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="fakultas_id" class="form-label">Fakultas <span class="required">*</span></label>
+                        <select id="fakultas_id" name="fakultas_id" class="form-input form-select" required>
+                            <option value="">-- Pilih Fakultas --</option>
+                            {% for f in fakultas_list %}
+                            <option value="{{ f.id }}"
+                                {{ 'selected' if current_user.fakultas_id == f.id }}>
+                                {{ f.nama_fakultas }}
+                            </option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="prodi_id" class="form-label">Program Studi <span class="required">*</span></label>
+                        <select id="prodi_id" name="prodi_id" class="form-input form-select" required>
+                            {% if current_user.program_studi %}
+                            <option value="{{ current_user.prodi_id }}" selected>{{ current_user.program_studi.nama_prodi }}</option>
+                            {% else %}
+                            <option value="">-- Pilih Prodi --</option>
+                            {% endif %}
+                        </select>
+                    </div>
+                </div>
+
+                <h2 class="section-divider">Data Pengajuan</h2>
+
+                <div class="form-group">
+                    <label for="alamat" class="form-label">Alamat Lengkap <span class="required">*</span></label>
+                    <textarea id="alamat" name="alamat" class="form-input form-textarea" rows="3"
+                              placeholder="Masukkan alamat tempat tinggal saat ini" required></textarea>
+                </div>
+
+                <h2 class="section-divider">Upload Dokumen</h2>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="file_bebas_pustaka" class="form-label">
+                            Surat Bebas dari Fakultas <span class="required">*</span>
+                        </label>
+                        <div class="file-upload-area" id="dropzone1">
+                            <input type="file" id="file_bebas_pustaka" name="file_bebas_pustaka" accept=".pdf" required class="file-input">
+                            <div class="file-upload-content">
+                                <span class="file-upload-icon">📂</span>
+                                <p>Klik atau drag & drop file PDF</p>
+                                <p class="file-upload-hint">Maks. 5MB, format PDF</p>
+                            </div>
+                        </div>
+                        <p class="file-selected-name" id="file1Name"></p>
+                    </div>
+                    <div class="form-group">
+                        <label for="file_kartu_mahasiswa" class="form-label">
+                            Kartu Tanda Mahasiswa / Identitas <span class="required">*</span>
+                        </label>
+                        <div class="file-upload-area" id="dropzone2">
+                            <input type="file" id="file_kartu_mahasiswa" name="file_kartu_mahasiswa" accept=".pdf" required class="file-input">
+                            <div class="file-upload-content">
+                                <span class="file-upload-icon">🪪</span>
+                                <p>Klik atau drag & drop file PDF</p>
+                                <p class="file-upload-hint">Maks. 5MB, format PDF</p>
+                            </div>
+                        </div>
+                        <p class="file-selected-name" id="file2Name"></p>
+                    </div>
+                </div>
+
+                <div class="alert alert-info">
+                    <strong>ℹ️ Catatan:</strong> Setelah pengajuan dibuat, Anda dapat langsung membuka halaman detail dan menyetujuinya.
+                </div>
+
+                <div class="form-actions">
+                    <a href="{{ url_for('staff.dashboard') }}" class="btn btn-outline">Batal</a>
+                    <button type="submit" class="btn btn-primary" id="btnSubmit">Kirim Pengajuan</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+// Update prodi dropdown saat fakultas berubah
+document.getElementById('fakultas_id').addEventListener('change', function () {
+    const fakultasId = this.value;
+    const prodiSelect = document.getElementById('prodi_id');
+    prodiSelect.innerHTML = '<option value="">-- Memuat... --</option>';
+
+    if (!fakultasId) {
+        prodiSelect.innerHTML = '<option value="">-- Pilih Prodi --</option>';
+        return;
+    }
+
+    fetch(`/api/prodi-by-fakultas/${fakultasId}`)
+        .then(r => r.json())
+        .then(data => {
+            prodiSelect.innerHTML = '<option value="">-- Pilih Prodi --</option>';
+            data.forEach(p => {
+                const opt = document.createElement('option');
+                opt.value = p.id;
+                opt.textContent = p.nama_prodi;
+                prodiSelect.appendChild(opt);
+            });
+        })
+        .catch(() => {
+            prodiSelect.innerHTML = '<option value="">-- Gagal memuat --</option>';
+        });
+});
+
+// Preview nama file
+document.getElementById('file_bebas_pustaka').addEventListener('change', function () {
+    document.getElementById('file1Name').textContent = this.files[0] ? this.files[0].name : '';
+});
+document.getElementById('file_kartu_mahasiswa').addEventListener('change', function () {
+    document.getElementById('file2Name').textContent = this.files[0] ? this.files[0].name : '';
+});
+</script>
+{% endblock %}

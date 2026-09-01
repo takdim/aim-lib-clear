@@ -69,6 +69,32 @@
 
         <!-- Kolom Kanan: Aksi -->
         <div>
+            <!-- Surat Bebas Pustaka (jika sudah disetujui) -->
+            {% if pengajuan.status == 'disetujui' %}
+            <div class="card mb-4">
+                <div class="card-body">
+                    <h2 class="card-title">📄 Surat Bebas Pustaka</h2>
+                    <table class="table table-detail mb-3">
+                        <tbody>
+                            <tr><th>Nomor Surat</th><td>{{ pengajuan.nomor_surat or '-' }}</td></tr>
+                            <tr><th>Tanggal Disetujui</th><td>{{ pengajuan.approved_at.strftime('%d %B %Y, %H:%M') if pengajuan.approved_at else '-' }}</td></tr>
+                            <tr><th>Disetujui oleh</th><td>{{ pengajuan.reviewer.name if pengajuan.reviewer else '-' }}</td></tr>
+                        </tbody>
+                    </table>
+                    <div style="display:flex;gap:0.5rem;flex-wrap:wrap;">
+                        <button type="button" class="btn btn-primary"
+                            onclick="openPDFModal('{{ url_for('api.generate_pdf', id=pengajuan.id) }}', 'Surat Bebas Pustaka — {{ pengajuan.nama }}')">
+                            👁 Lihat Surat
+                        </button>
+                        <a href="{{ url_for('api.generate_pdf', id=pengajuan.id, download=1) }}"
+                           class="btn btn-outline" download>
+                            ⬇ Download PDF
+                        </a>
+                    </div>
+                </div>
+            </div>
+            {% endif %}
+
             <!-- Aksi -->
             {% if pengajuan.status in ['menunggu_review', 'sedang_diproses'] %}
             <div class="card mb-4">

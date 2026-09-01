@@ -66,16 +66,19 @@
                 <div class="card-icon">🎓</div>
                 <h3>Status Mahasiswa Aktif</h3>
                 <p>Pastikan NIM dan email terdaftar sebagai mahasiswa aktif di institusi.</p>
+                <a href="#" class="card-link" onclick="openModal('modalMahasiswaAktif'); return false;">Selengkapnya →</a>
             </div>
             <div class="card card-feature">
                 <div class="card-icon">📋</div>
                 <h3>Surat Bebas dari Fakultas</h3>
                 <p>Surat keterangan bebas tanggungan dari fakultas dalam format PDF (maks 5MB).</p>
+                <a href="#" class="card-link" onclick="openModal('modalSuratFakultas'); return false;">Selengkapnya →</a>
             </div>
             <div class="card card-feature">
                 <div class="card-icon">🪪</div>
                 <h3>Kartu Tanda Mahasiswa</h3>
                 <p>Scan atau foto KTM yang jelas dalam format PDF (maks 5MB).</p>
+                <a href="#" class="card-link" onclick="openModal('modalKTM'); return false;">Selengkapnya →</a>
             </div>
         </div>
     </div>
@@ -127,18 +130,119 @@
                 <span class="contact-icon">📍</span>
                 <h3>Alamat</h3>
                 <p>Gedung Perpustakaan Lt. 1<br>Kampus Utama</p>
+                <a href="#" class="card-link" onclick="openModal('modalAlamat'); return false;">Selengkapnya →</a>
             </div>
             <div class="contact-card">
                 <span class="contact-icon">📞</span>
                 <h3>Telepon</h3>
                 <p>(021) 000-0000</p>
+                <a href="#" class="card-link" onclick="openModal('modalTelepon'); return false;">Selengkapnya →</a>
             </div>
             <div class="contact-card">
                 <span class="contact-icon">📧</span>
                 <h3>Email</h3>
                 <p>perpustakaan@institusi.ac.id</p>
+                <a href="#" class="card-link" onclick="openModal('modalEmail'); return false;">Selengkapnya →</a>
             </div>
         </div>
     </div>
 </section>
+
+<!-- ─── MODALS ──────────────────────────────────────────── -->
+
+<!-- Modal: Status Mahasiswa Aktif -->
+<div class="modal-overlay" id="modalMahasiswaAktif" style="display:none">
+    <div class="modal-box">
+        <h3 class="modal-title">🎓 Status Mahasiswa Aktif</h3>
+        <p>NIM dan email harus terdaftar di sistem informasi akademik institusi sebagai mahasiswa aktif. Pengajuan tidak dapat diproses untuk mahasiswa yang sedang cuti akademik atau yang masa studinya telah berakhir.</p>
+        <div class="modal-actions">
+            <button onclick="closeModal('modalMahasiswaAktif')" class="btn btn-primary">Tutup</button>
+        </div>
+    </div>
+</div>
+
+<!-- Modal: Surat Bebas dari Fakultas -->
+<div class="modal-overlay" id="modalSuratFakultas" style="display:none">
+    <div class="modal-box">
+        <h3 class="modal-title">📋 Surat Bebas dari Fakultas</h3>
+        <p>Surat keterangan yang diterbitkan oleh dekanat atau bagian administrasi fakultas, menyatakan mahasiswa tidak memiliki tanggungan administrasi (UKT/SPP, dll). Pastikan surat sudah ditandatangani dan distempel resmi. Format file: PDF, ukuran maksimal 5MB.</p>
+        <div class="modal-actions">
+            <button onclick="closeModal('modalSuratFakultas')" class="btn btn-primary">Tutup</button>
+        </div>
+    </div>
+</div>
+
+<!-- Modal: Kartu Tanda Mahasiswa -->
+<div class="modal-overlay" id="modalKTM" style="display:none">
+    <div class="modal-box">
+        <h3 class="modal-title">🪪 Kartu Tanda Mahasiswa</h3>
+        <p>Scan atau foto KTM (Kartu Tanda Mahasiswa) yang masih berlaku dan terbaca dengan jelas. Pastikan semua informasi — nama, NIM, dan foto — terlihat terang. Format file: PDF, ukuran maksimal 5MB.</p>
+        <div class="modal-actions">
+            <button onclick="closeModal('modalKTM')" class="btn btn-primary">Tutup</button>
+        </div>
+    </div>
+</div>
+
+<!-- Modal: Alamat -->
+<div class="modal-overlay" id="modalAlamat" style="display:none">
+    <div class="modal-box">
+        <h3 class="modal-title">📍 Alamat</h3>
+        <p>Gedung Perpustakaan Lt. 1, Kampus Utama.<br><br>Jam operasional: <strong>Senin–Jumat, 08.00–16.00 WIB</strong>.</p>
+        <div class="modal-actions">
+            <button onclick="closeModal('modalAlamat')" class="btn btn-primary">Tutup</button>
+        </div>
+    </div>
+</div>
+
+<!-- Modal: Telepon -->
+<div class="modal-overlay" id="modalTelepon" style="display:none">
+    <div class="modal-box">
+        <h3 class="modal-title">📞 Telepon</h3>
+        <p>Hubungi kami di nomor <strong>(021) 000-0000</strong> pada jam operasional Senin–Jumat pukul 08.00–16.00 WIB.</p>
+        <div class="modal-actions">
+            <a href="tel:021000000" class="btn btn-primary">Hubungi Sekarang</a>
+            <button onclick="closeModal('modalTelepon')" class="btn btn-outline">Tutup</button>
+        </div>
+    </div>
+</div>
+
+<!-- Modal: Email -->
+<div class="modal-overlay" id="modalEmail" style="display:none">
+    <div class="modal-box">
+        <h3 class="modal-title">📧 Email</h3>
+        <p>Kirim pertanyaan atau keluhan ke <strong>perpustakaan@institusi.ac.id</strong>. Kami akan merespons dalam 1×24 jam kerja.</p>
+        <div class="modal-actions">
+            <a href="mailto:perpustakaan@institusi.ac.id" class="btn btn-primary">Kirim Email</a>
+            <button onclick="closeModal('modalEmail')" class="btn btn-outline">Tutup</button>
+        </div>
+    </div>
+</div>
+
+{% endblock %}
+
+{% block extra_js %}
+<script>
+function openModal(id) {
+    document.getElementById(id).style.display = 'flex';
+    document.body.style.overflow = 'hidden';
+}
+function closeModal(id) {
+    document.getElementById(id).style.display = 'none';
+    document.body.style.overflow = '';
+}
+// Tutup modal saat klik overlay
+document.querySelectorAll('.modal-overlay').forEach(function(overlay) {
+    overlay.addEventListener('click', function(e) {
+        if (e.target === this) closeModal(this.id);
+    });
+});
+// Tutup modal dengan Escape
+document.addEventListener('keydown', function(e) {
+    if (e.key === 'Escape') {
+        document.querySelectorAll('.modal-overlay').forEach(function(m) {
+            if (m.style.display === 'flex') closeModal(m.id);
+        });
+    }
+});
+</script>
 {% endblock %}
