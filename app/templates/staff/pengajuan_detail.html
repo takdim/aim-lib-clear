@@ -208,7 +208,10 @@
     <div class="modal-box modal-box-wide" style="max-width: 90%; height: 90vh; display: flex; flex-direction: column;">
         <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
             <h3 class="modal-title" id="pdfModalTitle" style="margin-bottom: 0;">Preview Dokumen</h3>
-            <button class="btn btn-sm btn-outline" onclick="closePDFModal()">Tutup (X)</button>
+            <div style="display:flex; gap:0.5rem;">
+                <a id="pdfOpenNewTab" class="btn btn-sm btn-outline" href="#" target="_blank" rel="noopener">Buka di Tab Baru</a>
+                <button class="btn btn-sm btn-outline" onclick="closePDFModal()">Tutup (X)</button>
+            </div>
         </div>
         <div style="flex: 1; background: #eee; border-radius: 8px; overflow: hidden;">
             <iframe id="pdfFrame" src="" style="width: 100%; height: 100%; border: none;"></iframe>
@@ -234,12 +237,14 @@ function closeModal() {
 function openPDFModal(url, title) {
     document.getElementById('pdfModalTitle').textContent = title;
     document.getElementById('pdfFrame').src = url;
+    document.getElementById('pdfOpenNewTab').href = url;
     document.getElementById('modalPDF').style.display = 'flex';
 }
 
 function closePDFModal() {
     document.getElementById('modalPDF').style.display = 'none';
     document.getElementById('pdfFrame').src = '';
+    document.getElementById('pdfOpenNewTab').href = '#';
 }
 
 function toggleTolakForm() {
