@@ -8,7 +8,8 @@ class BebasPustaka(db.Model):
     __tablename__ = 'bebas_pustaka'
 
     id = db.Column(db.Integer, primary_key=True)
-    user_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
+    user_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=True)
+    created_by = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=True)
 
     nim = db.Column(db.String(20), nullable=False)
     nama = db.Column(db.String(100), nullable=False)
@@ -20,6 +21,10 @@ class BebasPustaka(db.Model):
     file_kartu_mahasiswa = db.Column(db.String(255), nullable=True)
     file_deleted = db.Column(db.Boolean, default=False, nullable=False)
     file_deleted_at = db.Column(db.DateTime, nullable=True)
+
+    tipe_pengajuan = db.Column(
+        db.String(20), default='pusat', nullable=False
+    )
 
     status = db.Column(
         db.Enum('menunggu_review', 'sedang_diproses', 'disetujui', 'ditolak', name='status_enum'),
@@ -58,6 +63,13 @@ class BebasPustaka(db.Model):
         }
         return labels.get(self.status, self.status)
 
+    def get_tipe_label(self):
+        labels = {
+            'fakultas': 'Bebas Pustaka Fakultas',
+            'pusat': 'Bebas Pustaka Pusat',
+        }
+        return labels.get(self.tipe_pengajuan, self.tipe_pengajuan)
+
     def get_status_badge_class(self):
         classes = {
             'menunggu_review': 'badge-warning',
@@ -69,6 +81,11 @@ class BebasPustaka(db.Model):
 
     def generate_nomor_surat(self):
         """Generate nomor surat dari SistemSetting lalu naikkan counter."""
+        if self.tipe_pengajuan == 'fakultas':
+            from app.models.fakultas_setting import FakultasSetting
+            setting = FakultasSetting.get_for_fakultas(self.fakultas)
+            return setting.generate_and_increment()
+
         from app.models.sistem_setting import SistemSetting
         setting = SistemSetting.get()
         return setting.generate_and_increment()

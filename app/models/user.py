@@ -40,6 +40,13 @@ class User(UserMixin, db.Model):
         lazy=True
     )
 
+    created_submissions = db.relationship(
+        'BebasPustaka',
+        foreign_keys='BebasPustaka.created_by',
+        backref='creator',
+        lazy=True
+    )
+
     def is_locked(self):
         """Cek apakah akun sedang dikunci karena brute-force."""
         if self.locked_until and datetime.utcnow() < self.locked_until:

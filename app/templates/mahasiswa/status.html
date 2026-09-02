@@ -40,6 +40,7 @@
             </div>
 
             <div class="status-current mt-3">
+                <span class="badge badge-info">{{ pengajuan.get_tipe_label() }}</span>
                 <span class="badge {{ pengajuan.get_status_badge_class() }} badge-lg">{{ pengajuan.get_status_label() }}</span>
                 <span class="text-muted ml-2">Diajukan: {{ pengajuan.created_at.strftime('%d %b %Y, %H:%M') }}</span>
             </div>
@@ -88,6 +89,7 @@
                     <tr><th>Alamat</th><td>{{ pengajuan.alamat }}</td></tr>
                     <tr><th>Fakultas</th><td>{{ pengajuan.fakultas.nama_fakultas if pengajuan.fakultas else '-' }}</td></tr>
                     <tr><th>Program Studi</th><td>{{ pengajuan.program_studi.nama_prodi if pengajuan.program_studi else '-' }}</td></tr>
+                    <tr><th>Jenis Pengajuan</th><td>{{ pengajuan.get_tipe_label() }}</td></tr>
                     <tr><th>Tanggal Pengajuan</th><td>{{ pengajuan.created_at.strftime('%d %B %Y, %H:%M') }}</td></tr>
                     {% if pengajuan.nomor_surat %}
                     <tr><th>Nomor Surat</th><td>{{ pengajuan.nomor_surat }}</td></tr>

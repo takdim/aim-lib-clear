@@ -5,8 +5,8 @@
 <div class="container page-content">
     <div class="page-header">
         <div>
-            <h1 class="page-title">Buat Pengajuan Bebas Pustaka</h1>
-            <p class="page-subtitle">Input data mahasiswa dan upload dokumen persyaratan</p>
+            <h1 class="page-title">Buat {{ 'Bebas Pustaka Fakultas' if tipe_pengajuan == 'fakultas' else 'Bebas Pustaka Pusat' }}</h1>
+            <p class="page-subtitle">Layanan langsung untuk mahasiswa, tanpa perlu akun</p>
         </div>
         <a href="{{ url_for('staff.dashboard') }}" class="btn btn-outline">← Kembali</a>
     </div>
@@ -15,6 +15,11 @@
         <div class="card-body">
             <form method="POST" action="{{ url_for('staff.form_bebas_pustaka') }}" enctype="multipart/form-data" id="formPengajuan" novalidate>
                 <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+
+                <div class="alert alert-info">
+                    <strong>Jenis Layanan:</strong> {{ 'Bebas Pustaka Fakultas' if tipe_pengajuan == 'fakultas' else 'Bebas Pustaka Pusat' }}
+                    {% if tipe_pengajuan == 'pusat' %}<br>Pastikan Bebas Pustaka Fakultas untuk NIM ini sudah disetujui.{% endif %}
+                </div>
 
                 <h2 class="section-divider">Data Mahasiswa</h2>
                 <div class="form-row">
@@ -34,6 +39,10 @@
                 <div class="form-row">
                     <div class="form-group">
                         <label for="fakultas_id" class="form-label">Fakultas <span class="required">*</span></label>
+                        {% if is_scoped %}
+                        <input type="hidden" name="fakultas_id" value="{{ fakultas_list[0].id }}">
+                        <input type="text" class="form-input" value="{{ fakultas_list[0].nama_fakultas }}" disabled>
+                        {% else %}
                         <select id="fakultas_id" name="fakultas_id" class="form-input form-select" required>
                             <option value="">-- Pilih Fakultas --</option>
                             {% for f in fakultas_list %}
@@ -43,6 +52,7 @@
                             </option>
                             {% endfor %}
                         </select>
+                        {% endif %}
                     </div>
                     <div class="form-group">
                         <label for="prodi_id" class="form-label">Program Studi <span class="required">*</span></label>
@@ -113,17 +123,13 @@
 
 {% block extra_js %}
 <script>
-// Update prodi dropdown saat fakultas berubah
-document.getElementById('fakultas_id').addEventListener('change', function () {
-    const fakultasId = this.value;
+function loadProdi(fakultasId) {
     const prodiSelect = document.getElementById('prodi_id');
-    prodiSelect.innerHTML = '<option value="">-- Memuat... --</option>';
-
     if (!fakultasId) {
         prodiSelect.innerHTML = '<option value="">-- Pilih Prodi --</option>';
         return;
     }
-
+    prodiSelect.innerHTML = '<option value="">-- Memuat... --</option>';
     fetch(`/api/prodi-by-fakultas/${fakultasId}`)
         .then(r => r.json())
         .then(data => {
@@ -138,7 +144,20 @@ document.getElementById('fakultas_id').addEventListener('change', function () {
         .catch(() => {
             prodiSelect.innerHTML = '<option value="">-- Gagal memuat --</option>';
         });
-});
+}
+
+// Update prodi dropdown saat fakultas berubah (non-scoped)
+const fakultasSelect = document.getElementById('fakultas_id');
+if (fakultasSelect) {
+    fakultasSelect.addEventListener('change', function () {
+        loadProdi(this.value);
+    });
+}
+
+// Auto-load prodi untuk scoped staff (fakultas sudah terkunci)
+{% if is_scoped %}
+loadProdi({{ fakultas_list[0].id }});
+{% endif %}
 
 // Preview nama file
 document.getElementById('file_bebas_pustaka').addEventListener('change', function () {

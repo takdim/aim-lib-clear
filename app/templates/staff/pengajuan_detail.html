@@ -27,6 +27,7 @@
                             <tr><th>Alamat</th><td>{{ pengajuan.alamat }}</td></tr>
                             <tr><th>Fakultas</th><td>{{ pengajuan.fakultas.nama_fakultas if pengajuan.fakultas else '-' }}</td></tr>
                             <tr><th>Program Studi</th><td>{{ pengajuan.program_studi.nama_prodi if pengajuan.program_studi else '-' }}</td></tr>
+                            <tr><th>Jenis Pengajuan</th><td>{{ pengajuan.get_tipe_label() }}</td></tr>
                             <tr><th>Tgl Pengajuan</th><td>{{ pengajuan.created_at.strftime('%d %B %Y, %H:%M') }}</td></tr>
                             {% if pengajuan.approved_at %}
                             <tr><th>Tgl Disetujui</th><td>{{ pengajuan.approved_at.strftime('%d %B %Y, %H:%M') }}</td></tr>
@@ -96,7 +97,7 @@
             {% endif %}
 
             <!-- Aksi -->
-            {% if pengajuan.status in ['menunggu_review', 'sedang_diproses'] %}
+            {% if can_process and pengajuan.status in ['menunggu_review', 'sedang_diproses'] %}
             <div class="card mb-4">
                 <div class="card-body">
                     <h2 class="card-title">Aksi Pengajuan</h2>
@@ -142,6 +143,7 @@
             {% endif %}
 
             <!-- Edit Data -->
+            {% if can_process %}
             <div class="card">
                 <div class="card-body">
                     <h2 class="card-title">Edit Data Pengajuan</h2>
@@ -184,6 +186,7 @@
                     </form>
                 </div>
             </div>
+            {% endif %}
         </div>
     </div>
 </div>

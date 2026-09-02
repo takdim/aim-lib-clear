@@ -38,15 +38,37 @@ def save_upload(file, pengajuan_id, suffix):
     return os.path.join(sub_dir, filename)
 
 
+def staff_tipe_pengajuan():
+    return 'fakultas' if current_user.fakultas_id else 'pusat'
+
+
+def can_manage_pengajuan(pengajuan):
+    if pengajuan.tipe_pengajuan != staff_tipe_pengajuan():
+        return False
+    return not current_user.fakultas_id or pengajuan.fakultas_id == current_user.fakultas_id
+
+
+def can_view_pengajuan(pengajuan):
+    if can_manage_pengajuan(pengajuan):
+        return True
+    return (
+        current_user.fakultas_id and
+        pengajuan.tipe_pengajuan == 'pusat' and
+        (pengajuan.created_by == current_user.id or pengajuan.user_id == current_user.id)
+    )
+
+
 @staff_bp.route('/form-bebas-pustaka', methods=['GET', 'POST'])
 @login_required
 @staff_required
 def form_bebas_pustaka():
-    if not current_user.can_submit():
-        flash('Anda masih memiliki pengajuan yang aktif.', 'warning')
-        return redirect(url_for('staff.pengajuan_saya'))
+    tipe_pengajuan = staff_tipe_pengajuan()
 
-    fakultas_list = Fakultas.query.order_by(Fakultas.nama_fakultas).all()
+    # Scoped staff can only create submissions for their faculty
+    if current_user.fakultas_id:
+        fakultas_list = Fakultas.query.filter_by(id=current_user.fakultas_id).all()
+    else:
+        fakultas_list = Fakultas.query.order_by(Fakultas.nama_fakultas).all()
 
     if request.method == 'POST':
         nim = request.form.get('nim', '').strip()
@@ -73,18 +95,27 @@ def form_bebas_pustaka():
         if not file_kartu or not allowed_file(file_kartu.filename):
             errors.append('File Kartu Tanda Mahasiswa wajib diupload (PDF).')
 
+        if tipe_pengajuan == 'pusat' and not BebasPustaka.query.filter_by(
+                nim=nim,
+                fakultas_id=fakultas_id,
+                tipe_pengajuan='fakultas',
+                status='disetujui',
+            ).first():
+            errors.append('Mahasiswa harus memiliki Bebas Pustaka Fakultas yang disetujui terlebih dahulu.')
+
         if errors:
             for e in errors:
                 flash(e, 'danger')
-            return render_template('staff/form.html', fakultas_list=fakultas_list)
+            return render_template('staff/form.html', fakultas_list=fakultas_list, is_scoped=bool(current_user.fakultas_id), tipe_pengajuan=tipe_pengajuan)
 
         pengajuan = BebasPustaka(
-            user_id=current_user.id,
+            created_by=current_user.id,
             nim=nim,
             nama=nama,
             alamat=alamat,
             fakultas_id=fakultas_id,
             prodi_id=prodi_id,
+            tipe_pengajuan=tipe_pengajuan,
             status='menunggu_review',
         )
         db.session.add(pengajuan)
@@ -99,19 +130,22 @@ def form_bebas_pustaka():
         except Exception as e:
             db.session.rollback()
             flash(f'Gagal mengupload file: {str(e)}', 'danger')
-            return render_template('staff/form.html', fakultas_list=fakultas_list)
+            return render_template('staff/form.html', fakultas_list=fakultas_list, is_scoped=bool(current_user.fakultas_id), tipe_pengajuan=tipe_pengajuan)
 
         flash('Pengajuan berhasil dibuat. Anda dapat langsung menyetujuinya di halaman detail.', 'success')
         return redirect(url_for('staff.pengajuan_detail', id=pengajuan.id))
 
-    return render_template('staff/form.html', fakultas_list=fakultas_list)
+    return render_template('staff/form.html', fakultas_list=fakultas_list, is_scoped=bool(current_user.fakultas_id), tipe_pengajuan=tipe_pengajuan)
 
 
 @staff_bp.route('/pengajuan-saya')
 @login_required
 @staff_required
 def pengajuan_saya():
-    riwayat = BebasPustaka.query.filter_by(user_id=current_user.id).order_by(
+    riwayat = BebasPustaka.query.filter(
+        (BebasPustaka.created_by == current_user.id) |
+        (BebasPustaka.user_id == current_user.id)
+    ).order_by(
         BebasPustaka.created_at.desc()
     ).all()
     return render_template('staff/pengajuan_saya.html', riwayat=riwayat)
@@ -126,24 +160,31 @@ def dashboard():
     bulan_ini = datetime.utcnow().month
     tahun_ini = datetime.utcnow().year
 
+    # Scoped: filter by faculty if staff has one assigned
+    base_q = BebasPustaka.query.filter(
+        BebasPustaka.tipe_pengajuan == staff_tipe_pengajuan()
+    )
+    if current_user.fakultas_id:
+        base_q = base_q.filter(BebasPustaka.fakultas_id == current_user.fakultas_id)
+
     stats = {
-        'masuk_hari_ini': BebasPustaka.query.filter(
+        'masuk_hari_ini': base_q.filter(
             func.date(BebasPustaka.created_at) == today
         ).count(),
-        'menunggu_review': BebasPustaka.query.filter_by(status='menunggu_review').count(),
-        'disetujui_bulan_ini': BebasPustaka.query.filter(
+        'menunggu_review': base_q.filter(BebasPustaka.status == 'menunggu_review').count(),
+        'disetujui_bulan_ini': base_q.filter(
             BebasPustaka.status == 'disetujui',
             func.month(BebasPustaka.approved_at) == bulan_ini,
             func.year(BebasPustaka.approved_at) == tahun_ini,
         ).count(),
-        'ditolak_bulan_ini': BebasPustaka.query.filter(
+        'ditolak_bulan_ini': base_q.filter(
             BebasPustaka.status == 'ditolak',
             func.month(BebasPustaka.updated_at) == bulan_ini,
             func.year(BebasPustaka.updated_at) == tahun_ini,
         ).count(),
     }
 
-    pengajuan_terbaru = BebasPustaka.query.order_by(
+    pengajuan_terbaru = base_q.order_by(
         BebasPustaka.created_at.desc()
     ).limit(10).all()
 
@@ -160,15 +201,22 @@ def dashboard():
 def pengajuan_list():
     page = request.args.get('page', 1, type=int)
     status_filter = request.args.get('status', '')
-    fakultas_filter = request.args.get('fakultas_id', 0, type=int)
     search = request.args.get('search', '').strip()
 
-    query = BebasPustaka.query
+    # Scoped staff: lock to their faculty, ignore URL param
+    if current_user.fakultas_id:
+        fakultas_filter = current_user.fakultas_id
+    else:
+        fakultas_filter = request.args.get('fakultas_id', 0, type=int)
+
+    query = BebasPustaka.query.filter(
+        BebasPustaka.tipe_pengajuan == staff_tipe_pengajuan()
+    )
 
     if status_filter:
-        query = query.filter_by(status=status_filter)
+        query = query.filter(BebasPustaka.status == status_filter)
     if fakultas_filter:
-        query = query.filter_by(fakultas_id=fakultas_filter)
+        query = query.filter(BebasPustaka.fakultas_id == fakultas_filter)
     if search:
         query = query.filter(
             (BebasPustaka.nim.contains(search)) |
@@ -188,6 +236,7 @@ def pengajuan_list():
         status_filter=status_filter,
         fakultas_filter=fakultas_filter,
         search=search,
+        is_scoped=bool(current_user.fakultas_id),
     )
 
 
@@ -197,7 +246,12 @@ def pengajuan_list():
 def pengajuan_detail(id):
     pengajuan = BebasPustaka.query.get_or_404(id)
 
+    if not can_view_pengajuan(pengajuan):
+        abort(403)
+
     if request.method == 'POST':
+        if not can_manage_pengajuan(pengajuan):
+            abort(403)
         action = request.form.get('action')
 
         if action == 'setujui':
@@ -250,7 +304,8 @@ def pengajuan_detail(id):
     return render_template(
         'staff/pengajuan_detail.html',
         pengajuan=pengajuan,
-        fakultas_list=fakultas_list
+        fakultas_list=fakultas_list,
+        can_process=can_manage_pengajuan(pengajuan),
     )
 
 
@@ -260,6 +315,9 @@ def pengajuan_detail(id):
 def view_file(id, jenis):
     """Serve file upload untuk ditinjau staff."""
     pengajuan = BebasPustaka.query.get_or_404(id)
+
+    if not can_view_pengajuan(pengajuan):
+        abort(403)
 
     if pengajuan.file_deleted:
         return jsonify({

@@ -13,6 +13,7 @@ from app.models.user import User
 from app.models.bebas_pustaka import BebasPustaka
 from app.models.fakultas import Fakultas
 from app.models.program_studi import ProgramStudi
+from app.models.fakultas_setting import FakultasSetting
 from app.utils.decorators import admin_required
 
 admin_bp = Blueprint('admin', __name__)
@@ -131,9 +132,27 @@ def tambah_user():
 @admin_required
 def edit_user(id):
     user = User.query.get_or_404(id)
-    user.name = request.form.get('name', user.name).strip()
-    user.email = request.form.get('email', user.email).strip().lower()
+    name = request.form.get('name', '').strip()
+    email = request.form.get('email', '').strip().lower()
+    nim = request.form.get('nim', '').strip() or None
+
+    if not name or not email:
+        flash('Nama dan email wajib diisi.', 'danger')
+        return redirect(url_for('admin.users'))
+    if User.query.filter(User.email == email, User.id != user.id).first():
+        flash('Email sudah digunakan oleh pengguna lain.', 'danger')
+        return redirect(url_for('admin.users'))
+    if nim and User.query.filter(User.nim == nim, User.id != user.id).first():
+        flash('NIM sudah digunakan oleh pengguna lain.', 'danger')
+        return redirect(url_for('admin.users'))
+
+    user.name = name
+    user.email = email
+    user.nim = nim
     user.role = request.form.get('role', user.role)
+    
+    fakultas_id = request.form.get('fakultas_id')
+    user.fakultas_id = int(fakultas_id) if fakultas_id else None
 
     new_password = request.form.get('password', '').strip()
     if new_password:
@@ -345,4 +364,43 @@ def settings():
             flash(f'Gagal menyimpan pengaturan: {e}', 'danger')
         return redirect(url_for('admin.settings'))
 
-    return render_template('admin/settings.html', setting=setting)
+    fakultas_settings = []
+    for fakultas in Fakultas.query.order_by(Fakultas.nama_fakultas).all():
+        fakultas_settings.append((fakultas, FakultasSetting.get_for_fakultas(fakultas)))
+    db.session.commit()
+    return render_template(
+        'admin/settings.html',
+        setting=setting,
+        fakultas_settings=fakultas_settings,
+    )
+
+
+@admin_bp.route('/settings/fakultas/<int:fakultas_id>', methods=['POST'])
+@login_required
+@admin_required
+def settings_fakultas(fakultas_id):
+    fakultas = Fakultas.query.get_or_404(fakultas_id)
+    setting = FakultasSetting.get_for_fakultas(fakultas)
+
+    nama_perpustakaan = request.form.get('nama_perpustakaan', '').strip()
+    nomor_urut = request.form.get('nomor_urut', type=int)
+    nomor_bagian_tengah = request.form.get('nomor_bagian_tengah', '').strip()
+    nomor_tahun = request.form.get('nomor_tahun', type=int)
+    pejabat_jabatan = request.form.get('pejabat_jabatan', '').strip()
+    pejabat_nama = request.form.get('pejabat_nama', '').strip()
+    pejabat_nip = request.form.get('pejabat_nip', '').strip()
+
+    if not all([nama_perpustakaan, nomor_urut, nomor_bagian_tengah, nomor_tahun, pejabat_jabatan, pejabat_nama, pejabat_nip]):
+        flash('Semua pengaturan surat fakultas wajib diisi.', 'danger')
+        return redirect(url_for('admin.settings'))
+
+    setting.nama_perpustakaan = nama_perpustakaan
+    setting.nomor_urut = nomor_urut
+    setting.nomor_bagian_tengah = nomor_bagian_tengah
+    setting.nomor_tahun = nomor_tahun
+    setting.pejabat_jabatan = pejabat_jabatan
+    setting.pejabat_nama = pejabat_nama
+    setting.pejabat_nip = pejabat_nip
+    db.session.commit()
+    flash(f'Pengaturan surat {fakultas.nama_fakultas} berhasil disimpan.', 'success')
+    return redirect(url_for('admin.settings'))

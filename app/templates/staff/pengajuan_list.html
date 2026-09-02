@@ -5,6 +5,11 @@
 <div class="container page-content">
     <div class="page-header">
         <h1 class="page-title">Daftar Pengajuan Bebas Pustaka</h1>
+        {% if is_scoped %}
+        <span class="badge badge-info" title="Anda hanya dapat melihat pengajuan dari fakultas Anda">
+            🏫 {{ current_user.fakultas.nama_fakultas }}
+        </span>
+        {% endif %}
     </div>
 
     <!-- Filter -->
@@ -28,12 +33,16 @@
                     </div>
                     <div class="form-group">
                         <label class="form-label">Fakultas</label>
+                        {% if is_scoped %}
+                        <input type="text" class="form-input" value="{{ current_user.fakultas.nama_fakultas }}" disabled>
+                        {% else %}
                         <select name="fakultas_id" class="form-input form-select">
                             <option value="">Semua Fakultas</option>
                             {% for f in fakultas_list %}
                             <option value="{{ f.id }}" {{ 'selected' if fakultas_filter == f.id }}>{{ f.nama_fakultas }}</option>
                             {% endfor %}
                         </select>
+                        {% endif %}
                     </div>
                     <div class="form-group form-group-action">
                         <button type="submit" class="btn btn-primary">Filter</button>
@@ -56,6 +65,7 @@
                             <th>Nama Mahasiswa</th>
                             <th>Fakultas</th>
                             <th>Program Studi</th>
+                            <th>Jenis</th>
                             <th>Tgl Pengajuan</th>
                             <th>Status</th>
                             <th>Aksi</th>
@@ -69,6 +79,7 @@
                             <td>{{ p.nama }}</td>
                             <td>{{ p.fakultas.nama_fakultas if p.fakultas else '-' }}</td>
                             <td>{{ p.program_studi.nama_prodi if p.program_studi else '-' }}</td>
+                            <td>{{ p.get_tipe_label() }}</td>
                             <td>{{ p.created_at.strftime('%d %b %Y') }}</td>
                             <td><span class="badge {{ p.get_status_badge_class() }}">{{ p.get_status_label() }}</span></td>
                             <td>
@@ -76,7 +87,7 @@
                             </td>
                         </tr>
                         {% else %}
-                        <tr><td colspan="8" class="text-center text-muted">Tidak ada data pengajuan.</td></tr>
+                        <tr><td colspan="9" class="text-center text-muted">Tidak ada data pengajuan.</td></tr>
                         {% endfor %}
                     </tbody>
                 </table>

@@ -85,6 +85,57 @@
         </div>
     </form>
 
+    <div class="card" style="margin-top:2rem;">
+        <div class="card-body">
+            <h2 class="card-title">Pengaturan Surat Bebas Pustaka Fakultas</h2>
+            <p style="color:var(--text-muted); font-size:0.85rem;">Pengaturan ini digunakan pada PDF Bebas Pustaka Fakultas. Nomor urut setiap fakultas berjalan sendiri.</p>
+
+            {% for fakultas, fakultas_setting in fakultas_settings %}
+            <details style="border-top:1px solid var(--border); padding:1rem 0;" {{ 'open' if loop.first else '' }}>
+                <summary style="cursor:pointer; font-weight:600;">{{ fakultas.nama_fakultas }}</summary>
+                <form method="POST" action="{{ url_for('admin.settings_fakultas', fakultas_id=fakultas.id) }}" style="margin-top:1rem;">
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                    <div class="form-group">
+                        <label class="form-label">Nama Perpustakaan Fakultas</label>
+                        <input type="text" name="nama_perpustakaan" class="form-input" value="{{ fakultas_setting.nama_perpustakaan }}" required>
+                    </div>
+                    <div style="display:grid; grid-template-columns:1fr 2fr 1fr; gap:1rem;">
+                        <div class="form-group">
+                            <label class="form-label">Nomor Urut</label>
+                            <input type="number" name="nomor_urut" class="form-input" value="{{ fakultas_setting.nomor_urut }}" min="1" required>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Bagian Tengah Nomor Surat</label>
+                            <input type="text" name="nomor_bagian_tengah" class="form-input" value="{{ fakultas_setting.nomor_bagian_tengah }}" required>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Tahun</label>
+                            <input type="number" name="nomor_tahun" class="form-input" value="{{ fakultas_setting.nomor_tahun }}" min="2000" max="2099" required>
+                        </div>
+                    </div>
+                    <div style="display:grid; grid-template-columns:1fr 1fr; gap:1rem;">
+                        <div class="form-group">
+                            <label class="form-label">Jabatan Penanda Tangan</label>
+                            <textarea name="pejabat_jabatan" class="form-input form-textarea" rows="3" required>{{ fakultas_setting.pejabat_jabatan }}</textarea>
+                        </div>
+                        <div>
+                            <div class="form-group">
+                                <label class="form-label">Nama Penanda Tangan</label>
+                                <input type="text" name="pejabat_nama" class="form-input" value="{{ fakultas_setting.pejabat_nama }}" required>
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">NIP</label>
+                                <input type="text" name="pejabat_nip" class="form-input" value="{{ fakultas_setting.pejabat_nip }}" required>
+                            </div>
+                        </div>
+                    </div>
+                    <button type="submit" class="btn btn-primary">Simpan Pengaturan Fakultas</button>
+                </form>
+            </details>
+            {% endfor %}
+        </div>
+    </div>
+
     <!-- Info Read-only -->
     <div class="card" style="margin-top:2rem;">
         <div class="card-body">

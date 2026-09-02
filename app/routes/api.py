@@ -15,8 +15,26 @@ def generate_pdf(id):
     pengajuan = BebasPustaka.query.get_or_404(id)
 
     # KEAMANAN: Hanya pemilik (mahasiswa ybs) atau Staff/Admin yang boleh cetak
-    if current_user.role == 'mahasiswa' and current_user.id != pengajuan.user_id:
-        abort(403)
+    if current_user.role == 'mahasiswa':
+        is_owner = current_user.id == pengajuan.user_id
+        is_offline_owner = (
+            pengajuan.user_id is None and
+            current_user.nim == pengajuan.nim and
+            current_user.fakultas_id == pengajuan.fakultas_id
+        )
+        if not is_owner and not is_offline_owner:
+            abort(403)
+    if current_user.role == 'staff':
+        tipe_staff = 'fakultas' if current_user.fakultas_id else 'pusat'
+        if pengajuan.tipe_pengajuan != tipe_staff:
+            if not (
+                current_user.fakultas_id and
+                pengajuan.tipe_pengajuan == 'pusat' and
+                (pengajuan.created_by == current_user.id or pengajuan.user_id == current_user.id)
+            ):
+                abort(403)
+        if current_user.fakultas_id and pengajuan.fakultas_id != current_user.fakultas_id:
+            abort(403)
 
     if pengajuan.status != 'disetujui':
         flash('Surat hanya dapat dicetak jika pengajuan telah disetujui.', 'warning')

@@ -9,9 +9,7 @@
             <p class="page-subtitle">Riwayat pengajuan bebas pustaka atas nama Anda</p>
         </div>
         <div style="display:flex;gap:0.5rem;">
-            {% if not riwayat or riwayat[0].status in ['ditolak'] %}
             <a href="{{ url_for('staff.form_bebas_pustaka') }}" class="btn btn-primary">+ Buat Pengajuan Baru</a>
-            {% endif %}
             <a href="{{ url_for('staff.dashboard') }}" class="btn btn-outline">← Dashboard</a>
         </div>
     </div>

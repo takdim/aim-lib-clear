@@ -42,16 +42,32 @@ def save_upload(file, pengajuan_id, suffix):
 @login_required
 @mahasiswa_required
 def dashboard():
-    pengajuan_terbaru = BebasPustaka.query.filter_by(user_id=current_user.id).order_by(
+    pengajuan_query = BebasPustaka.query.filter_by(
+        nim=current_user.nim,
+        fakultas_id=current_user.fakultas_id,
+    )
+    pengajuan_terbaru = pengajuan_query.order_by(
         BebasPustaka.created_at.desc()
     ).first()
-    riwayat = BebasPustaka.query.filter_by(user_id=current_user.id).order_by(
+    riwayat = pengajuan_query.order_by(
         BebasPustaka.created_at.desc()
     ).all()
+    pengajuan_fakultas = BebasPustaka.query.filter_by(
+        nim=current_user.nim,
+        fakultas_id=current_user.fakultas_id,
+        tipe_pengajuan='fakultas',
+    ).order_by(BebasPustaka.created_at.desc()).first()
+    pengajuan_pusat = BebasPustaka.query.filter_by(
+        nim=current_user.nim,
+        fakultas_id=current_user.fakultas_id,
+        tipe_pengajuan='pusat',
+    ).order_by(BebasPustaka.created_at.desc()).first()
     return render_template(
         'mahasiswa/dashboard.html',
         pengajuan_terbaru=pengajuan_terbaru,
-        riwayat=riwayat
+        riwayat=riwayat,
+        pengajuan_fakultas=pengajuan_fakultas,
+        pengajuan_pusat=pengajuan_pusat,
     )
 
 
@@ -59,9 +75,31 @@ def dashboard():
 @login_required
 @mahasiswa_required
 def form_bebas_pustaka():
-    # Cek apakah boleh mengajukan
-    if not current_user.can_submit():
-        flash('Anda masih memiliki pengajuan yang aktif.', 'warning')
+    tipe_pengajuan = request.values.get('tipe', 'fakultas')
+    if tipe_pengajuan not in ('fakultas', 'pusat'):
+        flash('Jenis pengajuan tidak valid.', 'danger')
+        return redirect(url_for('mahasiswa.status'))
+
+    pengajuan_fakultas = BebasPustaka.query.filter_by(
+        nim=current_user.nim,
+        fakultas_id=current_user.fakultas_id,
+        tipe_pengajuan='fakultas',
+    ).order_by(BebasPustaka.created_at.desc()).first()
+    pengajuan_pusat = BebasPustaka.query.filter_by(
+        nim=current_user.nim,
+        fakultas_id=current_user.fakultas_id,
+        tipe_pengajuan='pusat',
+    ).order_by(BebasPustaka.created_at.desc()).first()
+
+    if tipe_pengajuan == 'pusat' and (
+        not pengajuan_fakultas or pengajuan_fakultas.status != 'disetujui'
+    ):
+        flash('Ajukan Bebas Pustaka Fakultas dan tunggu persetujuannya terlebih dahulu.', 'warning')
+        return redirect(url_for('mahasiswa.dashboard'))
+
+    pengajuan_sejenis = pengajuan_fakultas if tipe_pengajuan == 'fakultas' else pengajuan_pusat
+    if pengajuan_sejenis and pengajuan_sejenis.status in ('menunggu_review', 'sedang_diproses', 'disetujui'):
+        flash(f'Anda masih memiliki pengajuan {tipe_pengajuan} yang aktif.', 'warning')
         return redirect(url_for('mahasiswa.status'))
 
     if request.method == 'POST':
@@ -80,7 +118,7 @@ def form_bebas_pustaka():
         if errors:
             for e in errors:
                 flash(e, 'danger')
-            return render_template('mahasiswa/form.html')
+            return render_template('mahasiswa/form.html', tipe_pengajuan=tipe_pengajuan)
 
         # Simpan pengajuan ke DB dulu untuk dapat ID
         pengajuan = BebasPustaka(
@@ -90,6 +128,7 @@ def form_bebas_pustaka():
             alamat=alamat,
             fakultas_id=current_user.fakultas_id,
             prodi_id=current_user.prodi_id,
+            tipe_pengajuan=tipe_pengajuan,
             status='menunggu_review',
         )
         db.session.add(pengajuan)
@@ -105,19 +144,22 @@ def form_bebas_pustaka():
         except Exception as e:
             db.session.rollback()
             flash(f'Gagal mengupload file: {str(e)}', 'danger')
-            return render_template('mahasiswa/form.html')
+            return render_template('mahasiswa/form.html', tipe_pengajuan=tipe_pengajuan)
 
         flash('Pengajuan berhasil dikirim! Tunggu review dari staff.', 'success')
         return redirect(url_for('mahasiswa.status'))
 
-    return render_template('mahasiswa/form.html')
+    return render_template('mahasiswa/form.html', tipe_pengajuan=tipe_pengajuan)
 
 
 @mahasiswa_bp.route('/status')
 @login_required
 @mahasiswa_required
 def status():
-    pengajuan = BebasPustaka.query.filter_by(user_id=current_user.id).order_by(
+    pengajuan = BebasPustaka.query.filter_by(
+        nim=current_user.nim,
+        fakultas_id=current_user.fakultas_id,
+    ).order_by(
         BebasPustaka.created_at.desc()
     ).first()
     return render_template('mahasiswa/status.html', pengajuan=pengajuan)

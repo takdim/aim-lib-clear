@@ -6,7 +6,12 @@
     <div class="page-header">
         <div>
             <h1 class="page-title">Dashboard Staff</h1>
-            <p class="page-subtitle">Selamat datang, {{ current_user.name }}</p>
+            <p class="page-subtitle">
+                Selamat datang, {{ current_user.name }}
+                {% if current_user.fakultas_id %}
+                &mdash; <span class="badge badge-info">🏫 {{ current_user.fakultas.nama_fakultas }}</span>
+                {% endif %}
+            </p>
         </div>
         <div style="display:flex;gap:0.5rem;flex-wrap:wrap;">
             <a href="{{ url_for('staff.form_bebas_pustaka') }}" class="btn btn-primary">+ Buat Pengajuan Saya</a>

@@ -11,10 +11,14 @@
                 {% if current_user.program_studi %} / {{ current_user.program_studi.nama_prodi }}{% endif %}
             </p>
         </div>
-        {% if current_user.can_submit() %}
-            <a href="{{ url_for('mahasiswa.form_bebas_pustaka') }}" class="btn btn-primary" id="btnAjukan">
-                + Ajukan Bebas Pustaka
-            </a>
+        {% if not pengajuan_fakultas or pengajuan_fakultas.status == 'ditolak' %}
+        <a href="{{ url_for('mahasiswa.form_bebas_pustaka', tipe='fakultas') }}" class="btn btn-primary" id="btnAjukan">
+            + Ajukan Bebas Pustaka Fakultas
+        </a>
+        {% elif pengajuan_fakultas.status == 'disetujui' and (not pengajuan_pusat or pengajuan_pusat.status == 'ditolak') %}
+        <a href="{{ url_for('mahasiswa.form_bebas_pustaka', tipe='pusat') }}" class="btn btn-primary" id="btnAjukan">
+            + Ajukan Bebas Pustaka Pusat
+        </a>
         {% endif %}
     </div>
 
@@ -58,6 +62,7 @@
                         <tr>
                             <th>No.</th>
                             <th>Tanggal Pengajuan</th>
+                            <th>Jenis</th>
                             <th>Status</th>
                             <th>Keterangan</th>
                         </tr>
@@ -67,6 +72,7 @@
                         <tr>
                             <td>{{ loop.index }}</td>
                             <td>{{ p.created_at.strftime('%d %b %Y') }}</td>
+                            <td>{{ p.get_tipe_label() }}</td>
                             <td><span class="badge {{ p.get_status_badge_class() }}">{{ p.get_status_label() }}</span></td>
                             <td>{{ p.catatan_penolakan or '-' }}</td>
                         </tr>

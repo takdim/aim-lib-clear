@@ -43,7 +43,12 @@ def _make_qr_image(data):
 
 def generate_surat_bebas_pustaka(pengajuan, nama_institusi, nama_perpustakaan):
     from app.models.sistem_setting import SistemSetting
-    setting = SistemSetting.get()
+    if pengajuan.tipe_pengajuan == 'fakultas':
+        from app.models.fakultas_setting import FakultasSetting
+        setting = FakultasSetting.get_for_fakultas(pengajuan.fakultas)
+        nama_perpustakaan = setting.nama_perpustakaan
+    else:
+        setting = SistemSetting.get()
 
     buffer = BytesIO()
     c = canvas.Canvas(buffer, pagesize=A4)
@@ -63,7 +68,7 @@ def generate_surat_bebas_pustaka(pengajuan, nama_institusi, nama_perpustakaan):
     c.drawString(4.2*cm, height - 2.2*cm,  "DAN TEKNOLOGI")
     c.setFont("Times-Bold", 13)
     c.drawString(4.2*cm, height - 2.75*cm, "UNIVERSITAS HASANUDDIN")
-    c.drawString(4.2*cm, height - 3.25*cm, "PERPUSTAKAAN")
+    c.drawString(4.2*cm, height - 3.25*cm, nama_perpustakaan.upper())
 
     c.setFont("Times-Roman", 7)
     c.drawRightString(width - 1.5*cm, height - 1.55*cm, "Jalan Perintis Kemerdekaan Km. 10")
@@ -96,8 +101,7 @@ def generate_surat_bebas_pustaka(pengajuan, nama_institusi, nama_perpustakaan):
 
     y = height - 6.5*cm
     c.setFont("Helvetica", 11)
-    c.drawString(margin_left, y,
-                 "Perpustakaan Universitas Hasanuddin dengan ini menerangkan bahwa :")
+    c.drawString(margin_left, y, f"{nama_perpustakaan} dengan ini menerangkan bahwa :")
 
     y -= 0.9*cm
     rows = [
@@ -118,8 +122,8 @@ def generate_surat_bebas_pustaka(pengajuan, nama_institusi, nama_perpustakaan):
 
     y -= 0.5*cm
     p1 = Paragraph(
-        "Mahasiswa tersebut diatas benar tidak mempunyai pinjaman bahan pustaka pada Perpustakaan "
-        "Universitas Hasanuddin, dan surat keterangan ini berlaku sampai dengan :",
+        f"Mahasiswa tersebut diatas benar tidak mempunyai pinjaman bahan pustaka pada {nama_perpustakaan}, "
+        "dan surat keterangan ini berlaku sampai dengan :",
         p_style,
     )
     p1_w, p1_h = p1.wrap(text_width, 5*cm)

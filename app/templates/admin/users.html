@@ -59,6 +59,17 @@
                             </td>
                             <td>{{ u.created_at.strftime('%d %b %Y') }}</td>
                             <td class="actions-cell">
+                                <!-- Edit -->
+                                <button type="button" class="btn btn-sm btn-outline" title="Edit"
+                                    data-user-id="{{ u.id }}"
+                                    data-name="{{ u.name }}"
+                                    data-email="{{ u.email }}"
+                                    data-nim="{{ u.nim or '' }}"
+                                    data-role="{{ u.role }}"
+                                    data-fakultas-id="{{ u.fakultas_id or '' }}"
+                                    onclick="openEditModal(this)">
+                                    ✏️
+                                </button>
                                 <!-- Toggle Aktif -->
                                 <form method="POST" action="{{ url_for('admin.toggle_aktif', id=u.id) }}" style="display:inline">
                                     <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
@@ -93,6 +104,61 @@
             </div>
             {% endif %}
         </div>
+    </div>
+</div>
+
+<!-- Modal Edit Pengguna -->
+<div class="modal-overlay" id="modalEdit" style="display:none">
+    <div class="modal-box modal-box-wide">
+        <h3 class="modal-title">Edit Pengguna</h3>
+        <form method="POST" id="formEditUser">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+            <div class="form-row">
+                <div class="form-group">
+                    <label class="form-label">Nama <span class="required">*</span></label>
+                    <input type="text" name="name" id="editName" class="form-input" required>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Email <span class="required">*</span></label>
+                    <input type="email" name="email" id="editEmail" class="form-input" required>
+                                <div class="form-group">
+                                    <label class="form-label">NIM</label>
+                                    <input type="text" name="nim" id="editNim" class="form-input">
+                                </div>
+                            </div>
+                            <div class="form-row">
+                </div>
+            </div>
+            <div class="form-row">
+                <div class="form-group">
+                    <label class="form-label">Role <span class="required">*</span></label>
+                    <select name="role" id="editRole" class="form-input form-select" required>
+                        <option value="mahasiswa">Mahasiswa</option>
+                        <option value="staff">Staff</option>
+                        <option value="admin">Admin</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Fakultas</label>
+                    <select name="fakultas_id" id="editFakultasId" class="form-input form-select">
+                        <option value="">-- Pilih Fakultas --</option>
+                        {% for f in fakultas_list %}
+                        <option value="{{ f.id }}">{{ f.nama_fakultas }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+            </div>
+            <div class="form-row">
+                <div class="form-group">
+                    <label class="form-label">Password Baru (kosongkan jika tidak ingin mengubah)</label>
+                    <input type="password" name="password" id="editPassword" class="form-input">
+                </div>
+            </div>
+            <div class="modal-actions">
+                <button type="button" class="btn btn-outline" onclick="document.getElementById('modalEdit').style.display='none'">Batal</button>
+                <button type="submit" class="btn btn-primary">Simpan Perubahan</button>
+            </div>
+        </form>
     </div>
 </div>
 
@@ -144,6 +210,19 @@
             <div class="modal-actions">
                 <button type="button" class="btn btn-outline" onclick="document.getElementById('modalTambah').style.display='none'">Batal</button>
                 <button type="submit" class="btn btn-primary">Tambah Pengguna</button>
+
+            <script>
+            function openEditModal(button) {
+                document.getElementById('editName').value = button.dataset.name;
+                document.getElementById('editEmail').value = button.dataset.email;
+                document.getElementById('editNim').value = button.dataset.nim;
+                document.getElementById('editRole').value = button.dataset.role;
+                document.getElementById('editFakultasId').value = button.dataset.fakultasId;
+                document.getElementById('editPassword').value = '';
+                document.getElementById('formEditUser').action = '/admin/users/' + button.dataset.userId + '/edit';
+                document.getElementById('modalEdit').style.display = 'flex';
+            }
+            </script>
             </div>
         </form>
     </div>
