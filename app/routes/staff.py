@@ -1,7 +1,7 @@
 import os
 import hashlib
 import uuid
-from datetime import datetime
+from datetime import datetime, timedelta
 from flask import (
     Blueprint, render_template, redirect, url_for,
     flash, request, current_app, send_from_directory, abort, jsonify
@@ -11,6 +11,7 @@ from flask_login import login_required, current_user
 from app import db
 from app.models.bebas_pustaka import BebasPustaka
 from app.models.fakultas import Fakultas
+from app.models.user import User
 from app.utils.decorators import staff_required
 
 staff_bp = Blueprint('staff', __name__)
@@ -141,6 +142,102 @@ def form_bebas_pustaka():
     return render_template('staff/form.html', fakultas_list=fakultas_list, is_scoped=bool(current_user.fakultas_id), tipe_pengajuan=tipe_pengajuan)
 
 
+def _require_staff_pusat():
+    if current_user.fakultas_id:
+        abort(403)
+
+
+@staff_bp.route('/fast-track', methods=['GET', 'POST'])
+@login_required
+@staff_required
+def fast_track():
+    _require_staff_pusat()
+    fakultas_list = Fakultas.query.order_by(Fakultas.nama_fakultas).all()
+
+    if request.method == 'POST':
+        nim = request.form.get('nim', '').strip()
+        nama = request.form.get('nama', '').strip()
+        alamat = request.form.get('alamat', '').strip()
+        fakultas_id = request.form.get('fakultas_id', type=int)
+        prodi_id = request.form.get('prodi_id', type=int)
+        errors = []
+        if not nim or not nama or not alamat or not fakultas_id or not prodi_id:
+            errors.append('NIM, nama, alamat, fakultas, dan program studi wajib diisi.')
+        if errors:
+            for error in errors:
+                flash(error, 'danger')
+            return render_template('staff/center_special_form.html', mode='fast_track', fakultas_list=fakultas_list)
+
+        mahasiswa = User.query.filter_by(nim=nim, role='mahasiswa').first()
+        now = datetime.utcnow()
+        pengajuan = BebasPustaka(
+            user_id=mahasiswa.id if mahasiswa else None,
+            created_by=current_user.id,
+            nim=nim,
+            nama=nama,
+            alamat=alamat,
+            fakultas_id=fakultas_id,
+            prodi_id=prodi_id,
+            tipe_pengajuan='pusat',
+            status='disetujui',
+            reviewed_by=current_user.id,
+            approved_at=now,
+            berlaku_sampai=now + timedelta(days=90),
+        )
+        db.session.add(pengajuan)
+        db.session.flush()
+        pengajuan.nomor_surat = pengajuan.generate_nomor_surat()
+        db.session.commit()
+        flash('Surat Bebas Pustaka Pusat Fast Track berhasil diterbitkan.', 'success')
+        return redirect(url_for('staff.pengajuan_detail', id=pengajuan.id))
+
+    return render_template('staff/center_special_form.html', mode='fast_track', fakultas_list=fakultas_list)
+
+
+@staff_bp.route('/perpanjangan', methods=['GET', 'POST'])
+@login_required
+@staff_required
+def perpanjangan():
+    _require_staff_pusat()
+
+    if request.method == 'POST':
+        nim = request.form.get('nim', '').strip()
+        sumber = BebasPustaka.query.filter_by(
+            nim=nim, tipe_pengajuan='pusat', status='disetujui'
+        ).order_by(BebasPustaka.approved_at.desc()).first()
+        if not sumber:
+            flash('Surat Bebas Pustaka Pusat dengan NIM tersebut tidak ditemukan.', 'danger')
+            return render_template('staff/center_special_form.html', mode='renewal')
+
+        now = datetime.utcnow()
+        tanggal_mulai_perpanjangan = max(
+            now,
+            sumber.get_berlaku_sampai() or sumber.approved_at
+        )
+        pengajuan = BebasPustaka(
+            user_id=sumber.user_id,
+            created_by=current_user.id,
+            nim=sumber.nim,
+            nama=sumber.nama,
+            alamat=sumber.alamat,
+            fakultas_id=sumber.fakultas_id,
+            prodi_id=sumber.prodi_id,
+            tipe_pengajuan='pusat',
+            status='disetujui',
+            reviewed_by=current_user.id,
+            approved_at=now,
+            berlaku_sampai=tanggal_mulai_perpanjangan + timedelta(days=90),
+        )
+        db.session.add(pengajuan)
+        db.session.flush()
+        pengajuan.nomor_surat = pengajuan.generate_nomor_surat()
+        db.session.commit()
+        flash('Masa berlaku surat berhasil diperpanjang 90 hari.', 'success')
+        return redirect(url_for('staff.pengajuan_detail', id=pengajuan.id))
+
+    return render_template('staff/center_special_form.html', mode='renewal')
+
+
 @staff_bp.route('/pengajuan-saya')
 @login_required
 @staff_required
@@ -261,6 +358,7 @@ def pengajuan_detail(id):
             pengajuan.status = 'disetujui'
             pengajuan.reviewed_by = current_user.id
             pengajuan.approved_at = datetime.utcnow()
+            pengajuan.berlaku_sampai = pengajuan.approved_at + timedelta(days=90)
             # Generate nomor surat
             pengajuan.nomor_surat = pengajuan.generate_nomor_surat()
             db.session.commit()

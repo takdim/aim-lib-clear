@@ -6,6 +6,8 @@ load_dotenv()
 
 class Config:
     SECRET_KEY = os.environ.get('SECRET_KEY', 'dev-secret-key-ganti-di-produksi')
+    APP_NAME = 'SIPABUDI'
+    APP_TAGLINE = 'Sistem Pelayanan Akses Bebas Pustaka Digital'
 
     # MySQL connection via PyMySQL
     DB_HOST = os.environ.get('DB_HOST', 'localhost')

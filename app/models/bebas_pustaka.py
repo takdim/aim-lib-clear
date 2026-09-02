@@ -1,5 +1,5 @@
 import os
-from datetime import datetime
+from datetime import datetime, timedelta
 from flask import current_app
 from app import db
 
@@ -35,6 +35,7 @@ class BebasPustaka(db.Model):
     reviewed_by = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=True)
     nomor_surat = db.Column(db.String(100), nullable=True)
     approved_at = db.Column(db.DateTime, nullable=True)
+    berlaku_sampai = db.Column(db.DateTime, nullable=True)
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
     updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
 
@@ -45,14 +46,25 @@ class BebasPustaka(db.Model):
         if not self.approved_at:
             return True
         retention = current_app.config.get('FILE_RETENTION_DAYS', 30)
-        return (datetime.utcnow() - self.approved_at).days <= retention
+        return not self.is_berlaku_expired()
 
     def is_approved_over_retention(self):
         """Apakah sudah disetujui lebih dari retention period (tombol cetak ulang)."""
         if self.status != 'disetujui' or not self.approved_at:
             return False
         retention = current_app.config.get('FILE_RETENTION_DAYS', 30)
-        return (datetime.utcnow() - self.approved_at).days > retention
+        return self.is_berlaku_expired()
+
+    def is_berlaku_expired(self):
+        if self.status != 'disetujui' or not self.approved_at:
+            return False
+        expires_at = self.berlaku_sampai or self.approved_at + timedelta(days=90)
+        return datetime.utcnow() > expires_at
+
+    def get_berlaku_sampai(self):
+        if not self.approved_at:
+            return None
+        return self.berlaku_sampai or self.approved_at + timedelta(days=90)
 
     def get_status_label(self):
         labels = {

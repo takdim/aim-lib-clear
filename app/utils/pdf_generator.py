@@ -132,7 +132,7 @@ def generate_surat_bebas_pustaka(pengajuan, nama_institusi, nama_perpustakaan):
 
     # Tanggal berlaku (tebal, tengah)
     tgl_disetujui = pengajuan.approved_at or datetime.utcnow()
-    tgl_berlaku = tgl_disetujui + timedelta(days=90)
+    tgl_berlaku = pengajuan.get_berlaku_sampai() or tgl_disetujui + timedelta(days=90)
     c.setFont("Helvetica-Bold", 11)
     c.drawCentredString(width / 2, y, format_indo_date(tgl_berlaku))
     y -= 1.0*cm

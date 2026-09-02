@@ -1,1 +1,3 @@
-# aim-lib-clear
+# SIPABUDI
+
+Sistem Pelayanan Akses Bebas Pustaka Digital

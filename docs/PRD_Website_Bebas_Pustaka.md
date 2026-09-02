@@ -1,5 +1,5 @@
 # Product Requirements Document (PRD)
-# Website Bebas Pustaka — Sistem Manajemen Surat Keterangan Bebas Pustaka
+# SIPABUDI — Sistem Pelayanan Akses Bebas Pustaka Digital
 
 ---
 
@@ -7,7 +7,7 @@
 
 | Atribut | Detail |
 |---|---|
-| **Nama Produk** | Website Bebas Pustaka |
+| **Nama Produk** | SIPABUDI |
 | **Versi** | 1.0.0 |
 | **Status** | In Development |
 | **Tanggal** | Juni 2026 |

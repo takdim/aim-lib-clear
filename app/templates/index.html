@@ -1,15 +1,15 @@
 {% extends "base.html" %}
 
 {% block title %}Beranda{% endblock %}
-{% block meta_description %}Urus surat bebas pustaka secara digital, cepat, dan aman.{% endblock %}
+{% block meta_description %}{{ config.APP_TAGLINE }} untuk pengurusan surat bebas pustaka secara digital.{% endblock %}
 
 {% block content %}
 <!-- Hero -->
 <section class="hero">
     <div class="container hero-inner">
         <div class="hero-text">
-            <span class="hero-badge">Layanan Digital</span>
-            <h1 class="hero-title">Bebas Pustaka<br><span class="gradient-text">Lebih Mudah & Cepat</span></h1>
+            <span class="hero-badge">{{ config.APP_NAME }}</span>
+            <h1 class="hero-title">{{ config.APP_NAME }}<br><span class="gradient-text">Bebas Pustaka Lebih Mudah</span></h1>
             <p class="hero-desc">Ajukan surat keterangan bebas pustaka secara online tanpa perlu datang ke perpustakaan. Proses lebih cepat, aman, dan bisa dilacak kapan saja.</p>
             <div class="hero-actions">
                 {% if current_user.is_authenticated %}

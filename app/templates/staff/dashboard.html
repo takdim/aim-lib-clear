@@ -14,7 +14,12 @@
             </p>
         </div>
         <div style="display:flex;gap:0.5rem;flex-wrap:wrap;">
-            <a href="{{ url_for('staff.form_bebas_pustaka') }}" class="btn btn-primary">+ Buat Pengajuan Saya</a>
+            {% if current_user.fakultas_id %}
+            <a href="{{ url_for('staff.form_bebas_pustaka') }}" class="btn btn-primary">+ Buat Bebas Pustaka Fakultas</a>
+            {% else %}
+            <a href="{{ url_for('staff.fast_track') }}" class="btn btn-primary">+ Fast Track Pusat</a>
+            <a href="{{ url_for('staff.perpanjangan') }}" class="btn btn-outline">Perpanjangan Surat</a>
+            {% endif %}
             <a href="{{ url_for('staff.pengajuan_list') }}" class="btn btn-outline">Lihat Semua Pengajuan →</a>
         </div>
     </div>

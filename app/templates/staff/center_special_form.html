@@ -1,0 +1,89 @@
+{% extends "base.html" %}
+{% block title %}{{ 'Fast Track' if mode == 'fast_track' else 'Perpanjangan Surat' }}{% endblock %}
+
+{% block content %}
+<div class="container page-content">
+    <div class="page-header">
+        <div>
+            <h1 class="page-title">{{ 'Bebas Pustaka Pusat Fast Track' if mode == 'fast_track' else 'Perpanjangan Bebas Pustaka Pusat' }}</h1>
+            <p class="page-subtitle">Layanan khusus staff Perpustakaan Pusat</p>
+        </div>
+        <a href="{{ url_for('staff.dashboard') }}" class="btn btn-outline">← Kembali</a>
+    </div>
+
+    <div class="card">
+        <div class="card-body">
+            {% if mode == 'fast_track' %}
+            <div class="alert alert-warning">
+                <strong>Fast Track:</strong> surat pusat diterbitkan langsung tanpa menunggu persetujuan Fakultas dan tanpa upload dokumen.
+            </div>
+            <form method="POST" action="{{ url_for('staff.fast_track') }}" id="formFastTrack">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                <div class="form-row">
+                    <div class="form-group">
+                        <label class="form-label">NIM <span class="required">*</span></label>
+                        <input type="text" name="nim" class="form-input" maxlength="20" required>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Nama Lengkap <span class="required">*</span></label>
+                        <input type="text" name="nama" class="form-input" maxlength="100" required>
+                    </div>
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label class="form-label">Fakultas <span class="required">*</span></label>
+                        <select name="fakultas_id" id="fakultas_id" class="form-input form-select" required>
+                            <option value="">-- Pilih Fakultas --</option>
+                            {% for f in fakultas_list %}<option value="{{ f.id }}">{{ f.nama_fakultas }}</option>{% endfor %}
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Program Studi <span class="required">*</span></label>
+                        <select name="prodi_id" id="prodi_id" class="form-input form-select" required><option value="">-- Pilih Prodi --</option></select>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Alamat <span class="required">*</span></label>
+                    <textarea name="alamat" class="form-input form-textarea" rows="3" required></textarea>
+                </div>
+                <button type="submit" class="btn btn-primary">Terbitkan dan Setujui Surat</button>
+            </form>
+            {% else %}
+            <div class="alert alert-info">
+                Masukkan NIM mahasiswa. Sistem akan menyalin data surat pusat terakhir dan menerbitkan nomor serta masa berlaku baru selama 90 hari.
+            </div>
+            <form method="POST" action="{{ url_for('staff.perpanjangan') }}">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                <div class="form-group">
+                    <label class="form-label">NIM <span class="required">*</span></label>
+                    <input type="text" name="nim" class="form-input" maxlength="20" required autofocus>
+                </div>
+                <button type="submit" class="btn btn-primary">Perpanjang dan Terbitkan Surat</button>
+            </form>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+{% if mode == 'fast_track' %}
+<script>
+document.getElementById('fakultas_id').addEventListener('change', function () {
+    const prodi = document.getElementById('prodi_id');
+    prodi.innerHTML = '<option value="">-- Memuat... --</option>';
+    fetch('/api/prodi-by-fakultas/' + this.value)
+        .then(response => response.json())
+        .then(data => {
+            prodi.innerHTML = '<option value="">-- Pilih Prodi --</option>';
+            data.forEach(item => {
+                const option = document.createElement('option');
+                option.value = item.id;
+                option.textContent = item.nama_prodi;
+                prodi.appendChild(option);
+            });
+        });
+});
+</script>
+{% endif %}
+{% endblock %}

@@ -31,6 +31,7 @@
                             <tr><th>Tgl Pengajuan</th><td>{{ pengajuan.created_at.strftime('%d %B %Y, %H:%M') }}</td></tr>
                             {% if pengajuan.approved_at %}
                             <tr><th>Tgl Disetujui</th><td>{{ pengajuan.approved_at.strftime('%d %B %Y, %H:%M') }}</td></tr>
+                            <tr><th>Berlaku Sampai</th><td>{{ pengajuan.get_berlaku_sampai().strftime('%d %B %Y') if pengajuan.get_berlaku_sampai() else '-' }}</td></tr>
                             {% endif %}
                             {% if pengajuan.catatan_penolakan %}
                             <tr><th>Alasan Tolak</th><td class="text-danger">{{ pengajuan.catatan_penolakan }}</td></tr>
@@ -44,6 +45,7 @@
             </div>
 
             <!-- File Dokumen -->
+            {% if pengajuan.file_bebas_pustaka or pengajuan.file_kartu_mahasiswa %}
             <div class="card mb-4">
                 <div class="card-body">
                     <h2 class="card-title">Dokumen Upload Mahasiswa</h2>
@@ -66,6 +68,7 @@
                     {% endif %}
                 </div>
             </div>
+            {% endif %}
         </div>
 
         <!-- Kolom Kanan: Aksi -->

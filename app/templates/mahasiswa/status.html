@@ -43,6 +43,9 @@
                 <span class="badge badge-info">{{ pengajuan.get_tipe_label() }}</span>
                 <span class="badge {{ pengajuan.get_status_badge_class() }} badge-lg">{{ pengajuan.get_status_label() }}</span>
                 <span class="text-muted ml-2">Diajukan: {{ pengajuan.created_at.strftime('%d %b %Y, %H:%M') }}</span>
+                {% if pengajuan.status == 'disetujui' and pengajuan.get_berlaku_sampai() %}
+                <span class="text-muted ml-2">Berlaku sampai: {{ pengajuan.get_berlaku_sampai().strftime('%d %b %Y') }}</span>
+                {% endif %}
             </div>
         </div>
     </div>
