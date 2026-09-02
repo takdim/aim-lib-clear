@@ -30,6 +30,7 @@ class Config:
     NOMOR_SURAT_PREFIX = os.environ.get('NOMOR_SURAT_PREFIX', 'PERPUS')
     NAMA_INSTITUSI = os.environ.get('NAMA_INSTITUSI', 'Universitas Contoh')
     NAMA_PERPUSTAKAAN = os.environ.get('NAMA_PERPUSTAKAAN', 'UPT Perpustakaan')
+    PUBLIC_BASE_URL = os.environ.get('PUBLIC_BASE_URL', '').rstrip('/')
 
     # WTF CSRF
     WTF_CSRF_ENABLED = True

@@ -9,7 +9,7 @@ from reportlab.lib.utils import ImageReader
 from reportlab.pdfgen import canvas
 from reportlab.lib.styles import ParagraphStyle
 from reportlab.platypus import Paragraph
-from flask import current_app
+from flask import current_app, url_for
 
 
 def format_indo_date(date_obj):
@@ -163,10 +163,11 @@ def generate_surat_bebas_pustaka(pengajuan, nama_institusi, nama_perpustakaan):
 
     # QR Code verifikasi
     qr_size = 2.5*cm
-    qr_data = (
-        f"Nomor: {pengajuan.nomor_surat or 'N/A'} | "
-        f"Nama: {pengajuan.nama} | NIM: {pengajuan.nim}"
-    )
+    public_base_url = current_app.config.get('PUBLIC_BASE_URL')
+    if public_base_url:
+        qr_data = f"{public_base_url}/verifikasi/{pengajuan.id}"
+    else:
+        qr_data = url_for('main.verifikasi_surat', id=pengajuan.id, _external=True)
     try:
         qr_buf = _make_qr_image(qr_data)
         qr_x = width - margin_right - qr_size

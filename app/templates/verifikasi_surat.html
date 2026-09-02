@@ -1,0 +1,41 @@
+{% extends "base.html" %}
+{% block title %}Verifikasi Surat{% endblock %}
+
+{% block content %}
+<div class="container page-content" style="max-width:760px;">
+    <div class="page-header">
+        <div>
+            <h1 class="page-title">Verifikasi Surat</h1>
+            <p class="page-subtitle">Validasi keaslian Surat Keterangan Bebas Pustaka</p>
+        </div>
+    </div>
+
+    {% if pengajuan %}
+    <div class="card card-success">
+        <div class="card-body">
+            <h2 class="card-title">Surat Terverifikasi</h2>
+            <p class="text-muted">Surat ini tercatat sebagai surat yang sah di sistem.</p>
+            <table class="table table-detail" style="margin-top:1rem;">
+                <tbody>
+                    <tr><th>Nomor Surat</th><td>{{ pengajuan.nomor_surat }}</td></tr>
+                    <tr><th>Jenis Surat</th><td>{{ pengajuan.get_tipe_label() }}</td></tr>
+                    <tr><th>Nama</th><td>{{ pengajuan.nama }}</td></tr>
+                    <tr><th>NIM</th><td>{{ pengajuan.nim }}</td></tr>
+                    <tr><th>Fakultas</th><td>{{ pengajuan.fakultas.nama_fakultas if pengajuan.fakultas else '-' }}</td></tr>
+                    <tr><th>Program Studi</th><td>{{ pengajuan.program_studi.nama_prodi if pengajuan.program_studi else '-' }}</td></tr>
+                    <tr><th>Diterbitkan Oleh</th><td>{{ penerbit }}</td></tr>
+                    <tr><th>Tanggal Disetujui</th><td>{{ pengajuan.approved_at.strftime('%d %B %Y') if pengajuan.approved_at else '-' }}</td></tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+    {% else %}
+    <div class="card">
+        <div class="card-body text-center">
+            <h2 class="card-title">Surat Tidak Dapat Diverifikasi</h2>
+            <p class="text-muted">Surat tidak ditemukan atau belum disetujui.</p>
+        </div>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}
