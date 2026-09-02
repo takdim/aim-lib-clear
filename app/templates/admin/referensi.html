@@ -36,7 +36,10 @@
                                 <td>{{ f.kode_fakultas }}</td>
                                 <td>{{ f.nama_fakultas }}</td>
                                 <td>
-                                    <form method="POST" action="{{ url_for('admin.hapus_fakultas', id=f.id) }}"
+                                    <button type="button" class="btn btn-sm btn-outline" title="Edit"
+                                        data-id="{{ f.id }}" data-kode="{{ f.kode_fakultas }}" data-nama="{{ f.nama_fakultas }}"
+                                        onclick="openEditFakultas(this)">✏️</button>
+                                    <form method="POST" action="{{ url_for('admin.hapus_fakultas', id=f.id) }}" style="display:inline"
                                         onsubmit="return confirm('Hapus fakultas {{ f.nama_fakultas }}?')">
                                         <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                                         <button type="submit" class="btn btn-sm btn-danger">🗑</button>
@@ -91,7 +94,10 @@
                                 <td>{{ p.nama_prodi }}</td>
                                 <td>{{ p.fakultas.nama_fakultas if p.fakultas else '-' }}</td>
                                 <td>
-                                    <form method="POST" action="{{ url_for('admin.hapus_prodi', id=p.id) }}"
+                                    <button type="button" class="btn btn-sm btn-outline" title="Edit"
+                                        data-id="{{ p.id }}" data-kode="{{ p.kode_prodi }}" data-nama="{{ p.nama_prodi }}"
+                                        data-fakultas-id="{{ p.fakultas_id }}" onclick="openEditProdi(this)">✏️</button>
+                                    <form method="POST" action="{{ url_for('admin.hapus_prodi', id=p.id) }}" style="display:inline"
                                         onsubmit="return confirm('Hapus prodi {{ p.nama_prodi }}?')">
                                         <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                                         <button type="submit" class="btn btn-sm btn-danger">🗑</button>
@@ -108,4 +114,73 @@
         </div>
     </div>
 </div>
+
+<div class="modal-overlay" id="modalEditFakultas" style="display:none">
+    <div class="modal-box">
+        <h3 class="modal-title">Edit Fakultas</h3>
+        <form method="POST" id="formEditFakultas">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+            <div class="form-group">
+                <label class="form-label">Kode Fakultas</label>
+                <input type="text" name="kode_fakultas" id="editKodeFakultas" class="form-input" required>
+            </div>
+            <div class="form-group">
+                <label class="form-label">Nama Fakultas</label>
+                <input type="text" name="nama_fakultas" id="editNamaFakultas" class="form-input" required>
+            </div>
+            <div class="modal-actions">
+                <button type="button" class="btn btn-outline" onclick="closeEditModal('modalEditFakultas')">Batal</button>
+                <button type="submit" class="btn btn-primary">Simpan Perubahan</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<div class="modal-overlay" id="modalEditProdi" style="display:none">
+    <div class="modal-box">
+        <h3 class="modal-title">Edit Program Studi</h3>
+        <form method="POST" id="formEditProdi">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+            <div class="form-group">
+                <label class="form-label">Kode Program Studi</label>
+                <input type="text" name="kode_prodi" id="editKodeProdi" class="form-input" required>
+            </div>
+            <div class="form-group">
+                <label class="form-label">Nama Program Studi</label>
+                <input type="text" name="nama_prodi" id="editNamaProdi" class="form-input" required>
+            </div>
+            <div class="form-group">
+                <label class="form-label">Fakultas</label>
+                <select name="fakultas_id" id="editFakultasProdi" class="form-input form-select" required>
+                    {% for f in fakultas_list %}
+                    <option value="{{ f.id }}">{{ f.nama_fakultas }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="modal-actions">
+                <button type="button" class="btn btn-outline" onclick="closeEditModal('modalEditProdi')">Batal</button>
+                <button type="submit" class="btn btn-primary">Simpan Perubahan</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script>
+function openEditFakultas(button) {
+    document.getElementById('editKodeFakultas').value = button.dataset.kode;
+    document.getElementById('editNamaFakultas').value = button.dataset.nama;
+    document.getElementById('formEditFakultas').action = '/admin/referensi/fakultas/' + button.dataset.id + '/edit';
+    document.getElementById('modalEditFakultas').style.display = 'flex';
+}
+function openEditProdi(button) {
+    document.getElementById('editKodeProdi').value = button.dataset.kode;
+    document.getElementById('editNamaProdi').value = button.dataset.nama;
+    document.getElementById('editFakultasProdi').value = button.dataset.fakultasId;
+    document.getElementById('formEditProdi').action = '/admin/referensi/prodi/' + button.dataset.id + '/edit';
+    document.getElementById('modalEditProdi').style.display = 'flex';
+}
+function closeEditModal(id) {
+    document.getElementById(id).style.display = 'none';
+}
+</script>
 {% endblock %}

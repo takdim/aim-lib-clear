@@ -289,6 +289,26 @@ def tambah_fakultas():
     return redirect(url_for('admin.referensi'))
 
 
+@admin_bp.route('/referensi/fakultas/<int:id>/edit', methods=['POST'])
+@login_required
+@admin_required
+def edit_fakultas(id):
+    fakultas = Fakultas.query.get_or_404(id)
+    nama = request.form.get('nama_fakultas', '').strip()
+    kode = request.form.get('kode_fakultas', '').strip().upper()
+
+    if not nama or not kode:
+        flash('Nama dan kode fakultas wajib diisi.', 'danger')
+    elif Fakultas.query.filter(Fakultas.kode_fakultas == kode, Fakultas.id != id).first():
+        flash('Kode fakultas sudah digunakan.', 'danger')
+    else:
+        fakultas.nama_fakultas = nama
+        fakultas.kode_fakultas = kode
+        db.session.commit()
+        flash(f'Fakultas {nama} berhasil diperbarui.', 'success')
+    return redirect(url_for('admin.referensi'))
+
+
 @admin_bp.route('/referensi/fakultas/<int:id>/hapus', methods=['POST'])
 @login_required
 @admin_required
@@ -313,6 +333,28 @@ def tambah_prodi():
     db.session.add(ProgramStudi(nama_prodi=nama, kode_prodi=kode, fakultas_id=fakultas_id))
     db.session.commit()
     flash(f'Program Studi {nama} berhasil ditambahkan.', 'success')
+    return redirect(url_for('admin.referensi'))
+
+
+@admin_bp.route('/referensi/prodi/<int:id>/edit', methods=['POST'])
+@login_required
+@admin_required
+def edit_prodi(id):
+    prodi = ProgramStudi.query.get_or_404(id)
+    nama = request.form.get('nama_prodi', '').strip()
+    kode = request.form.get('kode_prodi', '').strip().upper()
+    fakultas_id = request.form.get('fakultas_id', type=int)
+
+    if not nama or not kode or not fakultas_id:
+        flash('Nama, kode, dan fakultas program studi wajib diisi.', 'danger')
+    elif not Fakultas.query.get(fakultas_id):
+        flash('Fakultas tidak ditemukan.', 'danger')
+    else:
+        prodi.nama_prodi = nama
+        prodi.kode_prodi = kode
+        prodi.fakultas_id = fakultas_id
+        db.session.commit()
+        flash(f'Program studi {nama} berhasil diperbarui.', 'success')
     return redirect(url_for('admin.referensi'))
 
 
