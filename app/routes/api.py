@@ -26,14 +26,17 @@ def generate_pdf(id):
             abort(403)
     if current_user.role == 'staff':
         tipe_staff = 'fakultas' if current_user.fakultas_id else 'pusat'
+        is_own_central_submission = (
+            current_user.fakultas_id and
+            pengajuan.tipe_pengajuan == 'pusat' and
+            (pengajuan.created_by == current_user.id or pengajuan.user_id == current_user.id)
+        )
         if pengajuan.tipe_pengajuan != tipe_staff:
-            if not (
-                current_user.fakultas_id and
-                pengajuan.tipe_pengajuan == 'pusat' and
-                (pengajuan.created_by == current_user.id or pengajuan.user_id == current_user.id)
-            ):
+            if not is_own_central_submission:
                 abort(403)
-        if current_user.fakultas_id and pengajuan.fakultas_id != current_user.fakultas_id:
+        if current_user.fakultas_id and \
+           pengajuan.fakultas_id != current_user.fakultas_id and \
+           not is_own_central_submission:
             abort(403)
 
     if pengajuan.status != 'disetujui':
