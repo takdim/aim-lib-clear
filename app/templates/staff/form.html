@@ -77,6 +77,7 @@
                 <h2 class="section-divider">Upload Dokumen</h2>
 
                 <div class="form-row">
+                    {% if tipe_pengajuan == 'pusat' %}
                     <div class="form-group">
                         <label for="file_bebas_pustaka" class="form-label">
                             Surat Bebas dari Fakultas <span class="required">*</span>
@@ -91,6 +92,7 @@
                         </div>
                         <p class="file-selected-name" id="file1Name"></p>
                     </div>
+                    {% endif %}
                     <div class="form-group">
                         <label for="file_kartu_mahasiswa" class="form-label">
                             Kartu Tanda Mahasiswa / Identitas <span class="required">*</span>
@@ -160,9 +162,12 @@ loadProdi({{ fakultas_list[0].id }});
 {% endif %}
 
 // Preview nama file
-document.getElementById('file_bebas_pustaka').addEventListener('change', function () {
-    document.getElementById('file1Name').textContent = this.files[0] ? this.files[0].name : '';
-});
+const fileBebasInput = document.getElementById('file_bebas_pustaka');
+if (fileBebasInput) {
+    fileBebasInput.addEventListener('change', function () {
+        document.getElementById('file1Name').textContent = this.files[0] ? this.files[0].name : '';
+    });
+}
 document.getElementById('file_kartu_mahasiswa').addEventListener('change', function () {
     document.getElementById('file2Name').textContent = this.files[0] ? this.files[0].name : '';
 });

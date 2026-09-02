@@ -110,7 +110,9 @@ def form_bebas_pustaka():
         errors = []
         if not alamat:
             errors.append('Alamat wajib diisi.')
-        if not file_bebas or not allowed_file(file_bebas.filename):
+        if tipe_pengajuan == 'pusat' and (
+            not file_bebas or not allowed_file(file_bebas.filename)
+        ):
             errors.append('File Bebas Pustaka dari Fakultas wajib diupload (PDF).')
         if not file_kartu or not allowed_file(file_kartu.filename):
             errors.append('File Kartu Mahasiswa wajib diupload (PDF).')
@@ -136,9 +138,10 @@ def form_bebas_pustaka():
 
         # Simpan file
         try:
-            path_bebas = save_upload(file_bebas, pengajuan.id, 'bebas_pustaka')
+            if file_bebas:
+                path_bebas = save_upload(file_bebas, pengajuan.id, 'bebas_pustaka')
+                pengajuan.file_bebas_pustaka = path_bebas
             path_kartu = save_upload(file_kartu, pengajuan.id, 'kartu_mahasiswa')
-            pengajuan.file_bebas_pustaka = path_bebas
             pengajuan.file_kartu_mahasiswa = path_kartu
             db.session.commit()
         except Exception as e:

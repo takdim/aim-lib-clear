@@ -54,6 +54,7 @@
                 <h2 class="section-divider">Upload Dokumen</h2>
 
                 <div class="form-row">
+                    {% if tipe_pengajuan == 'pusat' %}
                     <div class="form-group">
                         <label for="file_bebas_pustaka" class="form-label">
                             Surat Bebas dari Fakultas <span class="required">*</span>
@@ -68,6 +69,7 @@
                         </div>
                         <p class="file-selected-name" id="file1Name"></p>
                     </div>
+                    {% endif %}
                     <div class="form-group">
                         <label for="file_kartu_mahasiswa" class="form-label">
                             Kartu Tanda Mahasiswa (KTM) <span class="required">*</span>
