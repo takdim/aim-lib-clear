@@ -1,5 +1,6 @@
 import os
 import hashlib
+import shutil
 import uuid
 from datetime import datetime
 from flask import (
@@ -35,6 +36,32 @@ def save_upload(file, pengajuan_id, suffix):
     file_path = os.path.join(full_dir, filename)
     file.save(file_path)
 
+    return os.path.join(sub_dir, filename)
+
+
+def reusable_kartu_mahasiswa(pengajuan):
+    if not pengajuan or pengajuan.file_deleted or not pengajuan.file_kartu_mahasiswa:
+        return None
+
+    full_path = os.path.join(
+        current_app.config['UPLOAD_FOLDER'], pengajuan.file_kartu_mahasiswa
+    )
+    return pengajuan.file_kartu_mahasiswa if os.path.isfile(full_path) else None
+
+
+def copy_upload(relative_path, pengajuan_id, suffix):
+    upload_folder = current_app.config['UPLOAD_FOLDER']
+    now = datetime.utcnow()
+    sub_dir = os.path.join(str(now.year), f'{now.month:02d}', str(pengajuan_id))
+    full_dir = os.path.join(upload_folder, sub_dir)
+    os.makedirs(full_dir, exist_ok=True)
+
+    unique = hashlib.sha256(f'{uuid.uuid4()}{suffix}'.encode()).hexdigest()[:16]
+    filename = f'{unique}_{suffix}.pdf'
+    shutil.copy2(
+        os.path.join(upload_folder, relative_path),
+        os.path.join(full_dir, filename),
+    )
     return os.path.join(sub_dir, filename)
 
 
@@ -102,6 +129,11 @@ def form_bebas_pustaka():
         flash(f'Anda masih memiliki pengajuan {tipe_pengajuan} yang aktif.', 'warning')
         return redirect(url_for('mahasiswa.status'))
 
+    kartu_mahasiswa_lama = (
+        reusable_kartu_mahasiswa(pengajuan_fakultas)
+        if tipe_pengajuan == 'pusat' else None
+    )
+
     if request.method == 'POST':
         alamat = request.form.get('alamat', '').strip()
         file_bebas = request.files.get('file_bebas_pustaka')
@@ -114,13 +146,20 @@ def form_bebas_pustaka():
             not file_bebas or not allowed_file(file_bebas.filename)
         ):
             errors.append('File Bebas Pustaka dari Fakultas wajib diupload (PDF).')
-        if not file_kartu or not allowed_file(file_kartu.filename):
+        if (
+            not kartu_mahasiswa_lama and
+            (not file_kartu or not allowed_file(file_kartu.filename))
+        ):
             errors.append('File Kartu Mahasiswa wajib diupload (PDF).')
 
         if errors:
             for e in errors:
                 flash(e, 'danger')
-            return render_template('mahasiswa/form.html', tipe_pengajuan=tipe_pengajuan)
+            return render_template(
+                'mahasiswa/form.html',
+                tipe_pengajuan=tipe_pengajuan,
+                kartu_mahasiswa_lama=bool(kartu_mahasiswa_lama),
+            )
 
         # Simpan pengajuan ke DB dulu untuk dapat ID
         pengajuan = BebasPustaka(
@@ -141,18 +180,31 @@ def form_bebas_pustaka():
             if file_bebas:
                 path_bebas = save_upload(file_bebas, pengajuan.id, 'bebas_pustaka')
                 pengajuan.file_bebas_pustaka = path_bebas
-            path_kartu = save_upload(file_kartu, pengajuan.id, 'kartu_mahasiswa')
+            if kartu_mahasiswa_lama:
+                path_kartu = copy_upload(
+                    kartu_mahasiswa_lama, pengajuan.id, 'kartu_mahasiswa'
+                )
+            else:
+                path_kartu = save_upload(file_kartu, pengajuan.id, 'kartu_mahasiswa')
             pengajuan.file_kartu_mahasiswa = path_kartu
             db.session.commit()
         except Exception as e:
             db.session.rollback()
             flash(f'Gagal mengupload file: {str(e)}', 'danger')
-            return render_template('mahasiswa/form.html', tipe_pengajuan=tipe_pengajuan)
+            return render_template(
+                'mahasiswa/form.html',
+                tipe_pengajuan=tipe_pengajuan,
+                kartu_mahasiswa_lama=bool(kartu_mahasiswa_lama),
+            )
 
         flash('Pengajuan berhasil dikirim! Tunggu review dari staff.', 'success')
         return redirect(url_for('mahasiswa.status'))
 
-    return render_template('mahasiswa/form.html', tipe_pengajuan=tipe_pengajuan)
+    return render_template(
+        'mahasiswa/form.html',
+        tipe_pengajuan=tipe_pengajuan,
+        kartu_mahasiswa_lama=bool(kartu_mahasiswa_lama),
+    )
 
 
 @mahasiswa_bp.route('/status')
@@ -165,4 +217,14 @@ def status():
     ).order_by(
         BebasPustaka.created_at.desc()
     ).first()
-    return render_template('mahasiswa/status.html', pengajuan=pengajuan)
+    pengajuan_fakultas = BebasPustaka.query.filter_by(
+        nim=current_user.nim,
+        fakultas_id=current_user.fakultas_id,
+        tipe_pengajuan='fakultas',
+        status='disetujui',
+    ).order_by(BebasPustaka.created_at.desc()).first()
+    return render_template(
+        'mahasiswa/status.html',
+        pengajuan=pengajuan,
+        pengajuan_fakultas=pengajuan_fakultas,
+    )

@@ -51,6 +51,19 @@
     </div>
     {% endif %}
 
+    {% if pengajuan_fakultas and pengajuan_fakultas.status == 'disetujui' %}
+    <div class="card card-success mb-4">
+        <div class="card-body">
+            <h2 class="card-title">Bebas Pustaka Fakultas</h2>
+            <p class="text-muted">Surat Fakultas telah disetujui dan tetap tersedia untuk dilihat atau diunduh.</p>
+            <div style="display:flex;gap:0.5rem;flex-wrap:wrap;">
+                <a href="{{ url_for('api.generate_pdf', id=pengajuan_fakultas.id) }}" class="btn btn-outline" target="_blank">Lihat Surat Fakultas</a>
+                <a href="{{ url_for('api.generate_pdf', id=pengajuan_fakultas.id, download=1) }}" class="btn btn-success">Download Surat Fakultas</a>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+
     <!-- Riwayat -->
     {% if riwayat | length > 1 %}
     <div class="card">

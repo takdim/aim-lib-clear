@@ -58,9 +58,11 @@
                     </div>
                     {% else %}
                     <div class="file-actions">
+                        {% if not current_user.fakultas_id and pengajuan.file_bebas_pustaka %}
                         <button type="button" class="btn btn-outline" onclick="openPDFModal('{{ url_for('staff.view_file', id=pengajuan.id, jenis='bebas_pustaka') }}', 'Surat Bebas Pustaka Fakultas')">
                             📋 Lihat Surat Bebas dari Fakultas
                         </button>
+                        {% endif %}
                         <button type="button" class="btn btn-outline" onclick="openPDFModal('{{ url_for('staff.view_file', id=pengajuan.id, jenis='kartu_mahasiswa') }}', 'Kartu Tanda Mahasiswa')">
                             🪪 Lihat Kartu Mahasiswa
                         </button>

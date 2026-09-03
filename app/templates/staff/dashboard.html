@@ -16,6 +16,7 @@
         <div style="display:flex;gap:0.5rem;flex-wrap:wrap;">
             {% if current_user.fakultas_id %}
             <a href="{{ url_for('staff.form_bebas_pustaka') }}" class="btn btn-primary">+ Buat Bebas Pustaka Fakultas</a>
+            <a href="{{ url_for('staff.perpanjangan') }}" class="btn btn-outline">Perpanjangan Fakultas</a>
             {% else %}
             <a href="{{ url_for('staff.fast_track') }}" class="btn btn-primary">+ Fast Track Pusat</a>
             <a href="{{ url_for('staff.perpanjangan') }}" class="btn btn-outline">Perpanjangan Surat</a>
@@ -98,9 +99,12 @@
         <div class="card-body">
             <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:1rem;">
                 <h2 class="card-title" style="margin-bottom:0;">Pengajuan Saya</h2>
-                {% if current_user.can_submit() %}
+                <div style="display:flex;gap:0.5rem;">
+                    <a href="{{ url_for('staff.pengajuan_saya') }}" class="btn btn-sm btn-outline">Lihat Semua</a>
+                    {% if current_user.can_submit() %}
                 <a href="{{ url_for('staff.form_bebas_pustaka') }}" class="btn btn-sm btn-primary">+ Buat Pengajuan</a>
-                {% endif %}
+                    {% endif %}
+                </div>
             </div>
             {% if pengajuan_saya %}
             <div class="table-wrapper">

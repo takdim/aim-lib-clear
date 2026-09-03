@@ -5,8 +5,8 @@
 <div class="container page-content">
     <div class="page-header">
         <div>
-            <h1 class="page-title">{{ 'Bebas Pustaka Pusat Fast Track' if mode == 'fast_track' else 'Perpanjangan Bebas Pustaka Pusat' }}</h1>
-            <p class="page-subtitle">Layanan khusus staff Perpustakaan Pusat</p>
+            <h1 class="page-title">{{ 'Bebas Pustaka Pusat Fast Track' if mode == 'fast_track' else 'Perpanjangan Bebas Pustaka ' ~ ('Fakultas' if tipe_pengajuan == 'fakultas' else 'Pusat') }}</h1>
+            <p class="page-subtitle">{{ 'Layanan khusus staff Perpustakaan Pusat' if mode == 'fast_track' or tipe_pengajuan != 'fakultas' else 'Layanan staff Fakultas' }}</p>
         </div>
         <a href="{{ url_for('staff.dashboard') }}" class="btn btn-outline">← Kembali</a>
     </div>
@@ -50,7 +50,7 @@
             </form>
             {% else %}
             <div class="alert alert-info">
-                Masukkan NIM mahasiswa. Sistem akan menyalin data surat pusat terakhir dan menerbitkan nomor serta masa berlaku baru selama 90 hari.
+                Masukkan NIM mahasiswa. Sistem akan menyalin data surat {{ 'fakultas' if tipe_pengajuan == 'fakultas' else 'pusat' }} terakhir dan menerbitkan nomor serta masa berlaku baru selama 90 hari.
             </div>
             <form method="POST" action="{{ url_for('staff.perpanjangan') }}">
                 <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">

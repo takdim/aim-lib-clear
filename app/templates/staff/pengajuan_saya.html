@@ -14,7 +14,7 @@
         </div>
     </div>
 
-    {% if riwayat %}
+    {% if pagination.items %}
     <div class="card">
         <div class="card-body">
             <div class="table-wrapper">
@@ -30,7 +30,7 @@
                         </tr>
                     </thead>
                     <tbody>
-                        {% for p in riwayat %}
+                        {% for p in pagination.items %}
                         <tr>
                             <td>{{ p.id }}</td>
                             <td>{{ p.nim }}</td>
@@ -50,6 +50,17 @@
                     </tbody>
                 </table>
             </div>
+            {% if pagination.pages > 1 %}
+            <div class="pagination-wrapper">
+                {% if pagination.has_prev %}
+                <a href="{{ url_for('staff.pengajuan_saya', page=pagination.prev_num) }}" class="btn btn-sm btn-outline">← Sebelumnya</a>
+                {% endif %}
+                <span class="pagination-info">Halaman {{ pagination.page }} dari {{ pagination.pages }}</span>
+                {% if pagination.has_next %}
+                <a href="{{ url_for('staff.pengajuan_saya', page=pagination.next_num) }}" class="btn btn-sm btn-outline">Selanjutnya →</a>
+                {% endif %}
+            </div>
+            {% endif %}
         </div>
     </div>
     {% else %}

@@ -198,16 +198,27 @@ def fast_track():
 @login_required
 @staff_required
 def perpanjangan():
-    _require_staff_pusat()
+    tipe_pengajuan = staff_tipe_pengajuan()
+    nama_layanan = (
+        'Bebas Pustaka Fakultas'
+        if tipe_pengajuan == 'fakultas' else 'Bebas Pustaka Pusat'
+    )
 
     if request.method == 'POST':
         nim = request.form.get('nim', '').strip()
-        sumber = BebasPustaka.query.filter_by(
-            nim=nim, tipe_pengajuan='pusat', status='disetujui'
-        ).order_by(BebasPustaka.approved_at.desc()).first()
+        query = BebasPustaka.query.filter_by(
+            nim=nim, tipe_pengajuan=tipe_pengajuan, status='disetujui'
+        )
+        if current_user.fakultas_id:
+            query = query.filter_by(fakultas_id=current_user.fakultas_id)
+        sumber = query.order_by(BebasPustaka.approved_at.desc()).first()
         if not sumber:
-            flash('Surat Bebas Pustaka Pusat dengan NIM tersebut tidak ditemukan.', 'danger')
-            return render_template('staff/center_special_form.html', mode='renewal')
+            flash(f'Surat {nama_layanan} dengan NIM tersebut tidak ditemukan.', 'danger')
+            return render_template(
+                'staff/center_special_form.html',
+                mode='renewal',
+                tipe_pengajuan=tipe_pengajuan,
+            )
 
         now = datetime.utcnow()
         tanggal_mulai_perpanjangan = max(
@@ -222,7 +233,7 @@ def perpanjangan():
             alamat=sumber.alamat,
             fakultas_id=sumber.fakultas_id,
             prodi_id=sumber.prodi_id,
-            tipe_pengajuan='pusat',
+            tipe_pengajuan=tipe_pengajuan,
             status='disetujui',
             reviewed_by=current_user.id,
             approved_at=now,
@@ -232,23 +243,28 @@ def perpanjangan():
         db.session.flush()
         pengajuan.nomor_surat = pengajuan.generate_nomor_surat()
         db.session.commit()
-        flash('Masa berlaku surat berhasil diperpanjang 90 hari.', 'success')
+        flash(f'Masa berlaku surat {nama_layanan} berhasil diperpanjang 90 hari.', 'success')
         return redirect(url_for('staff.pengajuan_detail', id=pengajuan.id))
 
-    return render_template('staff/center_special_form.html', mode='renewal')
+    return render_template(
+        'staff/center_special_form.html',
+        mode='renewal',
+        tipe_pengajuan=tipe_pengajuan,
+    )
 
 
 @staff_bp.route('/pengajuan-saya')
 @login_required
 @staff_required
 def pengajuan_saya():
-    riwayat = BebasPustaka.query.filter(
+    page = request.args.get('page', 1, type=int)
+    pagination = BebasPustaka.query.filter(
         (BebasPustaka.created_by == current_user.id) |
         (BebasPustaka.user_id == current_user.id)
     ).order_by(
         BebasPustaka.created_at.desc()
-    ).all()
-    return render_template('staff/pengajuan_saya.html', riwayat=riwayat)
+    ).paginate(page=page, per_page=15, error_out=False)
+    return render_template('staff/pengajuan_saya.html', pagination=pagination)
 
 
 @staff_bp.route('/dashboard')
@@ -290,7 +306,7 @@ def dashboard():
 
     pengajuan_saya = BebasPustaka.query.filter_by(user_id=current_user.id).order_by(
         BebasPustaka.created_at.desc()
-    ).all()
+    ).limit(10).all()
 
     return render_template('staff/dashboard.html', stats=stats, pengajuan_terbaru=pengajuan_terbaru, pengajuan_saya=pengajuan_saya)
 

@@ -70,6 +70,14 @@
                         <p class="file-selected-name" id="file1Name"></p>
                     </div>
                     {% endif %}
+                    {% if kartu_mahasiswa_lama %}
+                    <div class="form-group">
+                        <label class="form-label">Kartu Tanda Mahasiswa (KTM)</label>
+                        <div class="alert alert-success">
+                            KTM dari pengajuan Bebas Pustaka Fakultas yang disetujui akan digunakan kembali.
+                        </div>
+                    </div>
+                    {% else %}
                     <div class="form-group">
                         <label for="file_kartu_mahasiswa" class="form-label">
                             Kartu Tanda Mahasiswa (KTM) <span class="required">*</span>
@@ -84,6 +92,7 @@
                         </div>
                         <p class="file-selected-name" id="file2Name"></p>
                     </div>
+                    {% endif %}
                 </div>
 
                 <div class="alert alert-info">
