@@ -49,7 +49,7 @@ def start_scheduler(app):
     if _scheduler and _scheduler.running:
         return
 
-    _scheduler = BackgroundScheduler(timezone='Asia/Jakarta')
+    _scheduler = BackgroundScheduler(timezone='Asia/Makassar')
     _scheduler.add_job(
         func=cleanup_expired_files,
         args=[app],
@@ -61,4 +61,4 @@ def start_scheduler(app):
         name='Cleanup Expired Upload Files',
     )
     _scheduler.start()
-    logger.info('[Scheduler] APScheduler started — cleanup job aktif setiap pukul 02:00 WIB')
+    logger.info('[Scheduler] APScheduler started — cleanup job aktif setiap pukul 02:00 WITA')

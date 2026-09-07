@@ -3,6 +3,12 @@ from datetime import datetime, timedelta
 from flask import Blueprint, render_template, redirect, url_for, flash, request, session
 from flask_login import login_user, logout_user, current_user, login_required
 
+REGISTRATION_ATTEMPTS = {}
+REGISTRATION_BLOCKED = {}
+MAX_REGISTRATION_ATTEMPTS = 5
+REGISTRATION_WINDOW = timedelta(minutes=10)
+REGISTRATION_BLOCK_DURATION = timedelta(minutes=15)
+
 from app import db
 from app.models.user import User
 from app.models.fakultas import Fakultas
@@ -14,6 +20,34 @@ MAX_LOGIN_ATTEMPTS = 5
 LOCKOUT_MINUTES = 15
 
 
+def get_client_ip():
+    forwarded_for = request.headers.get('X-Forwarded-For')
+    if forwarded_for:
+        return forwarded_for.split(',')[0].strip()
+    return request.remote_addr or 'unknown'
+
+
+def check_registration_rate_limit():
+    ip = get_client_ip()
+    now = datetime.utcnow()
+
+    if REGISTRATION_BLOCKED.get(ip) and REGISTRATION_BLOCKED[ip] > now:
+        remaining = int((REGISTRATION_BLOCKED[ip] - now).total_seconds() // 60) + 1
+        flash(f'Registrasi dibatasi sementara. Coba lagi dalam {remaining} menit.', 'danger')
+        return False
+
+    attempts = REGISTRATION_ATTEMPTS.setdefault(ip, [])
+    attempts[:] = [ts for ts in attempts if now - ts < REGISTRATION_WINDOW]
+
+    if len(attempts) >= MAX_REGISTRATION_ATTEMPTS:
+        REGISTRATION_BLOCKED[ip] = now + REGISTRATION_BLOCK_DURATION
+        flash('Terlalu sering mencoba mendaftar. Silakan tunggu beberapa menit lalu coba lagi.', 'danger')
+        return False
+
+    attempts.append(now)
+    return True
+
+
 @auth_bp.route('/register', methods=['GET', 'POST'])
 def register():
     if current_user.is_authenticated:
@@ -22,6 +56,14 @@ def register():
     fakultas_list = Fakultas.query.order_by(Fakultas.nama_fakultas).all()
 
     if request.method == 'POST':
+        honeypot = request.form.get('website', '').strip()
+        if honeypot:
+            flash('Registrasi ditolak: deteksi bot aktif.', 'danger')
+            return render_template('auth/register.html', fakultas_list=fakultas_list)
+
+        if not check_registration_rate_limit():
+            return render_template('auth/register.html', fakultas_list=fakultas_list)
+
         nim = request.form.get('nim', '').strip()
         name = request.form.get('name', '').strip()
         email = request.form.get('email', '').strip().lower()
@@ -73,6 +115,9 @@ def register():
         )
         db.session.add(user)
         db.session.commit()
+
+        REGISTRATION_ATTEMPTS.pop(get_client_ip(), None)
+        REGISTRATION_BLOCKED.pop(get_client_ip(), None)
 
         flash('Registrasi berhasil! Silakan login.', 'success')
         return redirect(url_for('auth.login'))

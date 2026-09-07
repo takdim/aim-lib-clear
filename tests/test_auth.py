@@ -6,6 +6,7 @@ from selenium.webdriver.common.by import By
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 
+from app.routes import auth as auth_routes
 from tests.conftest import do_login, CREDENTIALS
 
 
@@ -138,6 +139,53 @@ class TestRegisterPage:
         assert "nim" in driver.page_source.lower() and (
             "sudah" in driver.page_source.lower() or "danger" in driver.page_source.lower()
         )
+
+    def test_register_honeypot_terdeteksi(self, driver, base_url):
+        """Form register harus menolak bot yang mengisi field tersembunyi."""
+        driver.get(f"{base_url}/register")
+        WebDriverWait(driver, 10).until(
+            EC.presence_of_element_located((By.ID, "nim"))
+        )
+        driver.find_element(By.ID, "nim").send_keys("2021999999")
+        driver.find_element(By.ID, "name").send_keys("Bot User")
+        driver.find_element(By.ID, "email").send_keys("bot.user@email.com")
+        driver.find_element(By.ID, "password").send_keys("Password123")
+        driver.find_element(By.ID, "confirm_password").send_keys("Password123")
+        driver.execute_script("document.getElementById('website').value = 'spam';")
+
+        driver.find_element(By.ID, "btnRegister").click()
+
+        assert "bot" in driver.page_source.lower() or "spam" in driver.page_source.lower()
+
+    def test_register_rate_limit_per_ip(self, driver, base_url):
+        """IP yang terlalu sering mencoba register harus diblok sementara."""
+        auth_routes.REGISTRATION_ATTEMPTS.clear()
+        auth_routes.REGISTRATION_BLOCKED.clear()
+
+        driver.get(f"{base_url}/register")
+        WebDriverWait(driver, 10).until(
+            EC.presence_of_element_located((By.ID, "nim"))
+        )
+
+        for idx in range(6):
+            driver.get(f"{base_url}/register")
+            WebDriverWait(driver, 10).until(
+                EC.presence_of_element_located((By.ID, "nim"))
+            )
+            driver.find_element(By.ID, "nim").clear()
+            driver.find_element(By.ID, "nim").send_keys(f"202199999{idx}")
+            driver.find_element(By.ID, "name").clear()
+            driver.find_element(By.ID, "name").send_keys(f"User {idx}")
+            driver.find_element(By.ID, "email").clear()
+            driver.find_element(By.ID, "email").send_keys(f"user{idx}@email.com")
+            driver.find_element(By.ID, "password").clear()
+            driver.find_element(By.ID, "password").send_keys("Password123")
+            driver.find_element(By.ID, "confirm_password").clear()
+            driver.find_element(By.ID, "confirm_password").send_keys("Password123")
+            driver.execute_script("document.getElementById('website').value = '';")
+            driver.find_element(By.ID, "btnRegister").click()
+
+        assert "terlalu sering" in driver.page_source.lower() or "rate limit" in driver.page_source.lower()
 
     def test_link_ke_halaman_login(self, driver, base_url):
         """Halaman register harus ada link ke halaman login."""

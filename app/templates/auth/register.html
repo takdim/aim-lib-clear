@@ -14,6 +14,7 @@
 
         <form method="POST" action="{{ url_for('auth.register') }}" class="auth-form" id="registerForm" novalidate>
             <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+            <input type="text" name="website" id="website" class="honeypot" tabindex="-1" autocomplete="off" aria-hidden="true">
 
             <div class="form-row">
                 <div class="form-group">

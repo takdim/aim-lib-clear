@@ -629,6 +629,15 @@ body {
 
 .input-password-wrapper { position: relative; }
 
+.honeypot {
+    position: absolute;
+    left: -9999px;
+    width: 1px;
+    height: 1px;
+    opacity: 0;
+    pointer-events: none;
+}
+
 .input-password-wrapper .form-input { padding-right: 3rem; }
 
 .toggle-password {
