@@ -1,0 +1,168 @@
+/* ─── Liquid Glass Premium Library — Landing Page Theme ───
+   Scoped to body.landing-page so it never leaks into other pages.
+   Palette / tokens sourced from static/design_md/DESIGN.md
+*/
+
+body.landing-page {
+    --lg-navy: #0F172A;
+    --lg-navy-2: #131b2e;
+    --lg-blue: #0051d5;
+    --lg-blue-2: #316bf3;
+    --lg-bg: #f7f9fb;
+    --lg-on-surface: #191c1e;
+    --lg-on-surface-variant: #45464d;
+    --lg-glass-bg: rgba(255, 255, 255, 0.55);
+    --lg-glass-bg-strong: rgba(255, 255, 255, 0.72);
+    --lg-glass-border: rgba(255, 255, 255, 0.35);
+    --lg-glass-shadow: 0 20px 60px -15px rgba(15, 23, 42, 0.18), 0 4px 16px rgba(15, 23, 42, 0.08);
+    background:
+        radial-gradient(circle at 15% 0%, rgba(49, 107, 243, 0.10), transparent 45%),
+        radial-gradient(circle at 85% 20%, rgba(0, 81, 213, 0.08), transparent 50%),
+        linear-gradient(180deg, #f7f9fb 0%, #eef2f7 100%);
+    font-family: 'Inter', -apple-system, sans-serif;
+    color: var(--lg-on-surface);
+}
+
+body.landing-page .navbar {
+    background: var(--lg-glass-bg-strong);
+    backdrop-filter: blur(24px);
+    -webkit-backdrop-filter: blur(24px);
+    border-bottom: 1px solid var(--lg-glass-border);
+}
+
+body.landing-page .navbar-brand,
+body.landing-page .nav-link { color: var(--lg-navy); }
+body.landing-page .nav-link:hover,
+body.landing-page .nav-link.active { color: var(--lg-blue); }
+
+/* Pill-shaped buttons */
+body.landing-page .btn {
+    border-radius: 9999px;
+    transition: transform 0.25s ease, box-shadow 0.25s ease;
+}
+
+body.landing-page .btn-primary {
+    background: var(--lg-navy);
+    box-shadow: var(--lg-glass-shadow);
+}
+
+body.landing-page .btn-primary:hover {
+    background: var(--lg-navy-2);
+    transform: translateY(-2px) scale(1.02);
+}
+
+body.landing-page .btn-outline {
+    background: var(--lg-glass-bg);
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+    border: 1px solid var(--lg-glass-border);
+    color: var(--lg-navy);
+}
+
+body.landing-page .btn-outline:hover {
+    background: var(--lg-glass-bg-strong);
+    transform: translateY(-2px) scale(1.02);
+}
+
+/* Hero */
+body.landing-page .hero {
+    padding: 7rem 0 5rem;
+    background: none;
+}
+
+body.landing-page .hero-badge {
+    background: rgba(49, 107, 243, 0.10);
+    color: var(--lg-blue);
+    border: 1px solid rgba(49, 107, 243, 0.18);
+}
+
+body.landing-page .hero-title {
+    font-family: 'Poppins', 'Inter', sans-serif;
+    font-weight: 700;
+    letter-spacing: -0.02em;
+    color: var(--lg-navy);
+}
+
+body.landing-page .gradient-text {
+    background: linear-gradient(135deg, var(--lg-navy), var(--lg-blue-2));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+}
+
+body.landing-page .hero-desc { color: var(--lg-on-surface-variant); }
+
+body.landing-page .float-card {
+    background: var(--lg-glass-bg);
+    backdrop-filter: blur(24px);
+    -webkit-backdrop-filter: blur(24px);
+    border: 1px solid var(--lg-glass-border);
+    border-radius: 24px;
+    box-shadow: var(--lg-glass-shadow);
+}
+
+/* Sections */
+body.landing-page .section-alt { background: transparent; }
+
+body.landing-page .section-title {
+    font-family: 'Poppins', 'Inter', sans-serif;
+    color: var(--lg-navy);
+}
+
+body.landing-page .section-desc { color: var(--lg-on-surface-variant); }
+
+/* Glass cards */
+body.landing-page .card-feature,
+body.landing-page .contact-card {
+    background: var(--lg-glass-bg);
+    backdrop-filter: blur(24px);
+    -webkit-backdrop-filter: blur(24px);
+    border: 1px solid var(--lg-glass-border);
+    border-radius: 24px;
+    box-shadow: var(--lg-glass-shadow);
+    transition: transform 0.25s ease, background 0.25s ease, box-shadow 0.25s ease;
+}
+
+body.landing-page .card-feature:hover,
+body.landing-page .contact-card:hover {
+    background: var(--lg-glass-bg-strong);
+    transform: translateY(-4px);
+}
+
+body.landing-page .card-link { color: var(--lg-blue); }
+body.landing-page .card-link:hover { color: var(--lg-navy); }
+
+/* Steps */
+body.landing-page .step-num {
+    background: var(--lg-navy);
+    box-shadow: var(--lg-glass-shadow);
+}
+
+body.landing-page .step h3 { color: var(--lg-navy); }
+body.landing-page .step p { color: var(--lg-on-surface-variant); }
+body.landing-page .step-arrow { color: var(--lg-blue-2); }
+
+/* Modals */
+body.landing-page .modal-overlay {
+    background: rgba(15, 23, 42, 0.4);
+    backdrop-filter: blur(4px);
+}
+
+body.landing-page .modal-box {
+    background: var(--lg-glass-bg-strong);
+    backdrop-filter: blur(40px);
+    -webkit-backdrop-filter: blur(40px);
+    border: 1px solid var(--lg-glass-border);
+    border-radius: 24px;
+    box-shadow: var(--lg-glass-shadow);
+}
+
+body.landing-page .modal-title { color: var(--lg-navy); }
+
+/* Footer */
+body.landing-page .footer {
+    background: var(--lg-glass-bg);
+    backdrop-filter: blur(24px);
+    -webkit-backdrop-filter: blur(24px);
+    border-top: 1px solid var(--lg-glass-border);
+    color: var(--lg-on-surface-variant);
+}

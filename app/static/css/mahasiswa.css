@@ -1,0 +1,178 @@
+/* ─── Liquid Glass Premium Library — Mahasiswa Theme ───
+   Scoped to body.mahasiswa-page so it never leaks into other roles/pages.
+   Palette / tokens sourced from static/design_md/DESIGN.md
+*/
+
+body.mahasiswa-page {
+    --lg-navy: #0F172A;
+    --lg-navy-2: #131b2e;
+    --lg-blue: #0051d5;
+    --lg-blue-2: #316bf3;
+    --lg-on-surface: #191c1e;
+    --lg-on-surface-variant: #45464d;
+    --lg-glass-bg: rgba(255, 255, 255, 0.6);
+    --lg-glass-bg-strong: rgba(255, 255, 255, 0.8);
+    --lg-glass-border: rgba(255, 255, 255, 0.4);
+    --lg-glass-shadow: 0 20px 50px -18px rgba(15, 23, 42, 0.18), 0 4px 16px rgba(15, 23, 42, 0.06);
+    background:
+        radial-gradient(circle at 10% 0%, rgba(49, 107, 243, 0.10), transparent 45%),
+        radial-gradient(circle at 90% 10%, rgba(0, 81, 213, 0.08), transparent 50%),
+        linear-gradient(180deg, #f7f9fb 0%, #eef2f7 100%);
+    color: var(--lg-on-surface);
+}
+
+body.mahasiswa-page .navbar {
+    background: var(--lg-glass-bg-strong);
+    backdrop-filter: blur(24px);
+    -webkit-backdrop-filter: blur(24px);
+    border-bottom: 1px solid var(--lg-glass-border);
+}
+
+body.mahasiswa-page .navbar-brand,
+body.mahasiswa-page .nav-link { color: var(--lg-navy); }
+body.mahasiswa-page .nav-link:hover,
+body.mahasiswa-page .nav-link.active { color: var(--lg-blue); }
+
+body.mahasiswa-page .footer {
+    background: var(--lg-glass-bg);
+    backdrop-filter: blur(24px);
+    -webkit-backdrop-filter: blur(24px);
+    border-top: 1px solid var(--lg-glass-border);
+    color: var(--lg-on-surface-variant);
+}
+
+/* Page header */
+body.mahasiswa-page .page-title {
+    font-family: 'Poppins', 'Inter', sans-serif;
+    color: var(--lg-navy);
+}
+body.mahasiswa-page .page-subtitle { color: var(--lg-on-surface-variant); }
+
+/* Pill-shaped buttons */
+body.mahasiswa-page .btn {
+    border-radius: 9999px;
+    transition: transform 0.25s ease, box-shadow 0.25s ease;
+}
+body.mahasiswa-page .btn-primary { background: var(--lg-navy); box-shadow: var(--lg-glass-shadow); }
+body.mahasiswa-page .btn-primary:hover { background: var(--lg-navy-2); transform: translateY(-2px) scale(1.02); }
+body.mahasiswa-page .btn-outline {
+    background: var(--lg-glass-bg);
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+    border: 1px solid var(--lg-glass-border);
+    color: var(--lg-navy);
+}
+body.mahasiswa-page .btn-outline:hover { background: var(--lg-glass-bg-strong); transform: translateY(-2px) scale(1.02); }
+body.mahasiswa-page .btn-success { background: #0f7a4f; }
+body.mahasiswa-page .btn-warning { background: #a86200; }
+
+/* Glass cards */
+body.mahasiswa-page .card {
+    background: var(--lg-glass-bg);
+    backdrop-filter: blur(24px);
+    -webkit-backdrop-filter: blur(24px);
+    border: 1px solid var(--lg-glass-border);
+    border-radius: 24px;
+    box-shadow: var(--lg-glass-shadow);
+}
+body.mahasiswa-page .card-title { color: var(--lg-navy); font-family: 'Poppins', 'Inter', sans-serif; }
+body.mahasiswa-page .card-status { border-left: 4px solid var(--lg-blue-2); }
+body.mahasiswa-page .card-success { border-left: 4px solid #0f7a4f; background: rgba(240, 253, 244, 0.7); }
+
+/* Empty state */
+body.mahasiswa-page .empty-state {
+    background: var(--lg-glass-bg);
+    backdrop-filter: blur(24px);
+    -webkit-backdrop-filter: blur(24px);
+    border: 1px solid var(--lg-glass-border);
+    border-radius: 24px;
+}
+
+/* Badges — pill */
+body.mahasiswa-page .badge { border-radius: 9999px; }
+
+/* Status timeline */
+body.mahasiswa-page .status-step-dot { background: rgba(15, 23, 42, 0.12); color: var(--lg-on-surface-variant); }
+body.mahasiswa-page .status-step.active .status-step-dot { background: var(--lg-navy); color: #fff; }
+body.mahasiswa-page .status-step.active.done .status-step-dot { background: #0f7a4f; }
+body.mahasiswa-page .status-step.active.rejected .status-step-dot { background: var(--danger); }
+body.mahasiswa-page .status-step-line { background: rgba(15, 23, 42, 0.12); }
+body.mahasiswa-page .status-step-line.active { background: var(--lg-navy); }
+body.mahasiswa-page .status-step p { color: var(--lg-on-surface-variant); }
+
+/* Forms — recessed glass inputs */
+body.mahasiswa-page .form-input {
+    background: rgba(255, 255, 255, 0.7);
+    border: 1px solid var(--lg-glass-border);
+    border-radius: 12px;
+}
+body.mahasiswa-page .form-input:focus {
+    border-color: var(--lg-blue-2);
+    box-shadow: 0 0 0 3px rgba(49, 107, 243, 0.15);
+}
+body.mahasiswa-page .form-label { color: var(--lg-navy); }
+body.mahasiswa-page .section-divider { color: var(--lg-on-surface-variant); border-bottom-color: var(--lg-glass-border); }
+
+/* File upload */
+body.mahasiswa-page .file-upload-area {
+    background: rgba(255, 255, 255, 0.4);
+    border: 2px dashed var(--lg-glass-border);
+    border-radius: 20px;
+}
+body.mahasiswa-page .file-upload-area:hover {
+    border-color: var(--lg-blue-2);
+    background: rgba(49, 107, 243, 0.06);
+}
+
+/* Table */
+body.mahasiswa-page .table th {
+    background: rgba(15, 23, 42, 0.04);
+    color: var(--lg-on-surface-variant);
+}
+body.mahasiswa-page .table td { border-bottom-color: var(--lg-glass-border); }
+
+/* Alerts stay legible, just soften borders to match glass aesthetic */
+body.mahasiswa-page .alert { border-radius: 16px; }
+
+/* ─── RESPONSIVE (mobile + desktop) ─────────────────────── */
+@media (max-width: 768px) {
+    body.mahasiswa-page .page-header {
+        flex-direction: column;
+        align-items: stretch;
+        gap: 0.75rem;
+    }
+    body.mahasiswa-page .page-header .btn { width: 100%; text-align: center; }
+
+    body.mahasiswa-page .status-row {
+        flex-direction: column;
+        align-items: stretch;
+        gap: 0.75rem;
+    }
+    body.mahasiswa-page .status-row .btn { width: 100%; text-align: center; }
+
+    body.mahasiswa-page .status-steps { gap: 0; }
+    body.mahasiswa-page .status-step-dot { width: 28px; height: 28px; font-size: 0.75rem; }
+    body.mahasiswa-page .status-step p { font-size: 0.65rem; }
+    body.mahasiswa-page .status-step-line { min-width: 24px; }
+
+    body.mahasiswa-page .status-current {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 0.4rem;
+    }
+    body.mahasiswa-page .status-current .ml-2 { margin-left: 0; }
+
+    body.mahasiswa-page .form-actions {
+        flex-direction: column-reverse;
+        gap: 0.75rem;
+    }
+    body.mahasiswa-page .form-actions .btn { width: 100%; text-align: center; }
+
+    body.mahasiswa-page .card-body { padding: 1.25rem; }
+    body.mahasiswa-page .page-content { padding: 1.25rem 0; }
+    body.mahasiswa-page .empty-state { padding: 3rem 1.25rem; }
+}
+
+@media (min-width: 769px) {
+    body.mahasiswa-page .page-content { padding: 2.5rem 0; }
+}
