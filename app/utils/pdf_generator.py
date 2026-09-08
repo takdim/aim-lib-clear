@@ -41,6 +41,96 @@ def _make_qr_image(data):
     return buf
 
 
+def generate_template_kartu_mahasiswa(pengajuan):
+    """Generate template KTM yang mirip kartu mahasiswa tampilan yang umum dipakai."""
+    buffer = BytesIO()
+    c = canvas.Canvas(buffer, pagesize=A4)
+    width, height = A4
+
+    card_x = 1.3 * cm
+    card_y = 5.2 * cm
+    card_w = width - (2 * card_x)
+    card_h = 11.6 * cm
+
+    # Outer card background
+    c.setFillColorRGB(0.86, 0.10, 0.10)
+    c.rect(card_x, card_y, card_w, card_h, fill=1, stroke=0)
+
+    # Upper white panel area
+    c.setFillColorRGB(0.96, 0.96, 0.96)
+    c.rect(card_x + 0.2 * cm, card_y + 0.2 * cm, card_w - 0.4 * cm, card_h - 1.0 * cm, fill=1, stroke=0)
+
+    # Small emblem area without real image (placeholder)
+    c.setFillColorRGB(0.18, 0.18, 0.18)
+    c.setStrokeColorRGB(0.18, 0.18, 0.18)
+    c.circle(card_x + 1.0 * cm, card_y + card_h - 1.2 * cm, 0.48 * cm, fill=1, stroke=1)
+    c.setFillColorRGB(1, 1, 1)
+    c.setFont("Helvetica-Bold", 12)
+    c.drawCentredString(card_x + 1.0 * cm, card_y + card_h - 1.45 * cm, "UH")
+
+    # Top title
+    c.setFillColorRGB(0.15, 0.15, 0.15)
+    c.setFont("Helvetica-Bold", 22)
+    c.drawCentredString(width / 2, card_y + card_h - 1.3 * cm, "UNIVERSITAS HASANUDDIN")
+
+    # Section title
+    c.setFillColorRGB(0.15, 0.15, 0.15)
+    c.setFont("Helvetica-Bold", 18)
+    c.drawCentredString(width / 2, card_y + card_h - 3.0 * cm, "KARTU MAHASISWA")
+
+    # Blank QR placeholder area to keep the layout similar without actual QR code
+    c.setStrokeColorRGB(0.15, 0.15, 0.15)
+    c.setLineWidth(1.2)
+    c.rect(card_x + 2.1 * cm, card_y + 2.0 * cm, 3.4 * cm, 3.4 * cm, fill=0, stroke=1)
+    c.setFillColorRGB(0.15, 0.15, 0.15)
+    c.setFont("Helvetica-Bold", 9)
+    c.drawCentredString(card_x + 3.8 * cm, card_y + 1.4 * cm, "KODE")
+
+    # Photo placeholder area, no actual image
+    c.setStrokeColorRGB(0.25, 0.25, 0.25)
+    c.setLineWidth(1.1)
+    c.rect(card_x + card_w - 4.9 * cm, card_y + 1.7 * cm, 3.8 * cm, 4.6 * cm, fill=0, stroke=1)
+    c.setFillColorRGB(0.80, 0.80, 0.80)
+    c.rect(card_x + card_w - 4.6 * cm, card_y + 2.0 * cm, 3.2 * cm, 3.9 * cm, fill=1, stroke=0)
+    c.setFillColorRGB(0.4, 0.4, 0.4)
+    c.setFont("Helvetica-Bold", 10)
+    c.drawCentredString(card_x + card_w - 3.0 * cm, card_y + 1.3 * cm, "FOTO")
+
+    # Identity text block
+    c.setFillColorRGB(0.18, 0.18, 0.18)
+    c.setFont("Helvetica", 10)
+    c.drawString(card_x + 1.5 * cm, card_y + 5.1 * cm, "Nama")
+    c.drawString(card_x + 1.5 * cm, card_y + 4.2 * cm, "NIM")
+    c.drawString(card_x + 1.5 * cm, card_y + 3.3 * cm, "Prodi")
+    c.drawString(card_x + 1.5 * cm, card_y + 2.4 * cm, "Fakultas")
+
+    c.setFillColorRGB(0.10, 0.10, 0.10)
+    c.setFont("Helvetica-Bold", 12)
+    c.drawString(card_x + 4.5 * cm, card_y + 5.1 * cm, (pengajuan.nama or '-').upper())
+    c.drawString(card_x + 4.5 * cm, card_y + 4.2 * cm, (pengajuan.nim or '-'))
+    c.drawString(card_x + 4.5 * cm, card_y + 3.3 * cm, (pengajuan.program_studi.nama_prodi if pengajuan.program_studi else '-'))
+    c.drawString(card_x + 4.5 * cm, card_y + 2.4 * cm, (pengajuan.fakultas.nama_fakultas if pengajuan.fakultas else '-'))
+
+    # Bottom red name strip like reference
+    c.setFillColorRGB(0.88, 0.10, 0.10)
+    c.rect(card_x + 0.15 * cm, card_y + 0.25 * cm, card_w - 0.30 * cm, 2.5 * cm, fill=1, stroke=0)
+    c.setFillColorRGB(1, 1, 1)
+    c.setFont("Helvetica-Bold", 24)
+    c.drawString(card_x + 1.0 * cm, card_y + 1.4 * cm, (pengajuan.nama or 'NAMA MAHASISWA').upper())
+    c.setFont("Helvetica-Bold", 18)
+    c.drawString(card_x + 1.0 * cm, card_y + 0.7 * cm, (pengajuan.nim or 'NIM'))
+
+    # Program study line under name band
+    c.setFillColorRGB(1, 1, 1)
+    c.setFont("Helvetica-Bold", 11)
+    c.drawString(card_x + 1.0 * cm, card_y + 0.2 * cm, f"S3: {(pengajuan.program_studi.nama_prodi if pengajuan.program_studi else '-')}" )
+
+    c.save()
+    pdf_bytes = buffer.getvalue()
+    buffer.close()
+    return pdf_bytes
+
+
 def generate_surat_bebas_pustaka(pengajuan, nama_institusi, nama_perpustakaan):
     from app.models.sistem_setting import SistemSetting
     if pengajuan.tipe_pengajuan == 'fakultas':

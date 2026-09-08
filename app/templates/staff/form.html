@@ -97,6 +97,10 @@
                         <label for="file_kartu_mahasiswa" class="form-label">
                             Kartu Tanda Mahasiswa / Identitas <span class="required">*</span>
                         </label>
+                        <label class="checkbox-inline" for="tidak_punya_ktm" style="display:flex;align-items:center;gap:0.5rem;margin-bottom:0.75rem;cursor:pointer;">
+                            <input type="checkbox" id="tidak_punya_ktm" name="tidak_punya_ktm">
+                            <span>Saya tidak memiliki KTM, gunakan template KTM otomatis</span>
+                        </label>
                         <div class="file-upload-area" id="dropzone2">
                             <input type="file" id="file_kartu_mahasiswa" name="file_kartu_mahasiswa" accept=".pdf" required class="file-input">
                             <div class="file-upload-content">
@@ -106,6 +110,7 @@
                             </div>
                         </div>
                         <p class="file-selected-name" id="file2Name"></p>
+                        <p class="text-muted small" id="ktmTemplateNote">Jika centang opsi di atas, sistem akan membuat template KTM otomatis berdasarkan data mahasiswa.</p>
                     </div>
                 </div>
 

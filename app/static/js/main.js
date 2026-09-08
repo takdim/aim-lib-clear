@@ -33,6 +33,25 @@ document.addEventListener('DOMContentLoaded', function() {
         { input: 'file_kartu_mahasiswa', display: 'file2Name' }
     ];
 
+    const noKtmCheckbox = document.getElementById('tidak_punya_ktm');
+    const ktmInput = document.getElementById('file_kartu_mahasiswa');
+    const ktmTemplateNote = document.getElementById('ktmTemplateNote');
+
+    function syncKtmInputState() {
+        if (!ktmInput) return;
+        const disabled = !!noKtmCheckbox && noKtmCheckbox.checked;
+        ktmInput.disabled = disabled;
+        ktmInput.required = !disabled;
+        if (ktmTemplateNote) {
+            ktmTemplateNote.style.display = disabled ? 'block' : 'block';
+        }
+    }
+
+    if (noKtmCheckbox && ktmInput) {
+        noKtmCheckbox.addEventListener('change', syncKtmInputState);
+        syncKtmInputState();
+    }
+
     fileInputs.forEach(item => {
         const inputEl = document.getElementById(item.input);
         const displayEl = document.getElementById(item.display);

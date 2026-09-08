@@ -13,6 +13,7 @@ from app.models.bebas_pustaka import BebasPustaka
 from app.models.fakultas import Fakultas
 from app.models.user import User
 from app.utils.decorators import staff_required
+from app.utils.pdf_generator import generate_template_kartu_mahasiswa
 
 staff_bp = Blueprint('staff', __name__)
 
@@ -35,6 +36,24 @@ def save_upload(file, pengajuan_id, suffix):
     filename = f'{unique}_{suffix}.pdf'
     file_path = os.path.join(full_dir, filename)
     file.save(file_path)
+
+    return os.path.join(sub_dir, filename)
+
+
+def save_generated_pdf(pdf_bytes, pengajuan_id, suffix):
+    """Simpan PDF yang dibuat dari template ke folder upload."""
+    upload_folder = current_app.config['UPLOAD_FOLDER']
+    now = datetime.utcnow()
+    sub_dir = os.path.join(str(now.year), f'{now.month:02d}', str(pengajuan_id))
+    full_dir = os.path.join(upload_folder, sub_dir)
+    os.makedirs(full_dir, exist_ok=True)
+
+    unique = hashlib.sha256(f'{uuid.uuid4()}{suffix}'.encode()).hexdigest()[:16]
+    filename = f'{unique}_{suffix}.pdf'
+    full_path = os.path.join(full_dir, filename)
+
+    with open(full_path, 'wb') as f:
+        f.write(pdf_bytes)
 
     return os.path.join(sub_dir, filename)
 
@@ -79,6 +98,7 @@ def form_bebas_pustaka():
         prodi_id = request.form.get('prodi_id', type=int)
         file_bebas = request.files.get('file_bebas_pustaka')
         file_kartu = request.files.get('file_kartu_mahasiswa')
+        tidak_punya_ktm = request.form.get('tidak_punya_ktm') == 'on'
 
         errors = []
         if not nim:
@@ -95,8 +115,8 @@ def form_bebas_pustaka():
             not file_bebas or not allowed_file(file_bebas.filename)
         ):
             errors.append('File Bebas Pustaka dari Fakultas wajib diupload (PDF).')
-        if not file_kartu or not allowed_file(file_kartu.filename):
-            errors.append('File Kartu Tanda Mahasiswa wajib diupload (PDF).')
+        if not tidak_punya_ktm and (not file_kartu or not allowed_file(file_kartu.filename)):
+            errors.append('File Kartu Tanda Mahasiswa wajib diupload (PDF), atau centang opsi tidak memiliki KTM.')
 
         if tipe_pengajuan == 'pusat' and not BebasPustaka.query.filter_by(
                 nim=nim,
@@ -128,7 +148,11 @@ def form_bebas_pustaka():
             if file_bebas:
                 path_bebas = save_upload(file_bebas, pengajuan.id, 'bebas_pustaka')
                 pengajuan.file_bebas_pustaka = path_bebas
-            path_kartu = save_upload(file_kartu, pengajuan.id, 'kartu_mahasiswa')
+            if tidak_punya_ktm:
+                generated_ktm = generate_template_kartu_mahasiswa(pengajuan)
+                path_kartu = save_generated_pdf(generated_ktm, pengajuan.id, 'kartu_mahasiswa')
+            else:
+                path_kartu = save_upload(file_kartu, pengajuan.id, 'kartu_mahasiswa')
             pengajuan.file_kartu_mahasiswa = path_kartu
             db.session.commit()
         except Exception as e:

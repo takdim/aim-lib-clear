@@ -92,6 +92,22 @@ class TestMahasiswaFormPengajuan:
 
         assert "wajib" in driver.page_source.lower() or "danger" in driver.page_source.lower()
 
+    def test_form_pengajuan_wajib_upload_ktm(self, mahasiswa_driver, base_url):
+        """Mahasiswa wajib upload KTM karena opsi tanpa KTM sudah dipindahkan ke staff."""
+        driver = mahasiswa_driver
+        driver.get(f"{base_url}/mahasiswa/form-bebas-pustaka")
+
+        if "/form-bebas-pustaka" not in driver.current_url:
+            pytest.skip("Mahasiswa sudah memiliki pengajuan aktif")
+
+        WebDriverWait(driver, 10).until(
+            EC.presence_of_element_located((By.ID, "alamat"))
+        )
+
+        driver.find_element(By.ID, "alamat").send_keys("Jl. Perintis Kemerdekaan No. 3, Makassar")
+        driver.find_element(By.CSS_SELECTOR, "button[type='submit']").click()
+        assert "kartu mahasiswa" in driver.page_source.lower()
+
     def test_form_pengajuan_dengan_file_valid(self, mahasiswa_driver, base_url):
         """Submit form dengan data lengkap dan file PDF valid harus berhasil."""
         driver = mahasiswa_driver
