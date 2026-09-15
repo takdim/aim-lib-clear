@@ -53,7 +53,32 @@ def create_app(config_name=None):
     @app.context_processor
     def inject_globals():
         from datetime import datetime
-        return dict(now=datetime.utcnow(), config=app.config)
+        from flask_login import current_user
+        from app.models.bebas_pustaka import BebasPustaka
+
+        pending_count = 0
+        if current_user.is_authenticated:
+            pending_statuses = ('menunggu_review', 'sedang_diproses')
+
+            if current_user.role == 'admin':
+                pending_count = BebasPustaka.query.filter(
+                    BebasPustaka.status.in_(pending_statuses)
+                ).count()
+            elif current_user.role == 'staff':
+                tipe_pengajuan = 'fakultas' if current_user.fakultas_id else 'pusat'
+                query = BebasPustaka.query.filter(
+                    BebasPustaka.tipe_pengajuan == tipe_pengajuan,
+                    BebasPustaka.status.in_(pending_statuses),
+                )
+                if current_user.fakultas_id:
+                    query = query.filter(BebasPustaka.fakultas_id == current_user.fakultas_id)
+                pending_count = query.count()
+
+        return dict(
+            now=datetime.utcnow(),
+            config=app.config,
+            pending_pengajuan_count=pending_count,
+        )
 
     # Import models agar Migrate mengenali
     with app.app_context():
