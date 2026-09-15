@@ -37,7 +37,7 @@
                         <a href="{{ url_for('mahasiswa.status') }}" class="nav-link {% if request.endpoint == 'mahasiswa.status' %}active{% endif %}">Status Pengajuan</a>
                     {% elif current_user.role == 'staff' %}
                         <a href="{{ url_for('staff.dashboard') }}" class="nav-link {% if request.endpoint == 'staff.dashboard' %}active{% endif %}">Dashboard</a>
-                        <a href="{{ url_for('staff.pengajuan_list') }}" class="nav-link nav-link-with-badge {% if request.endpoint == 'staff.pengajuan_list' %}active{% endif %}">Pengajuan
+                        <a href="{{ url_for('staff.pengajuan_list') }}" data-pending-link="true" class="nav-link nav-link-with-badge {% if request.endpoint == 'staff.pengajuan_list' %}active{% endif %}">Pengajuan
                             {% if pending_pengajuan_count > 0 %}
                                 <span class="notif-badge" title="{{ pending_pengajuan_count }} pengajuan belum disetujui">{{ pending_pengajuan_count }}</span>
                             {% endif %}
@@ -49,7 +49,7 @@
                     {% elif current_user.role == 'admin' %}
                         <a href="{{ url_for('admin.dashboard') }}" class="nav-link {% if request.endpoint == 'admin.dashboard' %}active{% endif %}">Dashboard</a>
                         <a href="{{ url_for('admin.users') }}" class="nav-link {% if request.endpoint == 'admin.users' %}active{% endif %}">Pengguna</a>
-                        <a href="{{ url_for('admin.pengajuan') }}" class="nav-link nav-link-with-badge {% if request.endpoint == 'admin.pengajuan' %}active{% endif %}">Pengajuan
+                        <a href="{{ url_for('admin.pengajuan') }}" data-pending-link="true" class="nav-link nav-link-with-badge {% if request.endpoint == 'admin.pengajuan' %}active{% endif %}">Pengajuan
                             {% if pending_pengajuan_count > 0 %}
                                 <span class="notif-badge" title="{{ pending_pengajuan_count }} pengajuan belum disetujui">{{ pending_pengajuan_count }}</span>
                             {% endif %}
@@ -99,6 +99,58 @@
 
     <!-- JS -->
     <script src="{{ url_for('static', filename='js/main.js') }}"></script>
+    {% if current_user.is_authenticated and current_user.role in ['staff', 'admin'] %}
+    <script>
+    (function () {
+        const pendingUrl = "{{ url_for('api.pending_count') }}";
+        const pendingLinks = document.querySelectorAll('[data-pending-link="true"]');
+        if (!pendingLinks.length) return;
+
+        const baseTitle = document.title.replace(/^\(\d+\)\s+/, '');
+
+        function updatePendingUI(count) {
+            const normalizedCount = Number.isFinite(count) ? Math.max(0, count) : 0;
+
+            pendingLinks.forEach(function (link) {
+                let badge = link.querySelector('.notif-badge');
+                if (normalizedCount > 0) {
+                    if (!badge) {
+                        badge = document.createElement('span');
+                        badge.className = 'notif-badge';
+                        link.appendChild(badge);
+                    }
+                    badge.textContent = normalizedCount > 99 ? '99+' : String(normalizedCount);
+                    badge.title = normalizedCount + ' pengajuan belum disetujui';
+                } else if (badge) {
+                    badge.remove();
+                }
+            });
+
+            document.title = normalizedCount > 0
+                ? '(' + normalizedCount + ') ' + baseTitle
+                : baseTitle;
+        }
+
+        async function refreshPendingCount() {
+            try {
+                const response = await fetch(pendingUrl, {
+                    method: 'GET',
+                    cache: 'no-store',
+                    headers: { 'X-Requested-With': 'XMLHttpRequest' }
+                });
+                if (!response.ok) return;
+                const payload = await response.json();
+                updatePendingUI(payload.pending_count || 0);
+            } catch (error) {
+                // Silent fail: UI tetap menggunakan nilai terakhir.
+            }
+        }
+
+        refreshPendingCount();
+        window.setInterval(refreshPendingCount, 30000);
+    })();
+    </script>
+    {% endif %}
     {% block extra_js %}{% endblock %}
 </body>
 </html>

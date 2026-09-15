@@ -72,3 +72,27 @@ def prodi_by_fakultas(fakultas_id):
         ProgramStudi.nama_prodi
     ).all()
     return jsonify([p.to_dict() for p in prodi_list])
+
+
+@api_bp.route('/pending-count')
+@login_required
+def pending_count():
+    """Return jumlah pengajuan yang belum disetujui untuk user aktif."""
+    pending_statuses = ('menunggu_review', 'sedang_diproses')
+    count = 0
+
+    if current_user.role == 'admin':
+        count = BebasPustaka.query.filter(
+            BebasPustaka.status.in_(pending_statuses)
+        ).count()
+    elif current_user.role == 'staff':
+        tipe_pengajuan = 'fakultas' if current_user.fakultas_id else 'pusat'
+        query = BebasPustaka.query.filter(
+            BebasPustaka.tipe_pengajuan == tipe_pengajuan,
+            BebasPustaka.status.in_(pending_statuses),
+        )
+        if current_user.fakultas_id:
+            query = query.filter(BebasPustaka.fakultas_id == current_user.fakultas_id)
+        count = query.count()
+
+    return jsonify({'pending_count': count})
