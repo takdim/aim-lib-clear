@@ -1,4 +1,65 @@
 document.addEventListener('DOMContentLoaded', function() {
+    // Render UTC timestamps into the user's device timezone.
+    function localizeDateTimes() {
+        const locale = navigator.language || 'id-ID';
+        const nodes = document.querySelectorAll('[data-local-datetime][data-utc]');
+
+        const formatOptions = {
+            datetime: {
+                day: '2-digit',
+                month: 'short',
+                year: 'numeric',
+                hour: '2-digit',
+                minute: '2-digit',
+            },
+            'datetime-long': {
+                day: '2-digit',
+                month: 'long',
+                year: 'numeric',
+                hour: '2-digit',
+                minute: '2-digit',
+            },
+            'date-short': {
+                day: '2-digit',
+                month: 'short',
+                year: 'numeric',
+            },
+            'date-long': {
+                day: '2-digit',
+                month: 'long',
+                year: 'numeric',
+            },
+            time: {
+                hour: '2-digit',
+                minute: '2-digit',
+            },
+        };
+
+        nodes.forEach(node => {
+            const utcValue = node.getAttribute('data-utc');
+            if (!utcValue) return;
+
+            const date = new Date(utcValue);
+            if (Number.isNaN(date.getTime())) return;
+
+            const formatKey = node.getAttribute('data-local-format') || 'datetime';
+            const options = formatOptions[formatKey] || formatOptions.datetime;
+
+            node.textContent = date.toLocaleString(locale, options);
+            node.setAttribute('title', date.toLocaleString(locale, {
+                day: '2-digit',
+                month: 'long',
+                year: 'numeric',
+                hour: '2-digit',
+                minute: '2-digit',
+                second: '2-digit',
+                timeZoneName: 'short',
+            }));
+        });
+    }
+
+    localizeDateTimes();
+
     // 1. Navbar Mobile Toggle
     const toggleBtn = document.getElementById('navbarToggle');
     const navMenu = document.getElementById('navbarMenu');

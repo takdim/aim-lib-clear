@@ -38,7 +38,7 @@
                     <span class="badge {{ pengajuan_terbaru.get_status_badge_class() }} badge-lg">
                         {{ pengajuan_terbaru.get_status_label() }}
                     </span>
-                    <p class="text-muted mt-1">Diajukan: {{ pengajuan_terbaru.created_at.strftime('%d %b %Y, %H:%M') }}</p>
+                    <p class="text-muted mt-1">Diajukan: <span data-local-datetime="true" data-local-format="datetime" data-utc="{{ pengajuan_terbaru.created_at.isoformat() }}Z">{{ pengajuan_terbaru.created_at.strftime('%d %b %Y, %H:%M') }}</span></p>
                 </div>
                 <a href="{{ url_for('mahasiswa.status') }}" class="btn btn-outline">Lihat Detail →</a>
             </div>
@@ -90,7 +90,7 @@
                         {% for p in riwayat %}
                         <tr>
                             <td>{{ loop.index }}</td>
-                            <td>{{ p.created_at.strftime('%d %b %Y') }}</td>
+                            <td><span data-local-datetime="true" data-local-format="date-short" data-utc="{{ p.created_at.isoformat() }}Z">{{ p.created_at.strftime('%d %b %Y') }}</span></td>
                             <td>{{ p.get_tipe_label() }}</td>
                             <td><span class="badge {{ p.get_status_badge_class() }}">{{ p.get_status_label() }}</span></td>
                             <td>{{ p.catatan_penolakan or '-' }}</td>

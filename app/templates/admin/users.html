@@ -57,7 +57,7 @@
                                 {% if u.is_active %}<span class="badge badge-success">Aktif</span>
                                 {% else %}<span class="badge badge-danger">Nonaktif</span>{% endif %}
                             </td>
-                            <td>{{ u.created_at.strftime('%d %b %Y') }}</td>
+                            <td><span data-local-datetime="true" data-local-format="date-short" data-utc="{{ u.created_at.isoformat() }}Z">{{ u.created_at.strftime('%d %b %Y') }}</span></td>
                             <td class="actions-cell">
                                 <!-- Edit -->
                                 <button type="button" class="btn btn-sm btn-outline" title="Edit"

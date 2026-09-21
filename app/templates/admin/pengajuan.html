@@ -60,7 +60,7 @@
                             <td>{{ p.nama }}</td>
                             <td>{{ p.fakultas.nama_fakultas if p.fakultas else '-' }}</td>
                             <td>{{ p.program_studi.nama_prodi if p.program_studi else '-' }}</td>
-                            <td>{{ p.created_at.strftime('%d %b %Y') }}</td>
+                            <td><span data-local-datetime="true" data-local-format="date-short" data-utc="{{ p.created_at.isoformat() }}Z">{{ p.created_at.strftime('%d %b %Y') }}</span></td>
                             <td><span class="badge {{ p.get_status_badge_class() }}">{{ p.get_status_label() }}</span></td>
                         </tr>
                         {% else %}

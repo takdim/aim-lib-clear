@@ -78,7 +78,7 @@
                         <tr>
                             <td>{{ p.nim }}</td>
                             <td>{{ p.nama }}</td>
-                            <td>{{ p.created_at.strftime('%d %b %Y') }}</td>
+                            <td><span data-local-datetime="true" data-local-format="date-short" data-utc="{{ p.created_at.isoformat() }}Z">{{ p.created_at.strftime('%d %b %Y') }}</span></td>
                             <td><span class="badge {{ p.get_status_badge_class() }}">{{ p.get_status_label() }}</span></td>
                             <td>
                                 <a href="{{ url_for('staff.pengajuan_detail', id=p.id) }}" class="btn btn-sm btn-outline">Detail</a>
@@ -120,7 +120,7 @@
                     <tbody>
                         {% for p in pengajuan_saya %}
                         <tr>
-                            <td>{{ p.created_at.strftime('%d %b %Y') }}</td>
+                            <td><span data-local-datetime="true" data-local-format="date-short" data-utc="{{ p.created_at.isoformat() }}Z">{{ p.created_at.strftime('%d %b %Y') }}</span></td>
                             <td><span class="badge {{ p.get_status_badge_class() }}">{{ p.get_status_label() }}</span></td>
                             <td>{{ p.nomor_surat or '-' }}</td>
                             <td>

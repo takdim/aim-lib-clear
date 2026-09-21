@@ -24,7 +24,7 @@
                     <tr><th>Fakultas</th><td>{{ pengajuan.fakultas.nama_fakultas if pengajuan.fakultas else '-' }}</td></tr>
                     <tr><th>Program Studi</th><td>{{ pengajuan.program_studi.nama_prodi if pengajuan.program_studi else '-' }}</td></tr>
                     <tr><th>Diterbitkan Oleh</th><td>{{ penerbit }}</td></tr>
-                    <tr><th>Tanggal Disetujui</th><td>{{ pengajuan.approved_at.strftime('%d %B %Y') if pengajuan.approved_at else '-' }}</td></tr>
+                    <tr><th>Tanggal Disetujui</th><td>{% if pengajuan.approved_at %}<span data-local-datetime="true" data-local-format="date-long" data-utc="{{ pengajuan.approved_at.isoformat() }}Z">{{ pengajuan.approved_at.strftime('%d %B %Y') }}</span>{% else %}-{% endif %}</td></tr>
                 </tbody>
             </table>
         </div>
