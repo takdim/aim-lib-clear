@@ -14,6 +14,7 @@ class BebasPustaka(db.Model):
     nim = db.Column(db.String(20), nullable=False)
     nama = db.Column(db.String(100), nullable=False)
     alamat = db.Column(db.Text, nullable=False)
+    judul_buku_setor = db.Column(db.String(255), nullable=True)
     fakultas_id = db.Column(db.Integer, db.ForeignKey('fakultas.id'), nullable=False)
     prodi_id = db.Column(db.Integer, db.ForeignKey('program_studi.id'), nullable=False)
 

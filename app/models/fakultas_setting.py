@@ -15,6 +15,7 @@ class FakultasSetting(db.Model):
     pejabat_jabatan = db.Column(db.String(200), nullable=False)
     pejabat_nama = db.Column(db.String(150), nullable=False)
     pejabat_nip = db.Column(db.String(50), nullable=False)
+    setor_buku_wajib = db.Column(db.Boolean, nullable=False, default=False)
 
     @classmethod
     def get_for_fakultas(cls, fakultas):

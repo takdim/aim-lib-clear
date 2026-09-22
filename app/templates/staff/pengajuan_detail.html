@@ -25,6 +25,9 @@
                             <tr><th>NIM</th><td>{{ pengajuan.nim }}</td></tr>
                             <tr><th>Nama</th><td>{{ pengajuan.nama }}</td></tr>
                             <tr><th>Alamat</th><td>{{ pengajuan.alamat }}</td></tr>
+                            {% if pengajuan.judul_buku_setor %}
+                            <tr><th>Judul Buku Setor</th><td>{{ pengajuan.judul_buku_setor }}</td></tr>
+                            {% endif %}
                             <tr><th>Fakultas</th><td>{{ pengajuan.fakultas.nama_fakultas if pengajuan.fakultas else '-' }}</td></tr>
                             <tr><th>Program Studi</th><td>{{ pengajuan.program_studi.nama_prodi if pengajuan.program_studi else '-' }}</td></tr>
                             <tr><th>Jenis Pengajuan</th><td>{{ pengajuan.get_tipe_label() }}</td></tr>
@@ -163,6 +166,11 @@
                         <div class="form-group">
                             <label class="form-label">Alamat</label>
                             <textarea name="alamat" class="form-input form-textarea" rows="2">{{ pengajuan.alamat }}</textarea>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Judul Buku Setor</label>
+                            <input type="text" name="judul_buku_setor" class="form-input" value="{{ pengajuan.judul_buku_setor or '' }}">
+                            <small class="text-muted">Kosongkan jika tidak ada kewajiban setor buku.</small>
                         </div>
                         <div class="form-group">
                             <label class="form-label">Fakultas</label>

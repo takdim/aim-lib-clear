@@ -431,6 +431,7 @@ def settings_fakultas(fakultas_id):
     pejabat_jabatan = request.form.get('pejabat_jabatan', '').strip()
     pejabat_nama = request.form.get('pejabat_nama', '').strip()
     pejabat_nip = request.form.get('pejabat_nip', '').strip()
+    setor_buku_wajib = request.form.get('setor_buku_wajib') == 'on'
 
     if not all([nama_perpustakaan, nomor_urut, nomor_bagian_tengah, nomor_tahun, pejabat_jabatan, pejabat_nama, pejabat_nip]):
         flash('Semua pengaturan surat fakultas wajib diisi.', 'danger')
@@ -443,6 +444,7 @@ def settings_fakultas(fakultas_id):
     setting.pejabat_jabatan = pejabat_jabatan
     setting.pejabat_nama = pejabat_nama
     setting.pejabat_nip = pejabat_nip
+    setting.setor_buku_wajib = setor_buku_wajib
     db.session.commit()
     flash(f'Pengaturan surat {fakultas.nama_fakultas} berhasil disimpan.', 'success')
     return redirect(url_for('admin.settings'))

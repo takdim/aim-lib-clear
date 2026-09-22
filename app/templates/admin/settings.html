@@ -113,6 +113,15 @@
                             <input type="number" name="nomor_tahun" class="form-input" value="{{ fakultas_setting.nomor_tahun }}" min="2000" max="2099" required>
                         </div>
                     </div>
+                    <div class="form-group">
+                        <label style="display:flex; align-items:center; gap:0.5rem; font-weight:500;">
+                            <input type="checkbox" name="setor_buku_wajib" {{ 'checked' if fakultas_setting.setor_buku_wajib else '' }}>
+                            Fakultas ini masih mewajibkan setor buku
+                        </label>
+                        <p style="color:var(--text-muted); font-size:0.78rem; margin-top:0.35rem;">
+                            Jika dicentang, mahasiswa dari fakultas ini wajib mengisi judul buku pada form pengajuan Bebas Pustaka Fakultas.
+                        </p>
+                    </div>
                     <div style="display:grid; grid-template-columns:1fr 1fr; gap:1rem;">
                         <div class="form-group">
                             <label class="form-label">Jabatan Penanda Tangan</label>

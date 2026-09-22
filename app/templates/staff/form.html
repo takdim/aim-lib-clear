@@ -71,8 +71,23 @@
                 <div class="form-group">
                     <label for="alamat" class="form-label">Alamat Lengkap <span class="required">*</span></label>
                     <textarea id="alamat" name="alamat" class="form-input form-textarea" rows="3"
-                              placeholder="Masukkan alamat tempat tinggal saat ini" required></textarea>
+                              placeholder="Masukkan alamat tempat tinggal saat ini" required>{{ request.form.get('alamat', '') }}</textarea>
                 </div>
+
+                {% if tipe_pengajuan == 'fakultas' %}
+                <div class="form-group" id="judulBukuWrapper" style="display:none;">
+                    <label for="judul_buku_setor" class="form-label">Judul Buku yang Disetor <span class="required">*</span></label>
+                    <input
+                        type="text"
+                        id="judul_buku_setor"
+                        name="judul_buku_setor"
+                        class="form-input"
+                        placeholder="Contoh: Dasar-Dasar Rekayasa Perangkat Lunak"
+                        value="{{ request.form.get('judul_buku_setor', '') }}"
+                    >
+                    <p class="file-upload-hint" style="margin-top:0.4rem;">Wajib diisi untuk fakultas yang masih mewajibkan setor buku.</p>
+                </div>
+                {% endif %}
 
                 <h2 class="section-divider">Upload Dokumen</h2>
 
@@ -130,6 +145,25 @@
 
 {% block extra_js %}
 <script>
+const fakultasSetorBukuMap = {{ fakultas_setor_buku | tojson }};
+
+function refreshJudulBukuRequirement() {
+    const wrapper = document.getElementById('judulBukuWrapper');
+    const input = document.getElementById('judul_buku_setor');
+    if (!wrapper || !input) return;
+
+    const fakultasEl = document.getElementById('fakultas_id');
+    const hiddenFakultasEl = document.querySelector('input[name="fakultas_id"]');
+    const fakultasId = fakultasEl ? fakultasEl.value : (hiddenFakultasEl ? hiddenFakultasEl.value : '');
+    const wajib = Boolean(fakultasSetorBukuMap[String(fakultasId)]);
+
+    wrapper.style.display = wajib ? 'block' : 'none';
+    input.required = wajib;
+    if (!wajib) {
+        input.value = '';
+    }
+}
+
 function loadProdi(fakultasId) {
     const prodiSelect = document.getElementById('prodi_id');
     if (!fakultasId) {
@@ -158,6 +192,7 @@ const fakultasSelect = document.getElementById('fakultas_id');
 if (fakultasSelect) {
     fakultasSelect.addEventListener('change', function () {
         loadProdi(this.value);
+        refreshJudulBukuRequirement();
     });
 }
 
@@ -165,6 +200,7 @@ if (fakultasSelect) {
 {% if is_scoped %}
 loadProdi({{ fakultas_list[0].id }});
 {% endif %}
+refreshJudulBukuRequirement();
 
 // Preview nama file
 const fileBebasInput = document.getElementById('file_bebas_pustaka');

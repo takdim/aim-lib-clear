@@ -11,6 +11,7 @@ from flask_login import login_required, current_user
 from app import db
 from app.models.bebas_pustaka import BebasPustaka
 from app.models.fakultas import Fakultas
+from app.models.fakultas_setting import FakultasSetting
 from app.models.user import User
 from app.utils.decorators import staff_required
 from app.utils.pdf_generator import generate_template_kartu_mahasiswa
@@ -89,16 +90,22 @@ def form_bebas_pustaka():
         fakultas_list = Fakultas.query.filter_by(id=current_user.fakultas_id).all()
     else:
         fakultas_list = Fakultas.query.order_by(Fakultas.nama_fakultas).all()
+    fakultas_setor_buku = {
+        s.fakultas_id: s.setor_buku_wajib
+        for s in FakultasSetting.query.all()
+    }
 
     if request.method == 'POST':
         nim = request.form.get('nim', '').strip()
         nama = request.form.get('nama', '').strip()
         alamat = request.form.get('alamat', '').strip()
+        judul_buku_setor = request.form.get('judul_buku_setor', '').strip()
         fakultas_id = request.form.get('fakultas_id', type=int)
         prodi_id = request.form.get('prodi_id', type=int)
         file_bebas = request.files.get('file_bebas_pustaka')
         file_kartu = request.files.get('file_kartu_mahasiswa')
         tidak_punya_ktm = request.form.get('tidak_punya_ktm') == 'on'
+        wajib_setor_buku = bool(fakultas_setor_buku.get(fakultas_id, False))
 
         errors = []
         if not nim:
@@ -111,6 +118,8 @@ def form_bebas_pustaka():
             errors.append('Fakultas wajib dipilih.')
         if not prodi_id:
             errors.append('Program Studi wajib dipilih.')
+        if tipe_pengajuan == 'fakultas' and wajib_setor_buku and not judul_buku_setor:
+            errors.append('Judul buku setor wajib diisi untuk fakultas ini.')
         if tipe_pengajuan == 'pusat' and (
             not file_bebas or not allowed_file(file_bebas.filename)
         ):
@@ -129,13 +138,20 @@ def form_bebas_pustaka():
         if errors:
             for e in errors:
                 flash(e, 'danger')
-            return render_template('staff/form.html', fakultas_list=fakultas_list, is_scoped=bool(current_user.fakultas_id), tipe_pengajuan=tipe_pengajuan)
+            return render_template(
+                'staff/form.html',
+                fakultas_list=fakultas_list,
+                is_scoped=bool(current_user.fakultas_id),
+                tipe_pengajuan=tipe_pengajuan,
+                fakultas_setor_buku=fakultas_setor_buku,
+            )
 
         pengajuan = BebasPustaka(
             created_by=current_user.id,
             nim=nim,
             nama=nama,
             alamat=alamat,
+            judul_buku_setor=judul_buku_setor or None,
             fakultas_id=fakultas_id,
             prodi_id=prodi_id,
             tipe_pengajuan=tipe_pengajuan,
@@ -158,12 +174,24 @@ def form_bebas_pustaka():
         except Exception as e:
             db.session.rollback()
             flash(f'Gagal mengupload file: {str(e)}', 'danger')
-            return render_template('staff/form.html', fakultas_list=fakultas_list, is_scoped=bool(current_user.fakultas_id), tipe_pengajuan=tipe_pengajuan)
+            return render_template(
+                'staff/form.html',
+                fakultas_list=fakultas_list,
+                is_scoped=bool(current_user.fakultas_id),
+                tipe_pengajuan=tipe_pengajuan,
+                fakultas_setor_buku=fakultas_setor_buku,
+            )
 
         flash('Pengajuan berhasil dibuat. Anda dapat langsung menyetujuinya di halaman detail.', 'success')
         return redirect(url_for('staff.pengajuan_detail', id=pengajuan.id))
 
-    return render_template('staff/form.html', fakultas_list=fakultas_list, is_scoped=bool(current_user.fakultas_id), tipe_pengajuan=tipe_pengajuan)
+    return render_template(
+        'staff/form.html',
+        fakultas_list=fakultas_list,
+        is_scoped=bool(current_user.fakultas_id),
+        tipe_pengajuan=tipe_pengajuan,
+        fakultas_setor_buku=fakultas_setor_buku,
+    )
 
 
 def _require_staff_pusat():
@@ -428,6 +456,8 @@ def pengajuan_detail(id):
         elif action == 'edit':
             pengajuan.nama = request.form.get('nama', pengajuan.nama).strip()
             pengajuan.alamat = request.form.get('alamat', pengajuan.alamat).strip()
+            judul_buku_setor = request.form.get('judul_buku_setor', '').strip()
+            pengajuan.judul_buku_setor = judul_buku_setor or None
             fakultas_id = request.form.get('fakultas_id', type=int)
             prodi_id = request.form.get('prodi_id', type=int)
             if fakultas_id:

@@ -11,6 +11,7 @@ from flask_login import login_required, current_user
 
 from app import db
 from app.models.bebas_pustaka import BebasPustaka
+from app.models.fakultas_setting import FakultasSetting
 from app.utils.decorators import mahasiswa_required
 
 mahasiswa_bp = Blueprint('mahasiswa', __name__)
@@ -133,15 +134,25 @@ def form_bebas_pustaka():
         reusable_kartu_mahasiswa(pengajuan_fakultas)
         if tipe_pengajuan == 'pusat' else None
     )
+    wajib_setor_buku = False
+    if tipe_pengajuan == 'fakultas' and current_user.fakultas_id:
+        fakultas_setting = FakultasSetting.query.filter_by(
+            fakultas_id=current_user.fakultas_id
+        ).first()
+        if fakultas_setting:
+            wajib_setor_buku = fakultas_setting.setor_buku_wajib
 
     if request.method == 'POST':
         alamat = request.form.get('alamat', '').strip()
+        judul_buku_setor = request.form.get('judul_buku_setor', '').strip()
         file_bebas = request.files.get('file_bebas_pustaka')
         file_kartu = request.files.get('file_kartu_mahasiswa')
 
         errors = []
         if not alamat:
             errors.append('Alamat wajib diisi.')
+        if wajib_setor_buku and not judul_buku_setor:
+            errors.append('Judul buku setor wajib diisi untuk fakultas Anda.')
         if tipe_pengajuan == 'pusat' and (
             not file_bebas or not allowed_file(file_bebas.filename)
         ):
@@ -159,6 +170,7 @@ def form_bebas_pustaka():
                 'mahasiswa/form.html',
                 tipe_pengajuan=tipe_pengajuan,
                 kartu_mahasiswa_lama=bool(kartu_mahasiswa_lama),
+                wajib_setor_buku=wajib_setor_buku,
             )
 
         # Simpan pengajuan ke DB dulu untuk dapat ID
@@ -167,6 +179,7 @@ def form_bebas_pustaka():
             nim=current_user.nim,
             nama=current_user.name,
             alamat=alamat,
+            judul_buku_setor=judul_buku_setor or None,
             fakultas_id=current_user.fakultas_id,
             prodi_id=current_user.prodi_id,
             tipe_pengajuan=tipe_pengajuan,
@@ -195,6 +208,7 @@ def form_bebas_pustaka():
                 'mahasiswa/form.html',
                 tipe_pengajuan=tipe_pengajuan,
                 kartu_mahasiswa_lama=bool(kartu_mahasiswa_lama),
+                wajib_setor_buku=wajib_setor_buku,
             )
 
         flash('Pengajuan berhasil dikirim! Tunggu review dari staff.', 'success')
@@ -204,6 +218,7 @@ def form_bebas_pustaka():
         'mahasiswa/form.html',
         tipe_pengajuan=tipe_pengajuan,
         kartu_mahasiswa_lama=bool(kartu_mahasiswa_lama),
+        wajib_setor_buku=wajib_setor_buku,
     )
 
 
