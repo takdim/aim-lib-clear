@@ -3,6 +3,7 @@ import json
 import urllib.parse
 import urllib.request
 from html import unescape
+from datetime import datetime, timedelta
 from dataclasses import dataclass
 from http.cookiejar import CookieJar
 
@@ -18,15 +19,26 @@ class InlisliteLoginResult:
 class InlisliteClient:
     """Headless INLISLite client that works without browser automation."""
 
-    def __init__(self, base_url: str, login_url: str, username: str, password: str, timeout: int = 20):
+    _SESSION_CACHE: dict[str, dict] = {}
+
+    def __init__(
+        self,
+        base_url: str,
+        login_url: str,
+        username: str,
+        password: str,
+        timeout: int = 20,
+        session_ttl: int = 900,
+    ):
         self.base_url = (base_url or '').rstrip('/')
         self.login_url = (login_url or '').strip()
         self.username = (username or '').strip()
         self.password = (password or '').strip()
         self.timeout = timeout
+        self.session_ttl = max(60, int(session_ttl))
+        self._session_key = f'{self.base_url}|{self.login_url}|{self.username}'
 
-        self._cookie_jar = CookieJar()
-        self._opener = urllib.request.build_opener(urllib.request.HTTPCookieProcessor(self._cookie_jar))
+        self._cookie_jar, self._opener, self._session_from_cache = self._restore_or_create_session()
         self._headers = {
             'User-Agent': (
                 'Mozilla/5.0 (X11; Linux x86_64) '
@@ -45,6 +57,7 @@ class InlisliteClient:
             username=app_config.get('INLISLITE_USERNAME', ''),
             password=app_config.get('INLISLITE_PASSWORD', ''),
             timeout=int(app_config.get('INLISLITE_TIMEOUT', 20)),
+            session_ttl=int(app_config.get('INLISLITE_SESSION_TTL', 900)),
         )
 
     def can_login(self) -> bool:
@@ -60,6 +73,15 @@ class InlisliteClient:
             )
 
         try:
+            if self._session_from_cache and self._session_still_authenticated():
+                self._persist_session_cache()
+                return InlisliteLoginResult(
+                    success=True,
+                    final_url=self._backend_home_url(),
+                    status_code=200,
+                    message='Login INLISLite berhasil (reuse session).',
+                )
+
             login_html, _ = self._get(self.login_url)
             token = self._extract_backend_token(login_html)
             if not token:
@@ -95,6 +117,9 @@ class InlisliteClient:
             success = self._is_logged_in(final_url, final_html)
             message = 'Login INLISLite berhasil.' if success else 'Login INLISLite gagal.'
 
+            if success:
+                self._persist_session_cache()
+
             return InlisliteLoginResult(
                 success=success,
                 final_url=final_url,
@@ -110,8 +135,41 @@ class InlisliteClient:
             )
 
     def fetch(self, url: str) -> str:
-        html, _ = self._get(url)
+        html, response = self._get(url)
+        if self._is_login_page(response.geturl(), html):
+            login_result = self.login()
+            if login_result.success:
+                html, _ = self._get(url)
         return html
+
+    def _restore_or_create_session(self):
+        cached = self._SESSION_CACHE.get(self._session_key)
+        now = datetime.utcnow()
+        if cached and cached.get('expires_at') and cached['expires_at'] > now:
+            return cached['cookie_jar'], cached['opener'], True
+
+        cookie_jar = CookieJar()
+        opener = urllib.request.build_opener(urllib.request.HTTPCookieProcessor(cookie_jar))
+        return cookie_jar, opener, False
+
+    def _persist_session_cache(self):
+        self._SESSION_CACHE[self._session_key] = {
+            'cookie_jar': self._cookie_jar,
+            'opener': self._opener,
+            'expires_at': datetime.utcnow() + timedelta(seconds=self.session_ttl),
+        }
+
+    @staticmethod
+    def _is_login_page(url: str, html: str) -> bool:
+        return '/backend/site/login' in (url or '') and 'id="loginform-username"' in (html or '')
+
+    def _backend_home_url(self) -> str:
+        return f'{self.base_url}/backend/' if self.base_url else self.login_url
+
+    def _session_still_authenticated(self) -> bool:
+        backend_url = self._backend_home_url()
+        html, response = self._get(backend_url)
+        return self._is_logged_in(response.geturl(), html)
 
     def search_member_by_nim(self, nim: str) -> list[dict]:
         """Cari data member berdasarkan NIM/MemberNo dari halaman backend member."""

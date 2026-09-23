@@ -43,6 +43,8 @@ class Config:
     INLISLITE_USERNAME = os.environ.get('INLISLITE_USERNAME', '').strip()
     INLISLITE_PASSWORD = os.environ.get('INLISLITE_PASSWORD', '').strip()
     INLISLITE_TIMEOUT = int(os.environ.get('INLISLITE_TIMEOUT', 20))
+    INLISLITE_SESSION_TTL = int(os.environ.get('INLISLITE_SESSION_TTL', 900))
+    INLISLITE_MEMBER_CACHE_TTL = int(os.environ.get('INLISLITE_MEMBER_CACHE_TTL', 300))
 
 
 class DevelopmentConfig(Config):

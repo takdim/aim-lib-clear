@@ -20,6 +20,7 @@ from app.utils.pdf_generator import generate_template_kartu_mahasiswa
 staff_bp = Blueprint('staff', __name__)
 
 ALLOWED_EXTENSIONS = {'pdf'}
+INLISLITE_MEMBER_CACHE = {}
 
 
 def allowed_file(filename):
@@ -78,6 +79,27 @@ def can_view_pengajuan(pengajuan):
         pengajuan.tipe_pengajuan == 'pusat' and
         (pengajuan.created_by == current_user.id or pengajuan.user_id == current_user.id)
     )
+
+
+def _inlislite_get_cached_member_data(nim: str):
+    if not nim:
+        return None
+    cache_item = INLISLITE_MEMBER_CACHE.get(nim)
+    if not cache_item:
+        return None
+    if cache_item['expires_at'] <= datetime.utcnow():
+        INLISLITE_MEMBER_CACHE.pop(nim, None)
+        return None
+    return cache_item['value']
+
+
+def _inlislite_set_cached_member_data(nim: str, value: dict, ttl_seconds: int):
+    if not nim:
+        return
+    INLISLITE_MEMBER_CACHE[nim] = {
+        'value': value,
+        'expires_at': datetime.utcnow() + timedelta(seconds=max(30, int(ttl_seconds))),
+    }
 
 
 @staff_bp.route('/form-bebas-pustaka', methods=['GET', 'POST'])
@@ -487,25 +509,41 @@ def pengajuan_detail(id):
 
     if pengajuan.nim and inlislite_data['enabled']:
         try:
-            inlislite_client = InlisliteClient.from_app_config(current_app.config)
-            if inlislite_client.can_login():
-                login_result = inlislite_client.login()
-                inlislite_data['login_success'] = login_result.success
-                inlislite_data['message'] = login_result.message
-
-                if login_result.success:
-                    members = inlislite_client.search_member_by_nim(pengajuan.nim)
-                    if members:
-                        member = members[0]
-                        history = inlislite_client.get_member_loan_history(member.get('member_id'))
-                        inlislite_data['member'] = member
-                        inlislite_data['loan_history'] = history
-                        if history:
-                            inlislite_data['loan_columns'] = list(history[0].keys())
-                    else:
-                        inlislite_data['message'] = f'Data member dengan NIM {pengajuan.nim} tidak ditemukan di INLISLite.'
+            cache_hit = _inlislite_get_cached_member_data(pengajuan.nim)
+            if cache_hit:
+                inlislite_data.update(cache_hit)
+                inlislite_data['message'] = 'Data INLISLite diambil dari cache.'
             else:
-                inlislite_data['message'] = 'Konfigurasi INLISLite belum lengkap.'
+                inlislite_client = InlisliteClient.from_app_config(current_app.config)
+                if inlislite_client.can_login():
+                    login_result = inlislite_client.login()
+                    inlislite_data['login_success'] = login_result.success
+                    inlislite_data['message'] = login_result.message
+
+                    if login_result.success:
+                        members = inlislite_client.search_member_by_nim(pengajuan.nim)
+                        if members:
+                            member = members[0]
+                            history = inlislite_client.get_member_loan_history(member.get('member_id'))
+                            inlislite_data['member'] = member
+                            inlislite_data['loan_history'] = history
+                            if history:
+                                inlislite_data['loan_columns'] = list(history[0].keys())
+
+                            _inlislite_set_cached_member_data(
+                                pengajuan.nim,
+                                {
+                                    'login_success': True,
+                                    'member': inlislite_data['member'],
+                                    'loan_history': inlislite_data['loan_history'],
+                                    'loan_columns': inlislite_data['loan_columns'],
+                                },
+                                current_app.config.get('INLISLITE_MEMBER_CACHE_TTL', 300),
+                            )
+                        else:
+                            inlislite_data['message'] = f'Data member dengan NIM {pengajuan.nim} tidak ditemukan di INLISLite.'
+                else:
+                    inlislite_data['message'] = 'Konfigurasi INLISLite belum lengkap.'
         except Exception as exc:
             inlislite_data['message'] = f'Gagal mengambil data INLISLite: {exc}'
 
