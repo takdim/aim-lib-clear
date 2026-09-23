@@ -74,6 +74,60 @@
                 </div>
             </div>
             {% endif %}
+
+            {% if inlislite_data.enabled %}
+            <div class="card mb-4">
+                <div class="card-body">
+                    <h2 class="card-title">INLISLite UNHAS</h2>
+
+                    {% if inlislite_data.message %}
+                    <div class="alert {{ 'alert-success' if inlislite_data.login_success else 'alert-warning' }} mb-3">
+                        {{ inlislite_data.message }}
+                    </div>
+                    {% endif %}
+
+                    {% if inlislite_data.member %}
+                    <table class="table table-detail mb-3">
+                        <tbody>
+                            <tr><th>Member ID</th><td>{{ inlislite_data.member.member_id or '-' }}</td></tr>
+                            <tr><th>No. Anggota / NIM</th><td>{{ inlislite_data.member.member_no or '-' }}</td></tr>
+                            <tr><th>Nama INLISLite</th><td>{{ inlislite_data.member.full_name or '-' }}</td></tr>
+                            <tr><th>Fakultas INLISLite</th><td>{{ inlislite_data.member.fakultas or '-' }}</td></tr>
+                            <tr><th>Jurusan INLISLite</th><td>{{ inlislite_data.member.jurusan or '-' }}</td></tr>
+                        </tbody>
+                    </table>
+
+                    <h3 class="card-title" style="font-size:1rem;">Riwayat Peminjaman</h3>
+                    {% if inlislite_data.loan_history %}
+                    <div style="overflow-x:auto;">
+                        <table class="table table-detail">
+                            <thead>
+                                <tr>
+                                    {% for col in inlislite_data.loan_columns %}
+                                    <th>{{ col }}</th>
+                                    {% endfor %}
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for row in inlislite_data.loan_history %}
+                                <tr>
+                                    {% for col in inlislite_data.loan_columns %}
+                                    <td>{{ row[col] }}</td>
+                                    {% endfor %}
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                    {% else %}
+                    <p class="text-muted mb-0">Tidak ada data peminjaman untuk member ini.</p>
+                    {% endif %}
+                    {% elif inlislite_data.login_success %}
+                    <p class="text-muted mb-0">Data member INLISLite belum ditemukan untuk NIM ini.</p>
+                    {% endif %}
+                </div>
+            </div>
+            {% endif %}
         </div>
 
         <!-- Kolom Kanan: Aksi -->

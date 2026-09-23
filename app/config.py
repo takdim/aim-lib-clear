@@ -37,6 +37,13 @@ class Config:
     # WTF CSRF
     WTF_CSRF_ENABLED = True
 
+    # INLISLite integration
+    INLISLITE_BASE_URL = os.environ.get('INLISLITE_BASE_URL', '').rstrip('/')
+    INLISLITE_LOGIN_URL = os.environ.get('INLISLITE_LOGIN_URL', '').strip()
+    INLISLITE_USERNAME = os.environ.get('INLISLITE_USERNAME', '').strip()
+    INLISLITE_PASSWORD = os.environ.get('INLISLITE_PASSWORD', '').strip()
+    INLISLITE_TIMEOUT = int(os.environ.get('INLISLITE_TIMEOUT', 20))
+
 
 class DevelopmentConfig(Config):
     DEBUG = True

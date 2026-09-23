@@ -14,6 +14,7 @@ from app.models.fakultas import Fakultas
 from app.models.fakultas_setting import FakultasSetting
 from app.models.user import User
 from app.utils.decorators import staff_required
+from app.utils.inlislite_client import InlisliteClient
 from app.utils.pdf_generator import generate_template_kartu_mahasiswa
 
 staff_bp = Blueprint('staff', __name__)
@@ -471,12 +472,50 @@ def pengajuan_detail(id):
             flash('Data pengajuan berhasil diperbarui.', 'success')
             return redirect(url_for('staff.pengajuan_detail', id=id))
 
+    inlislite_data = {
+        'enabled': (
+            bool(current_app.config.get('INLISLITE_BASE_URL'))
+            and not bool(current_user.fakultas_id)
+            and pengajuan.tipe_pengajuan == 'pusat'
+        ),
+        'login_success': False,
+        'message': '',
+        'member': None,
+        'loan_history': [],
+        'loan_columns': [],
+    }
+
+    if pengajuan.nim and inlislite_data['enabled']:
+        try:
+            inlislite_client = InlisliteClient.from_app_config(current_app.config)
+            if inlislite_client.can_login():
+                login_result = inlislite_client.login()
+                inlislite_data['login_success'] = login_result.success
+                inlislite_data['message'] = login_result.message
+
+                if login_result.success:
+                    members = inlislite_client.search_member_by_nim(pengajuan.nim)
+                    if members:
+                        member = members[0]
+                        history = inlislite_client.get_member_loan_history(member.get('member_id'))
+                        inlislite_data['member'] = member
+                        inlislite_data['loan_history'] = history
+                        if history:
+                            inlislite_data['loan_columns'] = list(history[0].keys())
+                    else:
+                        inlislite_data['message'] = f'Data member dengan NIM {pengajuan.nim} tidak ditemukan di INLISLite.'
+            else:
+                inlislite_data['message'] = 'Konfigurasi INLISLite belum lengkap.'
+        except Exception as exc:
+            inlislite_data['message'] = f'Gagal mengambil data INLISLite: {exc}'
+
     fakultas_list = Fakultas.query.order_by(Fakultas.nama_fakultas).all()
     return render_template(
         'staff/pengajuan_detail.html',
         pengajuan=pengajuan,
         fakultas_list=fakultas_list,
         can_process=can_manage_pengajuan(pengajuan),
+        inlislite_data=inlislite_data,
     )
 
 
