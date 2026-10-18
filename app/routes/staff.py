@@ -110,6 +110,10 @@ def _fetch_inlislite_data(nim: str, force_refresh: bool = False) -> dict:
         'loan_history': [],
         'loan_columns': [],
     }
+    if not current_app.config.get('INLISLITE_ENABLED', False):
+        result['message'] = 'Fitur INLISLite sedang dinonaktifkan.'
+        return result
+
     if not nim:
         result['message'] = 'NIM mahasiswa tidak tersedia.'
         return result
@@ -552,7 +556,8 @@ def pengajuan_detail(id):
 
     inlislite_data = {
         'enabled': (
-            bool(current_app.config.get('INLISLITE_BASE_URL'))
+            bool(current_app.config.get('INLISLITE_ENABLED', False))
+            and bool(current_app.config.get('INLISLITE_BASE_URL'))
             and not bool(current_user.fakultas_id)
             and pengajuan.tipe_pengajuan == 'pusat'
         ),
@@ -592,14 +597,15 @@ def pengajuan_cek_inlislite(id):
         abort(403)
 
     enabled = (
-        bool(current_app.config.get('INLISLITE_BASE_URL'))
+        bool(current_app.config.get('INLISLITE_ENABLED', False))
+        and bool(current_app.config.get('INLISLITE_BASE_URL'))
         and not bool(current_user.fakultas_id)
         and pengajuan.tipe_pengajuan == 'pusat'
     )
     if not enabled:
         return jsonify({
             'success': False,
-            'message': 'Pengecekan INLISLite tidak aktif untuk pengajuan ini.',
+            'message': 'Fitur pengecekan INLISLite sedang dinonaktifkan.',
         }), 400
 
     if not pengajuan.nim:

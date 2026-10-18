@@ -38,6 +38,7 @@ class Config:
     WTF_CSRF_ENABLED = True
 
     # INLISLite integration
+    INLISLITE_ENABLED = os.environ.get('INLISLITE_ENABLED', 'false').lower() in ('1', 'true', 'yes')
     INLISLITE_BASE_URL = os.environ.get('INLISLITE_BASE_URL', '').rstrip('/')
     INLISLITE_LOGIN_URL = os.environ.get('INLISLITE_LOGIN_URL', '').strip()
     INLISLITE_USERNAME = os.environ.get('INLISLITE_USERNAME', '').strip()

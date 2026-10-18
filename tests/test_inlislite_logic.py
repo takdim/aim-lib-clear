@@ -11,6 +11,7 @@ def app_instance():
     app.config.update({
         'TESTING': True,
         'WTF_CSRF_ENABLED': False,
+        'INLISLITE_ENABLED': True,
         'INLISLITE_BASE_URL': 'https://inlislite.example.com',
         'INLISLITE_LOGIN_URL': 'https://inlislite.example.com/backend/site/login',
         'INLISLITE_USERNAME': 'admin',
@@ -120,3 +121,30 @@ def test_pengajuan_cek_inlislite_ajax_endpoint(client, app_instance):
         assert data['success'] is True
         assert data['data']['member']['member_id'] == '999'
         assert len(data['data']['loan_history']) == 1
+
+
+def test_inlislite_disabled_hides_card_and_blocks_endpoint(client, app_instance):
+    app_instance.config['INLISLITE_ENABLED'] = False
+    with client.session_transaction() as sess:
+        with app_instance.app_context():
+            user = db.session.query(User).filter_by(role='staff', fakultas_id=None).first()
+            if not user:
+                user = db.session.query(User).filter_by(role='admin').first()
+            sess['_user_id'] = str(user.id)
+            sess['_fresh'] = True
+
+            pengajuan = db.session.query(BebasPustaka).filter_by(tipe_pengajuan='pusat').first()
+            pengajuan_id = pengajuan.id
+
+    # Halaman detail tidak menampilkan kartu INLISLite
+    resp = client.get(f'/staff/pengajuan/{pengajuan_id}')
+    assert resp.status_code == 200
+    html = resp.get_data(as_text=True)
+    assert 'INLISLite UNHAS' not in html
+
+    # Endpoint AJAX mengembalikan status 400 dan pesan bahwa fitur dinonaktifkan
+    resp_ajax = client.get(f'/staff/pengajuan/{pengajuan_id}/cek-inlislite')
+    assert resp_ajax.status_code == 400
+    data = resp_ajax.get_json()
+    assert data['success'] is False
+    assert 'dinonaktifkan' in data['message']
