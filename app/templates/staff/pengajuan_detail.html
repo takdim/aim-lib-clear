@@ -76,55 +76,66 @@
             {% endif %}
 
             {% if inlislite_data.enabled %}
-            <div class="card mb-4">
+            <div class="card mb-4" id="inlisliteCard">
                 <div class="card-body">
-                    <h2 class="card-title">INLISLite UNHAS</h2>
-
-                    {% if inlislite_data.message %}
-                    <div class="alert {{ 'alert-success' if inlislite_data.login_success else 'alert-warning' }} mb-3">
-                        {{ inlislite_data.message }}
+                    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1rem; flex-wrap:wrap; gap:0.5rem;">
+                        <h2 class="card-title" style="margin-bottom:0;">INLISLite UNHAS</h2>
+                        <button type="button" class="btn btn-sm btn-outline" id="btnCekInlislite" onclick="cekInlislite({{ 'true' if inlislite_data.checked else 'false' }})">
+                            {% if inlislite_data.checked %}🔄 Cek Ulang INLISLite{% else %}🔍 Cek Peminjaman di INLISLite{% endif %}
+                        </button>
                     </div>
-                    {% endif %}
 
-                    {% if inlislite_data.member %}
-                    <table class="table table-detail mb-3">
-                        <tbody>
-                            <tr><th>Member ID</th><td>{{ inlislite_data.member.member_id or '-' }}</td></tr>
-                            <tr><th>No. Anggota / NIM</th><td>{{ inlislite_data.member.member_no or '-' }}</td></tr>
-                            <tr><th>Nama INLISLite</th><td>{{ inlislite_data.member.full_name or '-' }}</td></tr>
-                            <tr><th>Fakultas INLISLite</th><td>{{ inlislite_data.member.fakultas or '-' }}</td></tr>
-                            <tr><th>Jurusan INLISLite</th><td>{{ inlislite_data.member.jurusan or '-' }}</td></tr>
-                        </tbody>
-                    </table>
-
-                    <h3 class="card-title" style="font-size:1rem;">Riwayat Peminjaman</h3>
-                    {% if inlislite_data.loan_history %}
-                    <div style="overflow-x:auto;">
-                        <table class="table table-detail">
-                            <thead>
-                                <tr>
-                                    {% for col in inlislite_data.loan_columns %}
-                                    <th>{{ col }}</th>
-                                    {% endfor %}
-                                </tr>
-                            </thead>
-                            <tbody>
-                                {% for row in inlislite_data.loan_history %}
-                                <tr>
-                                    {% for col in inlislite_data.loan_columns %}
-                                    <td>{{ row[col] }}</td>
-                                    {% endfor %}
-                                </tr>
-                                {% endfor %}
-                            </tbody>
-                        </table>
+                    <div id="inlisliteAlert" class="alert {{ 'alert-success' if inlislite_data.login_success else 'alert-warning' }} mb-3" style="{{ 'display:none;' if not inlislite_data.message else '' }}">
+                        <span id="inlisliteAlertText">{{ inlislite_data.message }}</span>
                     </div>
-                    {% else %}
-                    <p class="text-muted mb-0">Tidak ada data peminjaman untuk member ini.</p>
-                    {% endif %}
-                    {% elif inlislite_data.login_success %}
-                    <p class="text-muted mb-0">Data member INLISLite belum ditemukan untuk NIM ini.</p>
-                    {% endif %}
+
+                    <div id="inlisliteContent">
+                        {% if inlislite_data.checked %}
+                            {% if inlislite_data.member %}
+                            <table class="table table-detail mb-3">
+                                <tbody>
+                                    <tr><th>Member ID</th><td>{{ inlislite_data.member.member_id or '-' }}</td></tr>
+                                    <tr><th>No. Anggota / NIM</th><td>{{ inlislite_data.member.member_no or '-' }}</td></tr>
+                                    <tr><th>Nama INLISLite</th><td>{{ inlislite_data.member.full_name or '-' }}</td></tr>
+                                    <tr><th>Fakultas INLISLite</th><td>{{ inlislite_data.member.fakultas or '-' }}</td></tr>
+                                    <tr><th>Jurusan INLISLite</th><td>{{ inlislite_data.member.jurusan or '-' }}</td></tr>
+                                </tbody>
+                            </table>
+
+                            <h3 class="card-title" style="font-size:1rem;">Riwayat Peminjaman</h3>
+                            {% if inlislite_data.loan_history %}
+                            <div style="overflow-x:auto;">
+                                <table class="table table-detail">
+                                    <thead>
+                                        <tr>
+                                            {% for col in inlislite_data.loan_columns %}
+                                            <th>{{ col }}</th>
+                                            {% endfor %}
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {% for row in inlislite_data.loan_history %}
+                                        <tr>
+                                            {% for col in inlislite_data.loan_columns %}
+                                            <td>{{ row[col] }}</td>
+                                            {% endfor %}
+                                        </tr>
+                                        {% endfor %}
+                                    </tbody>
+                                </table>
+                            </div>
+                            {% else %}
+                            <p class="text-muted mb-0">Tidak ada data peminjaman untuk member ini.</p>
+                            {% endif %}
+                            {% elif inlislite_data.login_success %}
+                            <p class="text-muted mb-0">Data member INLISLite belum ditemukan untuk NIM ini.</p>
+                            {% endif %}
+                        {% else %}
+                            <div class="text-muted py-2" id="inlislitePlaceholder">
+                                <p class="mb-0">Data peminjaman belum dicek. Klik tombol <strong>Cek Peminjaman di INLISLite</strong> untuk memeriksa status keanggotaan dan riwayat peminjaman.</p>
+                            </div>
+                        {% endif %}
+                    </div>
                 </div>
             </div>
             {% endif %}
@@ -333,5 +344,125 @@ document.getElementById('editFakultasId').addEventListener('change', function() 
             });
         });
 });
+
+function escapeHtml(text) {
+    if (text === null || text === undefined) return '';
+    return String(text)
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/"/g, "&quot;")
+        .replace(/'/g, "&#039;");
+}
+
+function cekInlislite(forceRefresh = false) {
+    const btn = document.getElementById('btnCekInlislite');
+    const alertBox = document.getElementById('inlisliteAlert');
+    const alertText = document.getElementById('inlisliteAlertText');
+    const contentDiv = document.getElementById('inlisliteContent');
+
+    if (!btn || !contentDiv) return;
+
+    btn.disabled = true;
+    btn.innerHTML = '⏳ Memeriksa INLISLite...';
+
+    if (alertBox) alertBox.style.display = 'none';
+    contentDiv.innerHTML = `
+        <div style="text-align:center; padding: 1.5rem 0; color: var(--text-muted, #64748b);">
+            <div style="font-size: 1.5rem; margin-bottom: 0.5rem;">⏳</div>
+            <p class="mb-0">Sedang menghubungi server INLISLite dan mengecek riwayat peminjaman...</p>
+        </div>
+    `;
+
+    const url = "{{ url_for('staff.pengajuan_cek_inlislite', id=pengajuan.id) }}" + (forceRefresh ? '?refresh=1' : '');
+
+    fetch(url, {
+        headers: {
+            'Accept': 'application/json',
+            'X-Requested-With': 'XMLHttpRequest'
+        }
+    })
+    .then(response => {
+        if (!response.ok) {
+            return response.json().then(errData => {
+                throw new Error(errData.message || 'Gagal menghubungi server');
+            }).catch(e => {
+                throw new Error(e.message || ('Terjadi kesalahan pada server (HTTP ' + response.status + ')'));
+            });
+        }
+        return response.json();
+    })
+    .then(res => {
+        btn.disabled = false;
+        btn.innerHTML = '🔄 Cek Ulang INLISLite';
+        btn.onclick = function() { cekInlislite(true); };
+
+        if (!res.success) {
+            if (alertBox && alertText) {
+                alertBox.className = 'alert alert-danger mb-3';
+                alertText.textContent = res.message || 'Pengecekan INLISLite gagal.';
+                alertBox.style.display = 'block';
+            }
+            contentDiv.innerHTML = '';
+            return;
+        }
+
+        const d = res.data;
+        if (d.message && alertBox && alertText) {
+            alertBox.className = `alert ${d.login_success ? 'alert-success' : 'alert-warning'} mb-3`;
+            alertText.textContent = d.message;
+            alertBox.style.display = 'block';
+        }
+
+        if (d.member) {
+            let html = `
+                <table class="table table-detail mb-3">
+                    <tbody>
+                        <tr><th>Member ID</th><td>${escapeHtml(d.member.member_id || '-')}</td></tr>
+                        <tr><th>No. Anggota / NIM</th><td>${escapeHtml(d.member.member_no || '-')}</td></tr>
+                        <tr><th>Nama INLISLite</th><td>${escapeHtml(d.member.full_name || '-')}</td></tr>
+                        <tr><th>Fakultas INLISLite</th><td>${escapeHtml(d.member.fakultas || '-')}</td></tr>
+                        <tr><th>Jurusan INLISLite</th><td>${escapeHtml(d.member.jurusan || '-')}</td></tr>
+                    </tbody>
+                </table>
+                <h3 class="card-title" style="font-size:1rem;">Riwayat Peminjaman</h3>
+            `;
+
+            if (d.loan_history && d.loan_history.length > 0) {
+                html += '<div style="overflow-x:auto;"><table class="table table-detail"><thead><tr>';
+                (d.loan_columns || []).forEach(col => {
+                    html += `<th>${escapeHtml(col)}</th>`;
+                });
+                html += '</tr></thead><tbody>';
+                d.loan_history.forEach(row => {
+                    html += '<tr>';
+                    (d.loan_columns || []).forEach(col => {
+                        html += `<td>${escapeHtml(row[col] !== null && row[col] !== undefined ? row[col] : '-')}</td>`;
+                    });
+                    html += '</tr>';
+                });
+                html += '</tbody></table></div>';
+            } else {
+                html += '<p class="text-muted mb-0">Tidak ada data peminjaman untuk member ini.</p>';
+            }
+            contentDiv.innerHTML = html;
+        } else if (d.login_success) {
+            contentDiv.innerHTML = '<p class="text-muted mb-0">Data member INLISLite belum ditemukan untuk NIM ini.</p>';
+        } else {
+            contentDiv.innerHTML = '<p class="text-muted mb-0">Gagal mendapatkan data member dari INLISLite.</p>';
+        }
+    })
+    .catch(err => {
+        btn.disabled = false;
+        btn.innerHTML = '🔍 Cek Peminjaman di INLISLite';
+        btn.onclick = function() { cekInlislite(false); };
+        if (alertBox && alertText) {
+            alertBox.className = 'alert alert-danger mb-3';
+            alertText.textContent = 'Gagal memeriksa INLISLite: ' + err.message;
+            alertBox.style.display = 'block';
+        }
+        contentDiv.innerHTML = '<p class="text-muted mb-0">Gagal memuat data. Silakan coba lagi.</p>';
+    });
+}
 </script>
 {% endblock %}

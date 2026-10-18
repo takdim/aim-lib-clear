@@ -102,6 +102,62 @@ def _inlislite_set_cached_member_data(nim: str, value: dict, ttl_seconds: int):
     }
 
 
+def _fetch_inlislite_data(nim: str, force_refresh: bool = False) -> dict:
+    result = {
+        'login_success': False,
+        'message': '',
+        'member': None,
+        'loan_history': [],
+        'loan_columns': [],
+    }
+    if not nim:
+        result['message'] = 'NIM mahasiswa tidak tersedia.'
+        return result
+
+    try:
+        if not force_refresh:
+            cache_hit = _inlislite_get_cached_member_data(nim)
+            if cache_hit:
+                result.update(cache_hit)
+                result['message'] = 'Data INLISLite diambil dari cache.'
+                return result
+
+        inlislite_client = InlisliteClient.from_app_config(current_app.config)
+        if inlislite_client.can_login():
+            login_result = inlislite_client.login()
+            result['login_success'] = login_result.success
+            result['message'] = login_result.message
+
+            if login_result.success:
+                members = inlislite_client.search_member_by_nim(nim)
+                if members:
+                    member = members[0]
+                    history = inlislite_client.get_member_loan_history(member.get('member_id'))
+                    result['member'] = member
+                    result['loan_history'] = history
+                    if history:
+                        result['loan_columns'] = list(history[0].keys())
+
+                    _inlislite_set_cached_member_data(
+                        nim,
+                        {
+                            'login_success': True,
+                            'member': result['member'],
+                            'loan_history': result['loan_history'],
+                            'loan_columns': result['loan_columns'],
+                        },
+                        current_app.config.get('INLISLITE_MEMBER_CACHE_TTL', 300),
+                    )
+                else:
+                    result['message'] = f'Data member dengan NIM {nim} tidak ditemukan di INLISLite.'
+        else:
+            result['message'] = 'Konfigurasi INLISLite belum lengkap.'
+    except Exception as exc:
+        result['message'] = f'Gagal mengambil data INLISLite: {exc}'
+
+    return result
+
+
 @staff_bp.route('/form-bebas-pustaka', methods=['GET', 'POST'])
 @login_required
 @staff_required
@@ -500,6 +556,7 @@ def pengajuan_detail(id):
             and not bool(current_user.fakultas_id)
             and pengajuan.tipe_pengajuan == 'pusat'
         ),
+        'checked': False,
         'login_success': False,
         'message': '',
         'member': None,
@@ -507,45 +564,12 @@ def pengajuan_detail(id):
         'loan_columns': [],
     }
 
-    if pengajuan.nim and inlislite_data['enabled']:
-        try:
-            cache_hit = _inlislite_get_cached_member_data(pengajuan.nim)
-            if cache_hit:
-                inlislite_data.update(cache_hit)
-                inlislite_data['message'] = 'Data INLISLite diambil dari cache.'
-            else:
-                inlislite_client = InlisliteClient.from_app_config(current_app.config)
-                if inlislite_client.can_login():
-                    login_result = inlislite_client.login()
-                    inlislite_data['login_success'] = login_result.success
-                    inlislite_data['message'] = login_result.message
-
-                    if login_result.success:
-                        members = inlislite_client.search_member_by_nim(pengajuan.nim)
-                        if members:
-                            member = members[0]
-                            history = inlislite_client.get_member_loan_history(member.get('member_id'))
-                            inlislite_data['member'] = member
-                            inlislite_data['loan_history'] = history
-                            if history:
-                                inlislite_data['loan_columns'] = list(history[0].keys())
-
-                            _inlislite_set_cached_member_data(
-                                pengajuan.nim,
-                                {
-                                    'login_success': True,
-                                    'member': inlislite_data['member'],
-                                    'loan_history': inlislite_data['loan_history'],
-                                    'loan_columns': inlislite_data['loan_columns'],
-                                },
-                                current_app.config.get('INLISLITE_MEMBER_CACHE_TTL', 300),
-                            )
-                        else:
-                            inlislite_data['message'] = f'Data member dengan NIM {pengajuan.nim} tidak ditemukan di INLISLite.'
-                else:
-                    inlislite_data['message'] = 'Konfigurasi INLISLite belum lengkap.'
-        except Exception as exc:
-            inlislite_data['message'] = f'Gagal mengambil data INLISLite: {exc}'
+    # Cek INLISLite HANYA dilakukan jika diminta eksplisit (misal: tombol diklik via query param ?cek_inlislite=1)
+    if pengajuan.nim and inlislite_data['enabled'] and request.args.get('cek_inlislite') == '1':
+        force_refresh = request.args.get('refresh') == '1'
+        fetched = _fetch_inlislite_data(pengajuan.nim, force_refresh=force_refresh)
+        inlislite_data.update(fetched)
+        inlislite_data['checked'] = True
 
     fakultas_list = Fakultas.query.order_by(Fakultas.nama_fakultas).all()
     return render_template(
@@ -555,6 +579,41 @@ def pengajuan_detail(id):
         can_process=can_manage_pengajuan(pengajuan),
         inlislite_data=inlislite_data,
     )
+
+
+@staff_bp.route('/pengajuan/<int:id>/cek-inlislite', methods=['GET', 'POST'])
+@login_required
+@staff_required
+def pengajuan_cek_inlislite(id):
+    """Endpoint untuk memeriksa peminjaman member di INLISLite sesuai permintaan."""
+    pengajuan = BebasPustaka.query.get_or_404(id)
+
+    if not can_view_pengajuan(pengajuan):
+        abort(403)
+
+    enabled = (
+        bool(current_app.config.get('INLISLITE_BASE_URL'))
+        and not bool(current_user.fakultas_id)
+        and pengajuan.tipe_pengajuan == 'pusat'
+    )
+    if not enabled:
+        return jsonify({
+            'success': False,
+            'message': 'Pengecekan INLISLite tidak aktif untuk pengajuan ini.',
+        }), 400
+
+    if not pengajuan.nim:
+        return jsonify({
+            'success': False,
+            'message': 'NIM mahasiswa tidak ditemukan pada pengajuan ini.',
+        }), 400
+
+    force_refresh = request.args.get('refresh') == '1' or (request.is_json and request.json.get('refresh'))
+    data = _fetch_inlislite_data(pengajuan.nim, force_refresh=force_refresh)
+    return jsonify({
+        'success': True,
+        'data': data,
+    })
 
 
 @staff_bp.route('/pengajuan/<int:id>/file/<string:jenis>')
