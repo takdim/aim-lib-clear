@@ -10,7 +10,7 @@ MAX_REGISTRATION_ATTEMPTS = 5
 REGISTRATION_WINDOW = timedelta(minutes=10)
 REGISTRATION_BLOCK_DURATION = timedelta(minutes=15)
 
-from app import db
+from app import db, limiter
 from app.models.user import User
 from app.models.fakultas import Fakultas
 from app.models.program_studi import ProgramStudi
@@ -145,6 +145,7 @@ def register():
 
 
 @auth_bp.route('/login', methods=['GET', 'POST'])
+@limiter.limit('5 per minute; 30 per hour', methods=['POST'])
 def login():
     if current_user.is_authenticated:
         return _redirect_by_role(current_user)

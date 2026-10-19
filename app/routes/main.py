@@ -1,5 +1,5 @@
 from datetime import datetime, timedelta
-from flask import Blueprint, render_template, request, current_app
+from flask import Blueprint, render_template, request, current_app, jsonify
 from flask_login import current_user
 
 from app.models.bebas_pustaka import BebasPustaka
@@ -99,3 +99,25 @@ def forbidden(e):
 @main_bp.app_errorhandler(404)
 def not_found(e):
     return render_template('errors/404.html'), 404
+
+
+@main_bp.app_errorhandler(429)
+def ratelimit_handler(e):
+    if request.is_json or request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+        return jsonify({
+            'success': False,
+            'message': 'Terlalu banyak permintaan. Silakan coba lagi beberapa saat lagi.',
+            'error': 'Too Many Requests'
+        }), 429
+    return render_template('errors/429.html', error=e), 429
+
+
+@main_bp.app_errorhandler(500)
+def internal_server_error(e):
+    if request.is_json or request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+        return jsonify({
+            'success': False,
+            'message': 'Terjadi kesalahan internal server.',
+            'error': 'Internal Server Error'
+        }), 500
+    return render_template('errors/500.html', error=e), 500

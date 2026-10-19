@@ -41,6 +41,16 @@ class Config:
     SESSION_COOKIE_HTTPONLY = True
     SESSION_COOKIE_SAMESITE = 'Lax'
     SESSION_COOKIE_SECURE = os.environ.get('SESSION_COOKIE_SECURE', 'false').lower() in ('1', 'true', 'yes')
+    PREFERRED_URL_SCHEME = os.environ.get('PREFERRED_URL_SCHEME', 'https')
+
+    # Rate Limiting (Flask-Limiter)
+    RATELIMIT_STORAGE_URI = os.environ.get('RATELIMIT_STORAGE_URI', 'memory://')
+    RATELIMIT_STRATEGY = 'fixed-window'
+    RATELIMIT_HEADERS_ENABLED = True
+    RATELIMIT_ENABLED = os.environ.get('RATELIMIT_ENABLED', 'true').lower() in ('1', 'true', 'yes')
+
+    # Security Headers Config
+    HSTS_ENABLED = os.environ.get('HSTS_ENABLED', 'true').lower() in ('1', 'true', 'yes')
 
     # INLISLite integration
     INLISLITE_ENABLED = os.environ.get('INLISLITE_ENABLED', 'true').lower() in ('1', 'true', 'yes')
@@ -55,10 +65,14 @@ class Config:
 
 class DevelopmentConfig(Config):
     DEBUG = True
+    # Di development lokal tanpa HTTPS, cookie secure dinonaktifkan kecuali disetel True via env
+    SESSION_COOKIE_SECURE = os.environ.get('SESSION_COOKIE_SECURE', 'false').lower() in ('1', 'true', 'yes')
 
 
 class ProductionConfig(Config):
     DEBUG = False
+    # Di environment production, defaultkan ke Secure=True
+    SESSION_COOKIE_SECURE = os.environ.get('SESSION_COOKIE_SECURE', 'true').lower() in ('1', 'true', 'yes')
 
 
 config = {

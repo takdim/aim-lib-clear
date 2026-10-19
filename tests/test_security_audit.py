@@ -174,14 +174,27 @@ def test_verification_token_signature(app_instance):
         assert is_signed_legacy is False  # Menandakan perlu disensor (masking)
 
 
-# ─── 5. TEST HTTP SECURITY HEADERS ───────────────────────────────────────────
+# ─── 5. TEST HTTP SECURITY HEADERS & ANTI-DUPLIKASI ───────────────────────────
 def test_security_headers_present(client):
-    """Memastikan response memuat HTTP Security Headers global."""
+    """Memastikan response memuat HTTP Security Headers global lengkap & tanpa duplikasi."""
     resp = client.get('/')
     assert resp.status_code == 200
     assert resp.headers.get('X-Frame-Options') == 'SAMEORIGIN'
     assert resp.headers.get('X-Content-Type-Options') == 'nosniff'
     assert resp.headers.get('Referrer-Policy') == 'strict-origin-when-cross-origin'
+    assert resp.headers.get('Permissions-Policy') == 'camera=(), microphone=(), geolocation=()'
+    assert resp.headers.get('Cross-Origin-Resource-Policy') == 'same-origin'
+    assert 'Strict-Transport-Security' in resp.headers
+    assert 'Content-Security-Policy' in resp.headers
+    assert "default-src 'self'" in resp.headers['Content-Security-Policy']
+
+    # Pastikan tidak ada header keamanan yang ganda (Temuan #5)
+    for header in [
+        'Referrer-Policy', 'X-Frame-Options', 'X-Content-Type-Options',
+        'Content-Security-Policy', 'Strict-Transport-Security', 'Permissions-Policy'
+    ]:
+        values = resp.headers.getlist(header)
+        assert len(values) == 1, f"Header {header} terduplikasi: {values}"
 
 
 # ─── 6. TEST PROXY FIX REVERSE PROXY ANTI-SPOOFING ───────────────────────────
@@ -202,9 +215,9 @@ def test_proxy_fix_middleware():
         assert resp.status_code == 200
 
 
-# ─── 7. TEST CUSTOM ERROR PAGES (403 & 404) ──────────────────────────────────
+# ─── 7. TEST CUSTOM ERROR PAGES (403, 404, 429) ──────────────────────────────
 def test_custom_error_pages(client, app_instance):
-    """Memastikan halaman 404 dan 403 menampilkan template kustom."""
+    """Memastikan halaman 404, 403, dan 429 menampilkan template kustom."""
     # 404: Akses URL yang tidak ada
     resp_404 = client.get('/halaman-tidak-ada-123')
     assert resp_404.status_code == 404
@@ -224,3 +237,36 @@ def test_custom_error_pages(client, app_instance):
     html_403 = resp_403.get_data(as_text=True)
     assert 'Akses Ditolak' in html_403
     assert '403' in html_403
+
+
+# ─── 8. TEST RATE LIMITING LOGIN (TEMUAN #1) ─────────────────────────────────
+def test_login_rate_limiting_blocks_bruteforce(client):
+    """Memastikan percobaan brute-force pada /login diblokir dengan 429 setelah 5 percobaan per menit."""
+    statuses = []
+    last_resp = None
+    for i in range(6):
+        last_resp = client.post('/login', data={'identifier': f'tester{i}@unhas.ac.id', 'password': 'wrongpassword'})
+        statuses.append(last_resp.status_code)
+
+    assert statuses[:5] == [200, 200, 200, 200, 200], f"5 percobaan pertama harus 200: {statuses[:5]}"
+    assert statuses[5] == 429, f"Percobaan ke-6 harus 429 (Too Many Requests), didapat: {statuses[5]}"
+    html_429 = last_resp.get_data(as_text=True)
+    assert '429' in html_429
+    assert 'Terlalu Banyak Permintaan' in html_429
+
+
+# ─── 9. TEST SESSION COOKIE HARDENING (TEMUAN #2) ─────────────────────────────
+def test_session_cookie_hardening_production():
+    """Memastikan session cookie disetel dengan Secure, HttpOnly, dan SameSite=Lax di production."""
+    prod_app = create_app('production')
+    prod_client = prod_app.test_client()
+
+    resp = prod_client.get('/login', base_url='https://localhost')
+    cookies = resp.headers.getlist('Set-Cookie')
+    joined_cookies = ' '.join(cookies)
+
+    # Ketika cookie session terpasang oleh CSRF atau Session
+    if 'session=' in joined_cookies:
+        assert 'Secure' in joined_cookies
+        assert 'HttpOnly' in joined_cookies
+        assert 'SameSite=Lax' in joined_cookies

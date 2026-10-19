@@ -1,0 +1,10 @@
+{% extends "base.html" %}
+{% block title %}500 Kesalahan Server{% endblock %}
+{% block content %}
+<div class="error-page">
+    <div class="error-code">500</div>
+    <h1>Terjadi Kesalahan Server</h1>
+    <p>Mohon maaf, sistem mengalami gangguan internal saat memproses permintaan Anda. Silakan hubungi administrator perpustakaan jika masalah berlanjut.</p>
+    <a href="{{ url_for('main.index') }}" class="btn btn-primary">Kembali ke Beranda</a>
+</div>
+{% endblock %}

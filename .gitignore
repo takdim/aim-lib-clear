@@ -29,10 +29,15 @@ env.bak/
 venv.bak/
 
 # ========================
-# Environment Variables
+# Environment Variables & Secrets
 # ========================
 .env
+.env.*
 !.env.example
+*.pem
+*.key
+*.crt
+*.pfx
 
 # ========================
 # Flask / SQLAlchemy
@@ -50,11 +55,13 @@ migrations/versions/*.py
 # Uploads (file PDF mahasiswa)
 # ========================
 uploads/
+app/static/uploads/
 
 # ========================
 # Database
 # ========================
 *.db
+*.sqlite
 *.sqlite3
 
 # ========================
@@ -71,6 +78,7 @@ logs/
 *.swp
 *.swo
 *~
+*.code-workspace
 
 # ========================
 # macOS
@@ -84,12 +92,18 @@ Icon?
 .Trashes
 
 # ========================
-# Testing
+# Testing & Security Assessment
 # ========================
+# Folder testing internal & laporan pentest (sensitif/rahasia)
+testing/
+*.pdf
 .pytest_cache/
 .coverage
 htmlcov/
 .tox/
+report.html
+test-results/
+screenshots/
 
 # ========================
 # Misc

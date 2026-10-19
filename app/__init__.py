@@ -4,6 +4,8 @@ from flask_sqlalchemy import SQLAlchemy
 from flask_login import LoginManager
 from flask_migrate import Migrate
 from flask_wtf.csrf import CSRFProtect
+from flask_limiter import Limiter
+from flask_limiter.util import get_remote_address
 
 from app.config import config
 
@@ -11,6 +13,10 @@ db = SQLAlchemy()
 login_manager = LoginManager()
 migrate = Migrate()
 csrf = CSRFProtect()
+limiter = Limiter(
+    key_func=get_remote_address,
+    default_limits=[],
+)
 
 
 def create_app(config_name=None):
@@ -45,6 +51,7 @@ def create_app(config_name=None):
     login_manager.init_app(app)
     migrate.init_app(app, db)
     csrf.init_app(app)
+    limiter.init_app(app)
 
     # Login manager config
     login_manager.login_view = 'auth.login'
@@ -97,12 +104,29 @@ def create_app(config_name=None):
             pending_pengajuan_count=pending_count,
         )
 
-    # Security Headers
+    # Security Headers — Menutup Temuan Keamanan SIDORA/SIBESTI #3 dan #5
     @app.after_request
     def set_security_headers(response):
+        # Assignment langsung (bukan add) untuk mencegah duplikasi header
         response.headers['X-Frame-Options'] = 'SAMEORIGIN'
         response.headers['X-Content-Type-Options'] = 'nosniff'
         response.headers['Referrer-Policy'] = 'strict-origin-when-cross-origin'
+        response.headers['Permissions-Policy'] = 'camera=(), microphone=(), geolocation=()'
+        response.headers['Cross-Origin-Resource-Policy'] = 'same-origin'
+        response.headers['Content-Security-Policy'] = (
+            "default-src 'self'; "
+            "script-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net; "
+            "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; "
+            "img-src 'self' data: blob: https:; "
+            "font-src 'self' data: https://fonts.gstatic.com; "
+            "connect-src 'self'; "
+            "frame-ancestors 'self'; "
+            "object-src 'none'; "
+            "base-uri 'self'; "
+            "form-action 'self'"
+        )
+        if app.config.get('HSTS_ENABLED', True):
+            response.headers['Strict-Transport-Security'] = 'max-age=31536000; includeSubDomains; preload'
         return response
 
     # Import models agar Migrate mengenali
