@@ -79,7 +79,7 @@ class InlisliteClient:
                     success=True,
                     final_url=self._backend_home_url(),
                     status_code=200,
-                    message='Login INLISLite berhasil (reuse session).',
+                    message='Data berhasil di-load.',
                 )
 
             login_html, _ = self._get(self.login_url)
@@ -115,7 +115,7 @@ class InlisliteClient:
             status_code = getattr(response, 'status', 0)
 
             success = self._is_logged_in(final_url, final_html)
-            message = 'Login INLISLite berhasil.' if success else 'Login INLISLite gagal.'
+            message = 'Data berhasil di-load.' if success else 'Login INLISLite gagal.'
 
             if success:
                 self._persist_session_cache()

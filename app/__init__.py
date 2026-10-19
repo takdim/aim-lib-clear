@@ -80,6 +80,14 @@ def create_app(config_name=None):
             pending_pengajuan_count=pending_count,
         )
 
+    # Security Headers
+    @app.after_request
+    def set_security_headers(response):
+        response.headers['X-Frame-Options'] = 'SAMEORIGIN'
+        response.headers['X-Content-Type-Options'] = 'nosniff'
+        response.headers['Referrer-Policy'] = 'strict-origin-when-cross-origin'
+        return response
+
     # Import models agar Migrate mengenali
     with app.app_context():
         from app.models import user, fakultas, program_studi, bebas_pustaka, sistem_setting  # noqa

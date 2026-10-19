@@ -10,7 +10,14 @@
         </div>
     </div>
 
-    {% if pengajuan %}
+    {% if rate_limited %}
+    <div class="card">
+        <div class="card-body text-center" style="padding: 2.5rem 1.5rem;">
+            <h2 class="card-title text-danger" style="margin-bottom: 0.75rem;">Batas Permintaan Tercapai</h2>
+            <p class="text-muted">Terlalu banyak permintaan verifikasi dalam waktu singkat. Demi keamanan dan perlindungan data, silakan coba beberapa saat lagi.</p>
+        </div>
+    </div>
+    {% elif pengajuan %}
     <div class="card card-success">
         <div class="card-body">
             <h2 class="card-title">Surat Terverifikasi</h2>
@@ -19,14 +26,20 @@
                 <tbody>
                     <tr><th>Nomor Surat</th><td>{{ pengajuan.nomor_surat }}</td></tr>
                     <tr><th>Jenis Surat</th><td>{{ pengajuan.get_tipe_label() }}</td></tr>
-                    <tr><th>Nama</th><td>{{ pengajuan.nama }}</td></tr>
-                    <tr><th>NIM</th><td>{{ pengajuan.nim }}</td></tr>
+                    <tr><th>Nama</th><td><strong>{{ display_nama or pengajuan.nama }}</strong></td></tr>
+                    <tr><th>NIM</th><td><strong>{{ display_nim or pengajuan.nim }}</strong></td></tr>
                     <tr><th>Fakultas</th><td>{{ pengajuan.fakultas.nama_fakultas if pengajuan.fakultas else '-' }}</td></tr>
                     <tr><th>Program Studi</th><td>{{ pengajuan.program_studi.nama_prodi if pengajuan.program_studi else '-' }}</td></tr>
                     <tr><th>Diterbitkan Oleh</th><td>{{ penerbit }}</td></tr>
                     <tr><th>Tanggal Disetujui</th><td>{% if pengajuan.approved_at %}<span data-local-datetime="true" data-local-format="date-long" data-utc="{{ pengajuan.approved_at.isoformat() }}Z">{{ pengajuan.approved_at.strftime('%d %B %Y') }}</span>{% else %}-{% endif %}</td></tr>
                 </tbody>
             </table>
+
+            {% if not is_signed %}
+            <div class="alert alert-warning" style="margin-top: 1.25rem; font-size: 0.875rem;">
+                <strong>Perhatian:</strong> Halaman ini diakses melalui pencarian ID tanpa kode keamanan QR. Sebagian data identitas disamarkan demi melindungi privasi mahasiswa. Untuk melihat data lengkap tanpa sensor, pindai QR Code resmi langsung dari lembar fisik surat.
+            </div>
+            {% endif %}
         </div>
     </div>
     {% else %}

@@ -1,5 +1,6 @@
 import bcrypt
 from datetime import datetime, timedelta
+from urllib.parse import urlparse, urljoin
 from flask import Blueprint, render_template, redirect, url_for, flash, request, session
 from flask_login import login_user, logout_user, current_user, login_required
 
@@ -18,6 +19,18 @@ auth_bp = Blueprint('auth', __name__)
 
 MAX_LOGIN_ATTEMPTS = 5
 LOCKOUT_MINUTES = 15
+
+
+def is_safe_url(target):
+    """Cek apakah URL target aman untuk redirect (mencegah Open Redirect)."""
+    if not target or not isinstance(target, str):
+        return False
+    # Tolak jika ada backslash atau protocol-relative URL (//)
+    if '\\' in target or target.startswith('//'):
+        return False
+    ref_url = urlparse(request.host_url)
+    test_url = urlparse(urljoin(request.host_url, target))
+    return test_url.scheme in ('http', 'https') and ref_url.netloc == test_url.netloc
 
 
 def get_client_ip():
@@ -177,7 +190,7 @@ def login():
         flash(f'Selamat datang, {user.name}!', 'success')
 
         next_page = request.args.get('next')
-        if next_page:
+        if next_page and is_safe_url(next_page):
             return redirect(next_page)
         return _redirect_by_role(user)
 

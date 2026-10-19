@@ -80,7 +80,7 @@
                 <div class="card-body">
                     <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1rem; flex-wrap:wrap; gap:0.5rem;">
                         <h2 class="card-title" style="margin-bottom:0;">INLISLite UNHAS</h2>
-                        <button type="button" class="btn btn-sm btn-outline" id="btnCekInlislite" onclick="cekInlislite({{ 'true' if inlislite_data.checked else 'false' }})">
+                        <button type="button" class="btn btn-sm btn-primary" id="btnCekInlislite" onclick="cekInlislite({{ 'true' if inlislite_data.checked else 'false' }})">
                             {% if inlislite_data.checked %}🔄 Cek Ulang INLISLite{% else %}🔍 Cek Peminjaman di INLISLite{% endif %}
                         </button>
                     </div>

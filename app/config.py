@@ -37,8 +37,13 @@ class Config:
     # WTF CSRF
     WTF_CSRF_ENABLED = True
 
+    # Session Cookie Security
+    SESSION_COOKIE_HTTPONLY = True
+    SESSION_COOKIE_SAMESITE = 'Lax'
+    SESSION_COOKIE_SECURE = os.environ.get('SESSION_COOKIE_SECURE', 'false').lower() in ('1', 'true', 'yes')
+
     # INLISLite integration
-    INLISLITE_ENABLED = os.environ.get('INLISLITE_ENABLED', 'false').lower() in ('1', 'true', 'yes')
+    INLISLITE_ENABLED = os.environ.get('INLISLITE_ENABLED', 'true').lower() in ('1', 'true', 'yes')
     INLISLITE_BASE_URL = os.environ.get('INLISLITE_BASE_URL', '').rstrip('/')
     INLISLITE_LOGIN_URL = os.environ.get('INLISLITE_LOGIN_URL', '').strip()
     INLISLITE_USERNAME = os.environ.get('INLISLITE_USERNAME', '').strip()

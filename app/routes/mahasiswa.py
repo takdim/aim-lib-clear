@@ -13,6 +13,7 @@ from app import db
 from app.models.bebas_pustaka import BebasPustaka
 from app.models.fakultas_setting import FakultasSetting
 from app.utils.decorators import mahasiswa_required
+from app.utils.validators import is_valid_pdf
 
 mahasiswa_bp = Blueprint('mahasiswa', __name__)
 
@@ -154,14 +155,14 @@ def form_bebas_pustaka():
         if wajib_setor_buku and not judul_buku_setor:
             errors.append('Judul buku setor wajib diisi untuk fakultas Anda.')
         if tipe_pengajuan == 'pusat' and (
-            not file_bebas or not allowed_file(file_bebas.filename)
+            not file_bebas or not is_valid_pdf(file_bebas)
         ):
-            errors.append('File Bebas Pustaka dari Fakultas wajib diupload (PDF).')
+            errors.append('File Bebas Pustaka dari Fakultas wajib diupload (format PDF valid).')
         if (
             not kartu_mahasiswa_lama and
-            (not file_kartu or not allowed_file(file_kartu.filename))
+            (not file_kartu or not is_valid_pdf(file_kartu))
         ):
-            errors.append('File Kartu Mahasiswa wajib diupload (PDF).')
+            errors.append('File Kartu Mahasiswa wajib diupload (format PDF valid).')
 
         if errors:
             for e in errors:

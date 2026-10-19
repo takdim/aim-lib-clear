@@ -16,6 +16,7 @@ from app.models.user import User
 from app.utils.decorators import staff_required
 from app.utils.inlislite_client import InlisliteClient
 from app.utils.pdf_generator import generate_template_kartu_mahasiswa
+from app.utils.validators import is_valid_pdf
 
 staff_bp = Blueprint('staff', __name__)
 
@@ -123,14 +124,14 @@ def _fetch_inlislite_data(nim: str, force_refresh: bool = False) -> dict:
             cache_hit = _inlislite_get_cached_member_data(nim)
             if cache_hit:
                 result.update(cache_hit)
-                result['message'] = 'Data INLISLite diambil dari cache.'
+                result['message'] = 'Data berhasil di-load.'
                 return result
 
         inlislite_client = InlisliteClient.from_app_config(current_app.config)
         if inlislite_client.can_login():
             login_result = inlislite_client.login()
             result['login_success'] = login_result.success
-            result['message'] = login_result.message
+            result['message'] = 'Data berhasil di-load.' if login_result.success else login_result.message
 
             if login_result.success:
                 members = inlislite_client.search_member_by_nim(nim)
@@ -152,6 +153,7 @@ def _fetch_inlislite_data(nim: str, force_refresh: bool = False) -> dict:
                         },
                         current_app.config.get('INLISLITE_MEMBER_CACHE_TTL', 300),
                     )
+                    result['message'] = 'Data berhasil di-load.'
                 else:
                     result['message'] = f'Data member dengan NIM {nim} tidak ditemukan di INLISLite.'
         else:
@@ -204,11 +206,11 @@ def form_bebas_pustaka():
         if tipe_pengajuan == 'fakultas' and wajib_setor_buku and not judul_buku_setor:
             errors.append('Judul buku setor wajib diisi untuk fakultas ini.')
         if tipe_pengajuan == 'pusat' and (
-            not file_bebas or not allowed_file(file_bebas.filename)
+            not file_bebas or not is_valid_pdf(file_bebas)
         ):
-            errors.append('File Bebas Pustaka dari Fakultas wajib diupload (PDF).')
-        if not tidak_punya_ktm and (not file_kartu or not allowed_file(file_kartu.filename)):
-            errors.append('File Kartu Tanda Mahasiswa wajib diupload (PDF), atau centang opsi tidak memiliki KTM.')
+            errors.append('File Bebas Pustaka dari Fakultas wajib diupload (format PDF valid).')
+        if not tidak_punya_ktm and (not file_kartu or not is_valid_pdf(file_kartu)):
+            errors.append('File Kartu Tanda Mahasiswa wajib diupload (format PDF valid), atau centang opsi tidak memiliki KTM.')
 
         if tipe_pengajuan == 'pusat' and not BebasPustaka.query.filter_by(
                 nim=nim,
@@ -556,10 +558,10 @@ def pengajuan_detail(id):
 
     inlislite_data = {
         'enabled': (
-            bool(current_app.config.get('INLISLITE_ENABLED', False))
+            bool(current_app.config.get('INLISLITE_ENABLED', True))
             and bool(current_app.config.get('INLISLITE_BASE_URL'))
-            and not bool(current_user.fakultas_id)
-            and pengajuan.tipe_pengajuan == 'pusat'
+            and bool(pengajuan.nim)
+            and (pengajuan.tipe_pengajuan == 'pusat' or not bool(current_user.fakultas_id) or current_user.role == 'admin')
         ),
         'checked': False,
         'login_success': False,
@@ -597,10 +599,10 @@ def pengajuan_cek_inlislite(id):
         abort(403)
 
     enabled = (
-        bool(current_app.config.get('INLISLITE_ENABLED', False))
+        bool(current_app.config.get('INLISLITE_ENABLED', True))
         and bool(current_app.config.get('INLISLITE_BASE_URL'))
-        and not bool(current_user.fakultas_id)
-        and pengajuan.tipe_pengajuan == 'pusat'
+        and bool(pengajuan.nim)
+        and (pengajuan.tipe_pengajuan == 'pusat' or not bool(current_user.fakultas_id) or current_user.role == 'admin')
     )
     if not enabled:
         return jsonify({

@@ -1,4 +1,6 @@
 import os
+import hmac
+import hashlib
 from datetime import datetime, timedelta
 from flask import current_app
 from app import db
@@ -118,6 +120,57 @@ class BebasPustaka(db.Model):
             self.file_deleted = True
             self.file_deleted_at = datetime.utcnow()
         return deleted
+
+    def get_verification_token(self):
+        """
+        Generate token verifikasi bertanda tangan kriptografis (HMAC-SHA256)
+        agar URL QR code tidak dapat ditebak/di-scrape oleh pihak luar.
+        """
+        secret = current_app.config.get('SECRET_KEY', 'default-key').encode('utf-8')
+        payload = f"{self.id}:{self.nomor_surat or ''}:{self.nim}".encode('utf-8')
+        sig = hmac.new(secret, payload, hashlib.sha256).hexdigest()[:16]
+        return f"{self.id}-{sig}"
+
+    @classmethod
+    def verify_token(cls, code_or_id):
+        """
+        Validasi token verifikasi surat.
+        Mengembalikan (pengajuan, is_signed) jika ditemukan dan disetujui,
+        atau (None, False) jika tidak valid.
+        """
+        if not code_or_id:
+            return None, False
+
+        code_str = str(code_or_id).strip()
+
+        # Format bertanda tangan: <id>-<sig>
+        if '-' in code_str:
+            parts = code_str.split('-', 1)
+            if not parts[0].isdigit():
+                return None, False
+            obj_id = int(parts[0])
+            provided_sig = parts[1]
+
+            pengajuan = cls.query.get(obj_id)
+            if not pengajuan or pengajuan.status != 'disetujui' or not pengajuan.nomor_surat:
+                return None, False
+
+            secret = current_app.config.get('SECRET_KEY', 'default-key').encode('utf-8')
+            payload = f"{pengajuan.id}:{pengajuan.nomor_surat or ''}:{pengajuan.nim}".encode('utf-8')
+            expected_sig = hmac.new(secret, payload, hashlib.sha256).hexdigest()[:16]
+
+            if hmac.compare_digest(expected_sig, provided_sig):
+                return pengajuan, True
+            return None, False
+
+        # Format legacy: hanya ID numerik
+        elif code_str.isdigit():
+            pengajuan = cls.query.get(int(code_str))
+            if not pengajuan or pengajuan.status != 'disetujui' or not pengajuan.nomor_surat:
+                return None, False
+            return pengajuan, False
+
+        return None, False
 
     def __repr__(self):
         return f'<BebasPustaka {self.nim} - {self.status}>'

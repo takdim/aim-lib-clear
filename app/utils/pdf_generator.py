@@ -253,11 +253,12 @@ def generate_surat_bebas_pustaka(pengajuan, nama_institusi, nama_perpustakaan):
 
     # QR Code verifikasi
     qr_size = 2.5*cm
+    verif_token = pengajuan.get_verification_token()
     public_base_url = current_app.config.get('PUBLIC_BASE_URL')
     if public_base_url:
-        qr_data = f"{public_base_url}/verifikasi/{pengajuan.id}"
+        qr_data = f"{public_base_url}/verifikasi/{verif_token}"
     else:
-        qr_data = url_for('main.verifikasi_surat', id=pengajuan.id, _external=True)
+        qr_data = url_for('main.verifikasi_surat', code=verif_token, _external=True)
     try:
         qr_buf = _make_qr_image(qr_data)
         qr_x = width - margin_right - qr_size
