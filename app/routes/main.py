@@ -13,10 +13,16 @@ MAX_VERIFIKASI_PER_MINUTE = 20
 
 
 def get_client_ip():
+    """
+    Dapatkan IP klien yang aman.
+    Prioritaskan request.remote_addr (yang diverifikasi oleh ProxyFix jika aktif).
+    """
+    if request.remote_addr:
+        return request.remote_addr
     forwarded_for = request.headers.get('X-Forwarded-For')
     if forwarded_for:
         return forwarded_for.split(',')[0].strip()
-    return request.remote_addr or 'unknown'
+    return 'unknown'
 
 
 def check_verifikasi_rate_limit():

@@ -20,6 +20,23 @@ def create_app(config_name=None):
     app = Flask(__name__)
     app.config.from_object(config.get(config_name, config['default']))
 
+    # Reverse proxy support (ProxyFix) untuk Nginx, Caddy, atau Cloudflare
+    if os.environ.get('USE_PROXY_FIX', 'false').lower() in ('1', 'true', 'yes'):
+        from werkzeug.middleware.proxy_fix import ProxyFix
+        x_for = int(os.environ.get('PROXY_FIX_FOR', 1))
+        x_proto = int(os.environ.get('PROXY_FIX_PROTO', 1))
+        x_host = int(os.environ.get('PROXY_FIX_HOST', 1))
+        x_port = int(os.environ.get('PROXY_FIX_PORT', 0))
+        x_prefix = int(os.environ.get('PROXY_FIX_PREFIX', 0))
+        app.wsgi_app = ProxyFix(
+            app.wsgi_app,
+            x_for=x_for,
+            x_proto=x_proto,
+            x_host=x_host,
+            x_port=x_port,
+            x_prefix=x_prefix
+        )
+
     # Buat folder upload jika belum ada
     os.makedirs(app.config['UPLOAD_FOLDER'], exist_ok=True)
 
