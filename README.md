@@ -1,3 +1,3 @@
-# SIPABUDI
+# SIBESTI
 
-Sistem Pelayanan Akses Bebas Pustaka Digital
+Sistem Informasi Bebas Pustaka Terintegrasi
