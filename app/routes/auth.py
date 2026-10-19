@@ -1,7 +1,7 @@
 import bcrypt
 from datetime import datetime, timedelta
 from urllib.parse import urlparse, urljoin
-from flask import Blueprint, render_template, redirect, url_for, flash, request, session
+from flask import Blueprint, render_template, redirect, url_for, flash, request, session, current_app
 from flask_login import login_user, logout_user, current_user, login_required
 
 REGISTRATION_ATTEMPTS = {}
@@ -144,6 +144,46 @@ def register():
     return render_template('auth/register.html', fakultas_list=fakultas_list)
 
 
+def verify_turnstile(token, remote_ip=None):
+    """
+    Verifikasi token Cloudflare Turnstile ke API Cloudflare.
+    Jika TURNSTILE_SECRET_KEY belum disetel atau bernilai placeholder, lewati verifikasi.
+    """
+    secret = current_app.config.get('TURNSTILE_SECRET_KEY', '').strip()
+    if not secret or secret in ('YOUR_SECRET_KEY', 'your_secret_key', ''):
+        # Secret key belum diisi, bypass agar login tetap berfungsi
+        return True
+
+    if not token:
+        return False
+
+    try:
+        import json
+        import urllib.parse
+        import urllib.request
+
+        url = "https://challenges.cloudflare.com/turnstile/v0/siteverify"
+        payload = {
+            'secret': secret,
+            'response': token,
+        }
+        if remote_ip and remote_ip != 'unknown':
+            payload['remoteip'] = remote_ip
+
+        data = urllib.parse.urlencode(payload).encode('utf-8')
+        req = urllib.request.Request(
+            url,
+            data=data,
+            headers={'User-Agent': 'SIBESTI-Turnstile/1.0'}
+        )
+        with urllib.request.urlopen(req, timeout=5) as resp:
+            result = json.loads(resp.read().decode('utf-8'))
+            return bool(result.get('success'))
+    except Exception as e:
+        current_app.logger.error(f"Gagal verifikasi Cloudflare Turnstile: {e}")
+        return False
+
+
 @auth_bp.route('/login', methods=['GET', 'POST'])
 @limiter.limit('5 per minute; 30 per hour', methods=['POST'])
 def login():
@@ -151,6 +191,11 @@ def login():
         return _redirect_by_role(current_user)
 
     if request.method == 'POST':
+        turnstile_token = request.form.get('cf-turnstile-response')
+        if not verify_turnstile(turnstile_token, get_client_ip()):
+            flash('Verifikasi keamanan (Captcha) gagal atau kedaluwarsa. Silakan coba lagi.', 'danger')
+            return render_template('auth/login.html')
+
         identifier = request.form.get('identifier', '').strip()
         password = request.form.get('password', '')
 

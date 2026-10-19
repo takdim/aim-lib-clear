@@ -270,3 +270,18 @@ def test_session_cookie_hardening_production():
         assert 'Secure' in joined_cookies
         assert 'HttpOnly' in joined_cookies
         assert 'SameSite=Lax' in joined_cookies
+
+
+# ─── 10. TEST CLOUDFLARE TURNSTILE CAPTCHA ───────────────────────────────────
+def test_cloudflare_turnstile_rendered(client):
+    """Memastikan widget Turnstile dan script terpasang di form login serta CSP mengizinkan domain Cloudflare."""
+    resp = client.get('/login')
+    assert resp.status_code == 200
+    html = resp.get_data(as_text=True)
+    assert 'cf-turnstile' in html
+    assert 'challenges.cloudflare.com/turnstile/v0/api.js' in html
+
+    # Pastikan Content-Security-Policy membolehkan domain Turnstile
+    csp = resp.headers.get('Content-Security-Policy', '')
+    assert 'https://challenges.cloudflare.com' in csp
+

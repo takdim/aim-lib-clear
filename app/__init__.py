@@ -115,11 +115,12 @@ def create_app(config_name=None):
         response.headers['Cross-Origin-Resource-Policy'] = 'same-origin'
         response.headers['Content-Security-Policy'] = (
             "default-src 'self'; "
-            "script-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net; "
+            "script-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net https://challenges.cloudflare.com; "
             "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; "
             "img-src 'self' data: blob: https:; "
             "font-src 'self' data: https://fonts.gstatic.com; "
-            "connect-src 'self'; "
+            "connect-src 'self' https://challenges.cloudflare.com; "
+            "frame-src 'self' https://challenges.cloudflare.com; "
             "frame-ancestors 'self'; "
             "object-src 'none'; "
             "base-uri 'self'; "

@@ -52,6 +52,10 @@ class Config:
     # Security Headers Config
     HSTS_ENABLED = os.environ.get('HSTS_ENABLED', 'true').lower() in ('1', 'true', 'yes')
 
+    # Cloudflare Turnstile Captcha
+    TURNSTILE_SITE_KEY = os.environ.get('TURNSTILE_SITE_KEY', 'YOUR_SITE_KEY')
+    TURNSTILE_SECRET_KEY = os.environ.get('TURNSTILE_SECRET_KEY', '')
+
     # INLISLite integration
     INLISLITE_ENABLED = os.environ.get('INLISLITE_ENABLED', 'true').lower() in ('1', 'true', 'yes')
     INLISLITE_BASE_URL = os.environ.get('INLISLITE_BASE_URL', '').rstrip('/')
