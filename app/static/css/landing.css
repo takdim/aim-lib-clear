@@ -1,168 +1,805 @@
-/* ─── Liquid Glass Premium Library — Landing Page Theme ───
-   Scoped to body.landing-page so it never leaks into other pages.
-   Palette / tokens sourced from static/design_md/DESIGN.md
+/* ─── Liquid Glass Premium Library Theme (SIBESTI) ───
+   Crafted following Uizze UI-Taste Standards (Anti-UI-Slop & Craft Playbook):
+   - Cohesive SVG iconography (no amateurish emoji stand-ins)
+   - Refined typography hierarchy: Poppins for headings, Inter for body/controls
+   - Authentic macOS/iOS Liquid Glass: specular inset highlights, backdrop-filter: blur(28px)
+   - Accessible contrast (WCAG AA compliant: text contrast >= 4.5:1)
+   - Keyboard accessible focus rings (:focus-visible)
+   - Scoped strictly to body.landing-page
 */
 
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Poppins:wght@500;600;700;800&display=swap');
+
 body.landing-page {
-    --lg-navy: #0F172A;
-    --lg-navy-2: #131b2e;
+    --lg-surface: #f7f9fb;
+    --lg-surface-container: #eceef0;
+    --lg-surface-lowest: #ffffff;
+    --lg-on-surface: #0f172a;
+    --lg-on-surface-variant: #334155;
+    --lg-navy: #0f172a;
+    --lg-navy-dark: #020617;
     --lg-blue: #0051d5;
-    --lg-blue-2: #316bf3;
-    --lg-bg: #f7f9fb;
-    --lg-on-surface: #191c1e;
-    --lg-on-surface-variant: #45464d;
-    --lg-glass-bg: rgba(255, 255, 255, 0.55);
-    --lg-glass-bg-strong: rgba(255, 255, 255, 0.72);
-    --lg-glass-border: rgba(255, 255, 255, 0.35);
-    --lg-glass-shadow: 0 20px 60px -15px rgba(15, 23, 42, 0.18), 0 4px 16px rgba(15, 23, 42, 0.08);
-    background:
-        radial-gradient(circle at 15% 0%, rgba(49, 107, 243, 0.10), transparent 45%),
-        radial-gradient(circle at 85% 20%, rgba(0, 81, 213, 0.08), transparent 50%),
-        linear-gradient(180deg, #f7f9fb 0%, #eef2f7 100%);
-    font-family: 'Inter', -apple-system, sans-serif;
+    --lg-blue-light: #2563eb;
+    --lg-blue-tint: rgba(37, 99, 235, 0.08);
+    --lg-blue-border: rgba(37, 99, 235, 0.20);
+    --lg-outline: #64748b;
+    --lg-success: #059669;
+
+    /* Liquid Glass tokens */
+    --lg-glass-bg: rgba(255, 255, 255, 0.72);
+    --lg-glass-bg-hover: rgba(255, 255, 255, 0.90);
+    --lg-glass-bg-strong: rgba(255, 255, 255, 0.85);
+    --lg-glass-border: rgba(255, 255, 255, 0.85);
+    
+    /* Authentic Specular Highlights & Soft Lighting Shadows */
+    --lg-glass-shadow: 
+        0 20px 45px -12px rgba(15, 23, 42, 0.07), 
+        0 4px 16px rgba(15, 23, 42, 0.02),
+        inset 0 1px 1px 0 rgba(255, 255, 255, 0.95);
+    --lg-glass-shadow-hover: 
+        0 30px 65px -15px rgba(0, 81, 213, 0.16), 
+        0 10px 24px rgba(15, 23, 42, 0.05),
+        inset 0 1px 1px 0 rgba(255, 255, 255, 1);
+
+    /* Atmospheric Luminous Background */
+    background-color: var(--lg-surface);
+    background-image: 
+        radial-gradient(circle at 18% 10%, rgba(37, 99, 235, 0.16), transparent 45%),
+        radial-gradient(circle at 82% 16%, rgba(0, 81, 213, 0.12), transparent 48%),
+        radial-gradient(circle at 50% 50%, rgba(56, 189, 248, 0.10), transparent 50%),
+        radial-gradient(circle at 20% 85%, rgba(37, 99, 235, 0.10), transparent 45%),
+        linear-gradient(180deg, #f7f9fb 0%, #edf1f6 100%);
+    background-attachment: fixed;
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
     color: var(--lg-on-surface);
+    min-height: 100vh;
+    position: relative;
+    overflow-x: hidden;
+    -webkit-font-smoothing: antialiased;
 }
 
+/* ─── Ambient Liquid Glass Lighting Orbs ─── */
+body.landing-page .lg-ambient-glow {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    overflow: hidden;
+    pointer-events: none;
+    z-index: 0;
+}
+
+body.landing-page .lg-orb {
+    position: absolute;
+    border-radius: 50%;
+    filter: blur(90px);
+    opacity: 0.42;
+    animation: floatGlow 14s ease-in-out infinite alternate;
+}
+
+body.landing-page .lg-orb-1 {
+    width: 600px;
+    height: 600px;
+    background: radial-gradient(circle, #2563eb 0%, rgba(0, 81, 213, 0.4) 60%, transparent 80%);
+    top: -120px;
+    left: 20%;
+}
+
+body.landing-page .lg-orb-2 {
+    width: 520px;
+    height: 520px;
+    background: radial-gradient(circle, #60a5fa 0%, rgba(37, 99, 235, 0.3) 60%, transparent 80%);
+    top: 20%;
+    right: 5%;
+    animation-delay: -5s;
+}
+
+body.landing-page .lg-orb-3 {
+    width: 550px;
+    height: 550px;
+    background: radial-gradient(circle, #93c5fd 0%, rgba(0, 81, 213, 0.25) 60%, transparent 80%);
+    bottom: 5%;
+    left: 10%;
+    animation-delay: -9s;
+}
+
+@keyframes floatGlow {
+    0%   { transform: translate(0, 0) scale(1); }
+    50%  { transform: translate(30px, 20px) scale(1.08); }
+    100% { transform: translate(-20px, 35px) scale(0.95); }
+}
+
+/* ─── Content Layer ─── */
+body.landing-page .navbar,
+body.landing-page .main-content,
+body.landing-page .footer {
+    position: relative;
+    z-index: 1;
+}
+
+/* ─── Typography (Poppins & Inter) ─── */
+body.landing-page h1,
+body.landing-page h2,
+body.landing-page h3,
+body.landing-page h4,
+body.landing-page .hero-title,
+body.landing-page .section-title,
+body.landing-page .modal-title {
+    font-family: 'Poppins', 'Inter', -apple-system, sans-serif;
+    letter-spacing: -0.025em;
+    color: var(--lg-navy);
+}
+
+body.landing-page p,
+body.landing-page span,
+body.landing-page .nav-link,
+body.landing-page .btn,
+body.landing-page .float-label,
+body.landing-page .float-value {
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+}
+
+/* ─── Floating Liquid Glass Capsule Navbar ─── */
 body.landing-page .navbar {
-    background: var(--lg-glass-bg-strong);
-    backdrop-filter: blur(24px);
-    -webkit-backdrop-filter: blur(24px);
-    border-bottom: 1px solid var(--lg-glass-border);
+    position: sticky;
+    top: 1.25rem;
+    z-index: 1000;
+    max-width: 1140px;
+    width: calc(100% - 2.5rem);
+    margin: 1rem auto 0;
+    background: rgba(255, 255, 255, 0.78);
+    backdrop-filter: blur(28px);
+    -webkit-backdrop-filter: blur(28px);
+    border: 1px solid var(--lg-glass-border);
+    border-radius: 9999px;
+    box-shadow: 
+        0 16px 36px -8px rgba(15, 23, 42, 0.08),
+        inset 0 1px 1px 0 rgba(255, 255, 255, 0.95);
+    padding: 0.6rem 2rem;
+    height: auto;
+    min-height: 64px;
+    transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
-body.landing-page .navbar-brand,
-body.landing-page .nav-link { color: var(--lg-navy); }
-body.landing-page .nav-link:hover,
-body.landing-page .nav-link.active { color: var(--lg-blue); }
+body.landing-page .navbar:hover {
+    background: rgba(255, 255, 255, 0.90);
+    box-shadow: 
+        0 20px 42px -6px rgba(15, 23, 42, 0.12),
+        inset 0 1px 1px 0 rgba(255, 255, 255, 1);
+}
 
-/* Pill-shaped buttons */
+body.landing-page .navbar-brand {
+    font-family: 'Poppins', sans-serif;
+    font-weight: 700;
+    letter-spacing: -0.02em;
+    color: var(--lg-navy);
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+}
+
+body.landing-page .navbar-brand span {
+    font-size: 1.3rem;
+}
+
+body.landing-page .brand-logo {
+    height: 36px;
+    width: auto;
+}
+
+body.landing-page .nav-link {
+    color: var(--lg-on-surface-variant);
+    font-weight: 500;
+    font-size: 0.95rem;
+    padding: 0.5rem 0.6rem;
+    transition: color 0.2s ease;
+}
+
+body.landing-page .nav-link:hover,
+body.landing-page .nav-link.active {
+    color: var(--lg-blue);
+}
+
+/* ─── Pill-Shaped Buttons ─── */
 body.landing-page .btn {
     border-radius: 9999px;
-    transition: transform 0.25s ease, box-shadow 0.25s ease;
+    font-family: 'Inter', sans-serif;
+    font-weight: 600;
+    transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.6rem;
+    text-decoration: none;
+    cursor: pointer;
+}
+
+body.landing-page .btn:focus-visible {
+    outline: 2px solid var(--lg-blue);
+    outline-offset: 3px;
+}
+
+body.landing-page .btn-lg {
+    padding: 0.9rem 2.2rem;
+    font-size: 1rem;
 }
 
 body.landing-page .btn-primary {
     background: var(--lg-navy);
-    box-shadow: var(--lg-glass-shadow);
+    color: #ffffff;
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    box-shadow: 
+        0 10px 25px -4px rgba(15, 23, 42, 0.25),
+        inset 0 1px 1px 0 rgba(255, 255, 255, 0.35);
 }
 
 body.landing-page .btn-primary:hover {
-    background: var(--lg-navy-2);
+    background: var(--lg-blue);
+    color: #ffffff;
     transform: translateY(-2px) scale(1.02);
+    box-shadow: 
+        0 18px 36px -6px rgba(0, 81, 213, 0.35),
+        inset 0 1px 1px 0 rgba(255, 255, 255, 0.45);
 }
 
 body.landing-page .btn-outline {
     background: var(--lg-glass-bg);
-    backdrop-filter: blur(16px);
-    -webkit-backdrop-filter: blur(16px);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
     border: 1px solid var(--lg-glass-border);
     color: var(--lg-navy);
+    box-shadow: var(--lg-glass-shadow);
 }
 
 body.landing-page .btn-outline:hover {
-    background: var(--lg-glass-bg-strong);
-    transform: translateY(-2px) scale(1.02);
-}
-
-/* Hero */
-body.landing-page .hero {
-    padding: 7rem 0 5rem;
-    background: none;
-}
-
-body.landing-page .hero-badge {
-    background: rgba(49, 107, 243, 0.10);
+    background: rgba(255, 255, 255, 0.94);
     color: var(--lg-blue);
-    border: 1px solid rgba(49, 107, 243, 0.18);
+    border-color: var(--lg-blue-border);
+    transform: translateY(-2px) scale(1.02);
+    box-shadow: var(--lg-glass-shadow-hover);
 }
 
+/* ─── Hero Section ─── */
+body.landing-page .hero {
+    position: relative;
+    padding: 6.5rem 0 5rem;
+    background: transparent;
+}
+
+body.landing-page .hero-inner {
+    display: grid;
+    grid-template-columns: 1.15fr 0.85fr;
+    gap: 3.5rem;
+    align-items: center;
+}
+
+/* Pill Hero Badge */
+body.landing-page .hero-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.6rem;
+    background: rgba(255, 255, 255, 0.80);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    border: 1px solid var(--lg-blue-border);
+    border-radius: 9999px;
+    padding: 0.45rem 1.25rem;
+    color: var(--lg-blue);
+    font-size: 0.85rem;
+    font-weight: 600;
+    letter-spacing: 0.05em;
+    margin-bottom: 1.5rem;
+    box-shadow: 
+        0 4px 14px rgba(37, 99, 235, 0.08),
+        inset 0 1px 1px rgba(255, 255, 255, 0.95);
+}
+
+body.landing-page .hero-badge .badge-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: var(--lg-blue);
+    box-shadow: 0 0 10px rgba(0, 81, 213, 0.8);
+    display: inline-block;
+}
+
+/* Hero Heading & Gradient Accent */
 body.landing-page .hero-title {
-    font-family: 'Poppins', 'Inter', sans-serif;
+    font-family: 'Poppins', sans-serif;
+    font-size: clamp(2.4rem, 4.5vw, 3.6rem);
     font-weight: 700;
-    letter-spacing: -0.02em;
+    line-height: 1.18;
+    letter-spacing: -0.025em;
     color: var(--lg-navy);
+    margin-bottom: 1.25rem;
 }
 
 body.landing-page .gradient-text {
-    background: linear-gradient(135deg, var(--lg-navy), var(--lg-blue-2));
+    display: block;
+    background: linear-gradient(135deg, var(--lg-blue) 0%, var(--lg-blue-light) 100%);
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
 }
 
-body.landing-page .hero-desc { color: var(--lg-on-surface-variant); }
+body.landing-page .hero-desc {
+    font-size: 1.15rem;
+    line-height: 1.75;
+    color: var(--lg-on-surface-variant);
+    max-width: 580px;
+    margin-bottom: 2.25rem;
+}
+
+body.landing-page .hero-actions {
+    display: flex;
+    gap: 1.15rem;
+    flex-wrap: wrap;
+}
+
+/* ─── Floating Liquid Glass Visual Cards ─── */
+body.landing-page .hero-visual {
+    position: relative;
+    display: flex;
+    justify-content: center;
+}
+
+body.landing-page .hero-card-float {
+    display: flex;
+    flex-direction: column;
+    gap: 1.25rem;
+    width: 100%;
+    max-width: 390px;
+}
 
 body.landing-page .float-card {
     background: var(--lg-glass-bg);
-    backdrop-filter: blur(24px);
-    -webkit-backdrop-filter: blur(24px);
+    backdrop-filter: blur(28px);
+    -webkit-backdrop-filter: blur(28px);
     border: 1px solid var(--lg-glass-border);
     border-radius: 24px;
+    padding: 1.35rem 1.75rem;
+    display: flex;
+    align-items: center;
+    gap: 1.25rem;
     box-shadow: var(--lg-glass-shadow);
+    transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+    position: relative;
+    overflow: hidden;
 }
 
-/* Sections */
-body.landing-page .section-alt { background: transparent; }
+body.landing-page .float-card::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 1px;
+    background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.95), transparent);
+}
+
+body.landing-page .float-card:hover {
+    background: var(--lg-glass-bg-hover);
+    transform: scale(1.03) translateY(-2px);
+    box-shadow: var(--lg-glass-shadow-hover);
+}
+
+body.landing-page .float-card.card-2 {
+    margin-left: 2rem;
+}
+
+body.landing-page .float-icon {
+    width: 48px;
+    height: 48px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 16px;
+    flex-shrink: 0;
+    background: rgba(255, 255, 255, 0.8);
+    border: 1px solid var(--lg-glass-border);
+    box-shadow: inset 0 1px 1px rgba(255, 255, 255, 0.95);
+}
+
+body.landing-page .float-icon-success {
+    background: rgba(16, 185, 129, 0.12);
+    border-color: rgba(16, 185, 129, 0.25);
+}
+
+body.landing-page .float-icon-info {
+    background: rgba(37, 99, 235, 0.12);
+    border-color: rgba(37, 99, 235, 0.25);
+}
+
+body.landing-page .float-icon-secure {
+    background: rgba(49, 107, 243, 0.12);
+    border-color: rgba(49, 107, 243, 0.25);
+}
+
+body.landing-page .float-label {
+    font-size: 0.75rem;
+    font-weight: 600;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: var(--lg-outline);
+    margin: 0 0 0.2rem;
+}
+
+body.landing-page .float-value {
+    font-family: 'Poppins', sans-serif;
+    font-weight: 700;
+    font-size: 1.05rem;
+    color: var(--lg-navy);
+    margin: 0;
+}
+
+body.landing-page .text-success {
+    color: var(--lg-success) !important;
+}
+
+/* ─── Sections Shared ─── */
+body.landing-page .section {
+    padding: 5.5rem 0;
+    background: transparent;
+}
+
+body.landing-page .section-alt {
+    background: transparent;
+}
+
+body.landing-page .section-header {
+    text-align: center;
+    margin-bottom: 3.5rem;
+}
 
 body.landing-page .section-title {
-    font-family: 'Poppins', 'Inter', sans-serif;
+    font-family: 'Poppins', sans-serif;
+    font-size: clamp(1.85rem, 3.5vw, 2.5rem);
+    font-weight: 700;
     color: var(--lg-navy);
+    margin-bottom: 0.75rem;
 }
 
-body.landing-page .section-desc { color: var(--lg-on-surface-variant); }
+body.landing-page .section-desc {
+    font-size: 1.05rem;
+    color: var(--lg-on-surface-variant);
+    max-width: 600px;
+    margin: 0 auto;
+    line-height: 1.6;
+}
 
-/* Glass cards */
-body.landing-page .card-feature,
+/* ─── Persyaratan Cards (.card-feature) ─── */
+body.landing-page .card-feature {
+    background: var(--lg-glass-bg);
+    backdrop-filter: blur(28px);
+    -webkit-backdrop-filter: blur(28px);
+    border: 1px solid var(--lg-glass-border);
+    border-radius: 28px;
+    box-shadow: var(--lg-glass-shadow);
+    padding: 2.5rem 2rem;
+    display: flex;
+    flex-direction: column;
+    transition: all 0.28s cubic-bezier(0.16, 1, 0.3, 1);
+    position: relative;
+    overflow: hidden;
+}
+
+body.landing-page .card-feature::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 1px;
+    background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.95), transparent);
+}
+
+body.landing-page .card-feature:hover {
+    background: var(--lg-glass-bg-hover);
+    transform: translateY(-6px) scale(1.02);
+    box-shadow: var(--lg-glass-shadow-hover);
+}
+
+body.landing-page .card-feature .card-icon {
+    width: 56px;
+    height: 56px;
+    border-radius: 18px;
+    background: rgba(37, 99, 235, 0.1);
+    color: var(--lg-blue);
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    margin-bottom: 1.5rem;
+    box-shadow: inset 0 1px 1px rgba(255, 255, 255, 0.9);
+    transition: transform 0.25s ease;
+}
+
+body.landing-page .card-feature:hover .card-icon {
+    transform: scale(1.1);
+    background: rgba(37, 99, 235, 0.18);
+}
+
+body.landing-page .card-feature h3 {
+    font-family: 'Poppins', sans-serif;
+    font-size: 1.3rem;
+    font-weight: 600;
+    color: var(--lg-navy);
+    margin-bottom: 0.75rem;
+}
+
+body.landing-page .card-feature p {
+    font-size: 0.95rem;
+    line-height: 1.65;
+    color: var(--lg-on-surface-variant);
+    margin-bottom: 1.5rem;
+    flex: 1;
+}
+
+body.landing-page .card-link {
+    color: var(--lg-blue);
+    font-weight: 600;
+    font-size: 0.95rem;
+    text-decoration: none;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+    transition: gap 0.2s ease, color 0.2s ease;
+}
+
+body.landing-page .card-link svg {
+    transition: transform 0.2s ease;
+}
+
+body.landing-page .card-link:hover {
+    color: #003ea8;
+    text-decoration: none;
+}
+
+body.landing-page .card-link:hover svg {
+    transform: translateX(4px);
+}
+
+/* ─── Alur Pengajuan (.steps) ─── */
+body.landing-page .steps {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 1.5rem;
+    align-items: stretch;
+    justify-content: center;
+}
+
+body.landing-page .step-arrow {
+    display: none;
+}
+
+body.landing-page .step {
+    background: var(--lg-glass-bg);
+    backdrop-filter: blur(28px);
+    -webkit-backdrop-filter: blur(28px);
+    border: 1px solid var(--lg-glass-border);
+    border-radius: 26px;
+    padding: 2.25rem 1.5rem;
+    text-align: center;
+    box-shadow: var(--lg-glass-shadow);
+    transition: all 0.28s cubic-bezier(0.16, 1, 0.3, 1);
+    max-width: 100%;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    position: relative;
+    overflow: hidden;
+}
+
+body.landing-page .step::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 1px;
+    background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.95), transparent);
+}
+
+body.landing-page .step:hover {
+    background: var(--lg-glass-bg-hover);
+    transform: translateY(-5px) scale(1.02);
+    box-shadow: var(--lg-glass-shadow-hover);
+}
+
+body.landing-page .step-num {
+    width: 48px;
+    height: 48px;
+    border-radius: 50%;
+    background: var(--lg-navy);
+    color: #ffffff;
+    font-family: 'Poppins', sans-serif;
+    font-weight: 700;
+    font-size: 1.2rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 0 auto 1.25rem;
+    box-shadow: 
+        0 8px 20px -3px rgba(15, 23, 42, 0.25),
+        inset 0 1px 1px rgba(255, 255, 255, 0.4);
+    transition: transform 0.25s ease, background 0.25s ease;
+}
+
+body.landing-page .step:hover .step-num {
+    background: var(--lg-blue);
+    transform: scale(1.1);
+}
+
+body.landing-page .step h3 {
+    font-family: 'Poppins', sans-serif;
+    font-size: 1.15rem;
+    font-weight: 600;
+    color: var(--lg-navy);
+    margin-bottom: 0.5rem;
+}
+
+body.landing-page .step p {
+    font-size: 0.9rem;
+    line-height: 1.6;
+    color: var(--lg-on-surface-variant);
+    margin: 0;
+}
+
+/* ─── Hubungi Kami (.contact-card) ─── */
 body.landing-page .contact-card {
     background: var(--lg-glass-bg);
+    backdrop-filter: blur(28px);
+    -webkit-backdrop-filter: blur(28px);
+    border: 1px solid var(--lg-glass-border);
+    border-radius: 28px;
+    box-shadow: var(--lg-glass-shadow);
+    padding: 2.5rem 2rem;
+    text-align: center;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    transition: all 0.28s cubic-bezier(0.16, 1, 0.3, 1);
+    position: relative;
+    overflow: hidden;
+}
+
+body.landing-page .contact-card::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 1px;
+    background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.95), transparent);
+}
+
+body.landing-page .contact-card:hover {
+    background: var(--lg-glass-bg-hover);
+    transform: translateY(-6px) scale(1.02);
+    box-shadow: var(--lg-glass-shadow-hover);
+}
+
+body.landing-page .contact-icon {
+    width: 56px;
+    height: 56px;
+    border-radius: 50%;
+    background: rgba(37, 99, 235, 0.1);
+    color: var(--lg-blue);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-bottom: 1.25rem;
+    box-shadow: inset 0 1px 1px rgba(255, 255, 255, 0.9);
+    transition: transform 0.25s ease;
+}
+
+body.landing-page .contact-card:hover .contact-icon {
+    transform: scale(1.1);
+    background: rgba(37, 99, 235, 0.18);
+}
+
+body.landing-page .contact-card h3 {
+    font-family: 'Poppins', sans-serif;
+    font-size: 1.25rem;
+    font-weight: 600;
+    color: var(--lg-navy);
+    margin-bottom: 0.5rem;
+}
+
+body.landing-page .contact-card p {
+    font-size: 0.95rem;
+    line-height: 1.6;
+    color: var(--lg-on-surface-variant);
+    margin-bottom: 1.5rem;
+    flex: 1;
+}
+
+/* ─── Modals (Liquid Glass 40px Blur) ─── */
+body.landing-page .modal-overlay {
+    background: rgba(15, 23, 42, 0.38);
     backdrop-filter: blur(24px);
     -webkit-backdrop-filter: blur(24px);
-    border: 1px solid var(--lg-glass-border);
-    border-radius: 24px;
-    box-shadow: var(--lg-glass-shadow);
-    transition: transform 0.25s ease, background 0.25s ease, box-shadow 0.25s ease;
-}
-
-body.landing-page .card-feature:hover,
-body.landing-page .contact-card:hover {
-    background: var(--lg-glass-bg-strong);
-    transform: translateY(-4px);
-}
-
-body.landing-page .card-link { color: var(--lg-blue); }
-body.landing-page .card-link:hover { color: var(--lg-navy); }
-
-/* Steps */
-body.landing-page .step-num {
-    background: var(--lg-navy);
-    box-shadow: var(--lg-glass-shadow);
-}
-
-body.landing-page .step h3 { color: var(--lg-navy); }
-body.landing-page .step p { color: var(--lg-on-surface-variant); }
-body.landing-page .step-arrow { color: var(--lg-blue-2); }
-
-/* Modals */
-body.landing-page .modal-overlay {
-    background: rgba(15, 23, 42, 0.4);
-    backdrop-filter: blur(4px);
+    z-index: 2000;
 }
 
 body.landing-page .modal-box {
-    background: var(--lg-glass-bg-strong);
+    background: rgba(255, 255, 255, 0.88);
     backdrop-filter: blur(40px);
     -webkit-backdrop-filter: blur(40px);
-    border: 1px solid var(--lg-glass-border);
-    border-radius: 24px;
-    box-shadow: var(--lg-glass-shadow);
+    border: 1px solid rgba(255, 255, 255, 0.9);
+    border-radius: 28px;
+    box-shadow: 
+        0 25px 60px -10px rgba(15, 23, 42, 0.2),
+        inset 0 1px 2px rgba(255, 255, 255, 0.95);
+    padding: 2.25rem;
 }
 
-body.landing-page .modal-title { color: var(--lg-navy); }
+body.landing-page .modal-title {
+    font-family: 'Poppins', sans-serif;
+    font-size: 1.35rem;
+    font-weight: 700;
+    color: var(--lg-navy);
+    margin-bottom: 1rem;
+}
 
-/* Footer */
+body.landing-page .modal-box p {
+    font-size: 1rem;
+    line-height: 1.65;
+    color: var(--lg-on-surface-variant);
+}
+
+/* ─── Footer ─── */
 body.landing-page .footer {
     background: var(--lg-glass-bg);
-    backdrop-filter: blur(24px);
-    -webkit-backdrop-filter: blur(24px);
+    backdrop-filter: blur(28px);
+    -webkit-backdrop-filter: blur(28px);
     border-top: 1px solid var(--lg-glass-border);
+    box-shadow: inset 0 1px 1px rgba(255, 255, 255, 0.95);
     color: var(--lg-on-surface-variant);
+    padding: 2.5rem 0;
+    margin-top: 4rem;
+}
+
+body.landing-page .footer p {
+    font-size: 0.9rem;
+}
+
+/* ─── Responsive Adjustments ─── */
+@media (max-width: 992px) {
+    body.landing-page .navbar {
+        width: calc(100% - 1.5rem);
+        margin: 0.5rem auto 0;
+        padding: 0.5rem 1.25rem;
+    }
+    body.landing-page .hero-inner {
+        grid-template-columns: 1fr;
+        gap: 3rem;
+        text-align: center;
+    }
+    body.landing-page .hero-desc {
+        margin: 0 auto 2rem;
+    }
+    body.landing-page .hero-actions {
+        justify-content: center;
+    }
+    body.landing-page .float-card.card-2 {
+        margin-left: 0;
+    }
+    body.landing-page .steps {
+        grid-template-columns: repeat(2, 1fr);
+    }
+}
+
+@media (max-width: 768px) {
+    body.landing-page .navbar {
+        border-radius: 20px;
+    }
+    body.landing-page .hero {
+        padding: 4.5rem 0 3rem;
+    }
+    body.landing-page .hero-title {
+        font-size: 2.25rem;
+    }
+    body.landing-page .steps {
+        grid-template-columns: 1fr;
+    }
 }

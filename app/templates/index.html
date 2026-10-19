@@ -1,57 +1,94 @@
 {% extends "base.html" %}
 
-{% block title %}Beranda{% endblock %}
+{% block title %}Beranda — {{ config.APP_NAME }} — {{ config.NAMA_PERPUSTAKAAN }}{% endblock %}
 {% block meta_description %}{{ config.APP_TAGLINE }} untuk pengurusan surat bebas pustaka secara digital.{% endblock %}
 {% block body_class %}landing-page{% endblock %}
 
 {% block extra_css %}
-<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@500;600;700&display=swap" rel="stylesheet">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Poppins:wght@500;600;700;800&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="{{ url_for('static', filename='css/landing.css') }}">
 {% endblock %}
 
 {% block content %}
+<!-- Ambient Liquid Glass Lighting Orbs -->
+<div class="lg-ambient-glow" aria-hidden="true">
+    <div class="lg-orb lg-orb-1"></div>
+    <div class="lg-orb lg-orb-2"></div>
+    <div class="lg-orb lg-orb-3"></div>
+</div>
+
 <!-- Hero -->
 <section class="hero">
     <div class="container hero-inner">
         <div class="hero-text">
-            <span class="hero-badge">{{ config.APP_NAME }}</span>
-            <h1 class="hero-title">{{ config.APP_NAME }}<br><span class="gradient-text">Sistem Informasi Bebas Pustaka Terintegrasi</span></h1>
-            <p class="hero-desc">Ajukan surat keterangan bebas pustaka secara online tanpa perlu datang ke perpustakaan. Proses lebih cepat, aman, dan bisa dilacak kapan saja.</p>
+            <span class="hero-badge">
+                <span class="badge-dot" aria-hidden="true"></span>
+                <span>{{ config.APP_NAME }} Online</span>
+            </span>
+            <h1 class="hero-title">
+                {{ config.APP_NAME }}
+                <span class="gradient-text">Sistem Informasi Bebas Pustaka Terintegrasi</span>
+            </h1>
+            <p class="hero-desc">
+                Ajukan surat keterangan bebas pustaka secara online tanpa perlu datang ke perpustakaan. Proses lebih cepat, aman, dan bisa dilacak kapan saja.
+            </p>
             <div class="hero-actions">
                 {% if current_user.is_authenticated %}
                     {% if current_user.role == 'mahasiswa' %}
-                        <a href="{{ url_for('mahasiswa.dashboard') }}" class="btn btn-primary btn-lg">Ke Dashboard →</a>
+                        <a href="{{ url_for('mahasiswa.dashboard') }}" class="btn btn-primary btn-lg">
+                            <span>Ke Dashboard Mahasiswa</span>
+                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="5" y1="12" x2="19" y2="12"></line><polyline points="12 5 19 12 12 19"></polyline></svg>
+                        </a>
                     {% elif current_user.role == 'staff' %}
-                        <a href="{{ url_for('staff.dashboard') }}" class="btn btn-primary btn-lg">Dashboard Staff →</a>
+                        <a href="{{ url_for('staff.dashboard') }}" class="btn btn-primary btn-lg">
+                            <span>Dashboard Staff</span>
+                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="5" y1="12" x2="19" y2="12"></line><polyline points="12 5 19 12 12 19"></polyline></svg>
+                        </a>
                     {% else %}
-                        <a href="{{ url_for('admin.dashboard') }}" class="btn btn-primary btn-lg">Dashboard Admin →</a>
+                        <a href="{{ url_for('admin.dashboard') }}" class="btn btn-primary btn-lg">
+                            <span>Dashboard Admin</span>
+                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="5" y1="12" x2="19" y2="12"></line><polyline points="12 5 19 12 12 19"></polyline></svg>
+                        </a>
                     {% endif %}
                 {% else %}
-                    <a href="{{ url_for('auth.register') }}" class="btn btn-primary btn-lg">Ajukan Bebas Pustaka</a>
-                    <a href="{{ url_for('auth.login') }}" class="btn btn-outline btn-lg">Login</a>
+                    <a href="{{ url_for('auth.register') }}" class="btn btn-primary btn-lg">
+                        <span>Ajukan Bebas Pustaka</span>
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="5" y1="12" x2="19" y2="12"></line><polyline points="12 5 19 12 12 19"></polyline></svg>
+                    </a>
+                    <a href="{{ url_for('auth.login') }}" class="btn btn-outline btn-lg">
+                        <span>Masuk ke Akun</span>
+                    </a>
                 {% endif %}
             </div>
         </div>
         <div class="hero-visual" aria-hidden="true">
             <div class="hero-card-float">
                 <div class="float-card card-1">
-                    <span class="float-icon">✅</span>
+                    <span class="float-icon float-icon-success">
+                        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#10b981" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path><polyline points="22 4 12 14.01 9 11.01"></polyline></svg>
+                    </span>
                     <div>
                         <p class="float-label">Status Pengajuan</p>
-                        <p class="float-value" style="color:var(--success)">Disetujui</p>
+                        <p class="float-value text-success">Disetujui</p>
                     </div>
                 </div>
                 <div class="float-card card-2">
-                    <span class="float-icon">📄</span>
+                    <span class="float-icon float-icon-info">
+                        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#0051d5" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line><polyline points="10 9 9 9 8 9"></polyline></svg>
+                    </span>
                     <div>
                         <p class="float-label">Surat Tersedia</p>
-                        <p class="float-value">Siap Cetak</p>
+                        <p class="float-value">Siap Cetak Digital</p>
                     </div>
                 </div>
                 <div class="float-card card-3">
-                    <span class="float-icon">🔒</span>
+                    <span class="float-icon float-icon-secure">
+                        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#316bf3" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect><path d="M7 11V7a5 5 0 0 1 10 0v4"></path></svg>
+                    </span>
                     <div>
-                        <p class="float-label">Keamanan</p>
+                        <p class="float-label">Keamanan Dokumen</p>
                         <p class="float-value">Server-side Verified</p>
                     </div>
                 </div>
@@ -65,26 +102,41 @@
     <div class="container">
         <div class="section-header">
             <h2 class="section-title">Persyaratan Pengajuan</h2>
-            <p class="section-desc">Siapkan dokumen berikut sebelum mengajukan</p>
+            <p class="section-desc">Siapkan dokumen pendukung berikut sebelum mengajukan permohonan</p>
         </div>
         <div class="grid grid-3">
             <div class="card card-feature">
-                <div class="card-icon">🎓</div>
+                <div class="card-icon">
+                    <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 10v6M2 10l10-5 10 5-10 5z"></path><path d="M6 12v5c3 3 9 3 12 0v-5"></path></svg>
+                </div>
                 <h3>Status Mahasiswa Aktif</h3>
-                <p>Pastikan NIM dan email terdaftar sebagai mahasiswa aktif di institusi.</p>
-                <a href="#" class="card-link" onclick="openModal('modalMahasiswaAktif'); return false;">Selengkapnya →</a>
+                <p>Pastikan NIM dan email terdaftar sebagai mahasiswa aktif di pangkalan data institusi.</p>
+                <a href="#persyaratan" class="card-link" onclick="openModal('modalMahasiswaAktif'); return false;">
+                    <span>Selengkapnya</span>
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"></line><polyline points="12 5 19 12 12 19"></polyline></svg>
+                </a>
             </div>
             <div class="card card-feature">
-                <div class="card-icon">📋</div>
+                <div class="card-icon">
+                    <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line><polyline points="10 9 9 9 8 9"></polyline></svg>
+                </div>
                 <h3>Surat Bebas dari Fakultas</h3>
-                <p>Surat keterangan bebas tanggungan dari fakultas dalam format PDF (maks 5MB).</p>
-                <a href="#" class="card-link" onclick="openModal('modalSuratFakultas'); return false;">Selengkapnya →</a>
+                <p>Surat keterangan bebas tanggungan dari ruang baca fakultas dalam format PDF resmi (maks 5MB).</p>
+                <a href="#persyaratan" class="card-link" onclick="openModal('modalSuratFakultas'); return false;">
+                    <span>Selengkapnya</span>
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"></line><polyline points="12 5 19 12 12 19"></polyline></svg>
+                </a>
             </div>
             <div class="card card-feature">
-                <div class="card-icon">🪪</div>
+                <div class="card-icon">
+                    <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="4" width="20" height="16" rx="3"></rect><circle cx="8" cy="10" r="2"></circle><line x1="15" y1="9" x2="19" y2="9"></line><line x1="15" y1="13" x2="19" y2="13"></line><path d="M4 18c0-2 2-3 4-3s4 1 4 3"></path></svg>
+                </div>
                 <h3>Kartu Tanda Mahasiswa</h3>
-                <p>Scan atau foto KTM yang jelas dalam format PDF (maks 5MB).</p>
-                <a href="#" class="card-link" onclick="openModal('modalKTM'); return false;">Selengkapnya →</a>
+                <p>Scan atau foto KTM yang jelas dan terbaca dengan baik dalam format PDF (maks 5MB).</p>
+                <a href="#persyaratan" class="card-link" onclick="openModal('modalKTM'); return false;">
+                    <span>Selengkapnya</span>
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"></line><polyline points="12 5 19 12 12 19"></polyline></svg>
+                </a>
             </div>
         </div>
     </div>
@@ -95,31 +147,28 @@
     <div class="container">
         <div class="section-header">
             <h2 class="section-title">Alur Pengajuan</h2>
-            <p class="section-desc">4 langkah mudah untuk mendapatkan surat bebas pustaka</p>
+            <p class="section-desc">4 langkah mudah untuk mendapatkan surat bebas pustaka digital</p>
         </div>
         <div class="steps">
             <div class="step">
                 <div class="step-num">1</div>
                 <h3>Daftar & Login</h3>
-                <p>Buat akun menggunakan NIM dan email, lalu login ke sistem.</p>
+                <p>Buat akun menggunakan NIM dan email aktif Anda, lalu masuk ke portal.</p>
             </div>
-            <div class="step-arrow">→</div>
             <div class="step">
                 <div class="step-num">2</div>
                 <h3>Isi Formulir</h3>
-                <p>Upload dokumen persyaratan dan lengkapi data pengajuan.</p>
+                <p>Upload berkas persyaratan fakultas serta KTM, dan lengkapi data permohonan.</p>
             </div>
-            <div class="step-arrow">→</div>
             <div class="step">
                 <div class="step-num">3</div>
-                <h3>Tunggu Review</h3>
-                <p>Staff perpustakaan meninjau berkas pengajuan Anda.</p>
+                <h3>Tinjauan Berkas</h3>
+                <p>Petugas perpustakaan memeriksa tanggungan sirkulasi buku dan validitas dokumen.</p>
             </div>
-            <div class="step-arrow">→</div>
             <div class="step">
                 <div class="step-num">4</div>
                 <h3>Cetak Surat</h3>
-                <p>Setelah disetujui, unduh surat bebas pustaka digital Anda.</p>
+                <p>Setelah disetujui, langsung unduh surat bebas pustaka digital resmi ber-QR Code.</p>
             </div>
         </div>
     </div>
@@ -130,25 +179,41 @@
     <div class="container">
         <div class="section-header">
             <h2 class="section-title">Hubungi Kami</h2>
+            <p class="section-desc">Layanan informasi operasional dan bantuan administrasi bebas pustaka</p>
         </div>
         <div class="grid grid-3">
             <div class="contact-card">
-                <span class="contact-icon">📍</span>
+                <div class="contact-icon">
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path><circle cx="12" cy="10" r="3"></circle></svg>
+                </div>
                 <h3>Alamat</h3>
                 <p>Kampus UNHAS Tamalanrea<br>JL. Perintis Kemerdekaan Km.10</p>
-                <a href="#" class="card-link" onclick="openModal('modalAlamat'); return false;">Selengkapnya →</a>
+                <a href="#kontak" class="card-link" onclick="openModal('modalAlamat'); return false;">
+                    <span>Lihat Detail Lokasi</span>
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"></line><polyline points="12 5 19 12 12 19"></polyline></svg>
+                </a>
             </div>
             <div class="contact-card">
-                <span class="contact-icon">📞</span>
+                <div class="contact-icon">
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"></path></svg>
+                </div>
                 <h3>Telepon</h3>
-                <p>0882020273994</p>
-                <a href="#" class="card-link" onclick="openModal('modalTelepon'); return false;">Selengkapnya →</a>
+                <p>0882020273994<br><small style="color:var(--lg-outline); font-size:0.8rem;">Senin–Jumat: 08.00–16.00 WITA</small></p>
+                <a href="#kontak" class="card-link" onclick="openModal('modalTelepon'); return false;">
+                    <span>Hubungi Petugas</span>
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"></line><polyline points="12 5 19 12 12 19"></polyline></svg>
+                </a>
             </div>
             <div class="contact-card">
-                <span class="contact-icon">📧</span>
+                <div class="contact-icon">
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"></path><polyline points="22,6 12,13 2,6"></polyline></svg>
+                </div>
                 <h3>Email</h3>
-                <p>library@unhas.ac.id</p>
-                <a href="#" class="card-link" onclick="openModal('modalEmail'); return false;">Selengkapnya →</a>
+                <p>library@unhas.ac.id<br><small style="color:var(--lg-outline); font-size:0.8rem;">Respon cepat dalam 1x24 jam kerja</small></p>
+                <a href="#kontak" class="card-link" onclick="openModal('modalEmail'); return false;">
+                    <span>Kirim Pesan</span>
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"></line><polyline points="12 5 19 12 12 19"></polyline></svg>
+                </a>
             </div>
         </div>
     </div>
@@ -159,7 +224,7 @@
 <!-- Modal: Status Mahasiswa Aktif -->
 <div class="modal-overlay" id="modalMahasiswaAktif" style="display:none">
     <div class="modal-box">
-        <h3 class="modal-title">🎓 Status Mahasiswa Aktif</h3>
+        <h3 class="modal-title">Status Mahasiswa Aktif</h3>
         <p>NIM dan email harus terdaftar di sistem informasi akademik institusi sebagai mahasiswa aktif. Pengajuan tidak dapat diproses untuk mahasiswa yang sedang cuti akademik atau yang masa studinya telah berakhir.</p>
         <div class="modal-actions">
             <button onclick="closeModal('modalMahasiswaAktif')" class="btn btn-primary">Tutup</button>
@@ -170,8 +235,8 @@
 <!-- Modal: Surat Bebas dari Fakultas -->
 <div class="modal-overlay" id="modalSuratFakultas" style="display:none">
     <div class="modal-box">
-        <h3 class="modal-title">📋 Surat Bebas dari Fakultas</h3>
-        <p>Surat keterangan yang diterbitkan oleh dekanat atau bagian administrasi fakultas, menyatakan mahasiswa tidak memiliki tanggungan administrasi (UKT/SPP, dll). Pastikan surat sudah ditandatangani dan distempel resmi. Format file: PDF, ukuran maksimal 5MB.</p>
+        <h3 class="modal-title">Surat Bebas dari Fakultas</h3>
+        <p>Surat keterangan yang diterbitkan oleh dekanat atau bagian administrasi fakultas, menyatakan mahasiswa tidak memiliki tanggungan administrasi maupun pinjaman buku fakultas. Pastikan surat sudah ditandatangani dan distempel resmi. Format file: PDF, ukuran maksimal 5MB.</p>
         <div class="modal-actions">
             <button onclick="closeModal('modalSuratFakultas')" class="btn btn-primary">Tutup</button>
         </div>
@@ -181,7 +246,7 @@
 <!-- Modal: Kartu Tanda Mahasiswa -->
 <div class="modal-overlay" id="modalKTM" style="display:none">
     <div class="modal-box">
-        <h3 class="modal-title">🪪 Kartu Tanda Mahasiswa</h3>
+        <h3 class="modal-title">Kartu Tanda Mahasiswa</h3>
         <p>Scan atau foto KTM (Kartu Tanda Mahasiswa) yang masih berlaku dan terbaca dengan jelas. Pastikan semua informasi — nama, NIM, dan foto — terlihat terang. Format file: PDF, ukuran maksimal 5MB.</p>
         <div class="modal-actions">
             <button onclick="closeModal('modalKTM')" class="btn btn-primary">Tutup</button>
@@ -192,8 +257,8 @@
 <!-- Modal: Alamat -->
 <div class="modal-overlay" id="modalAlamat" style="display:none">
     <div class="modal-box">
-        <h3 class="modal-title">📍 Alamat</h3>
-        <p>Kampus UNHAS Tamalanrea<br>JL. Perintis Kemerdekaan Km.10, Makassar, 90245<br>Sulawesi Selatan - Indonesia.</p>
+        <h3 class="modal-title">Alamat Gedung Perpustakaan</h3>
+        <p>Gedung UPT Perpustakaan Universitas Hasanuddin<br>Kampus UNHAS Tamalanrea, JL. Perintis Kemerdekaan Km.10, Makassar, 90245<br>Sulawesi Selatan - Indonesia.</p>
         <div class="modal-actions">
             <button onclick="closeModal('modalAlamat')" class="btn btn-primary">Tutup</button>
         </div>
@@ -203,8 +268,8 @@
 <!-- Modal: Telepon -->
 <div class="modal-overlay" id="modalTelepon" style="display:none">
     <div class="modal-box">
-        <h3 class="modal-title">📞 Telepon</h3>
-        <p>Hubungi kami di nomor <strong>0882020273994</strong> pada jam operasional Senin–Jumat pukul 08.00–16.00 WIB.</p>
+        <h3 class="modal-title">Bantuan via Telepon</h3>
+        <p>Hubungi layanan bantuan kami di nomor <strong>0882020273994</strong> pada jam operasional Senin–Jumat pukul 08.00–16.00 WITA.</p>
         <div class="modal-actions">
             <a href="tel:0882020273994" class="btn btn-primary">Hubungi Sekarang</a>
             <button onclick="closeModal('modalTelepon')" class="btn btn-outline">Tutup</button>
@@ -215,8 +280,8 @@
 <!-- Modal: Email -->
 <div class="modal-overlay" id="modalEmail" style="display:none">
     <div class="modal-box">
-        <h3 class="modal-title">📧 Email</h3>
-        <p>Kirim pertanyaan atau keluhan ke <strong>library@unhas.ac.id</strong>. Kami akan merespons dalam 1×24 jam kerja.</p>
+        <h3 class="modal-title">Layanan Email Resmi</h3>
+        <p>Kirim pertanyaan atau keluhan berkas ke <strong>library@unhas.ac.id</strong>. Tim administrasi perpustakaan akan merespons dalam 1×24 jam kerja.</p>
         <div class="modal-actions">
             <a href="mailto:library@unhas.ac.id" class="btn btn-primary">Kirim Email</a>
             <button onclick="closeModal('modalEmail')" class="btn btn-outline">Tutup</button>
@@ -229,12 +294,18 @@
 {% block extra_js %}
 <script>
 function openModal(id) {
-    document.getElementById(id).style.display = 'flex';
-    document.body.style.overflow = 'hidden';
+    const modal = document.getElementById(id);
+    if (modal) {
+        modal.style.display = 'flex';
+        document.body.style.overflow = 'hidden';
+    }
 }
 function closeModal(id) {
-    document.getElementById(id).style.display = 'none';
-    document.body.style.overflow = '';
+    const modal = document.getElementById(id);
+    if (modal) {
+        modal.style.display = 'none';
+        document.body.style.overflow = '';
+    }
 }
 // Tutup modal saat klik overlay
 document.querySelectorAll('.modal-overlay').forEach(function(overlay) {
