@@ -200,3 +200,27 @@ def test_proxy_fix_middleware():
         # Request dari reverse proxy (misal Nginx) membawa header X-Forwarded-For
         resp = proxy_client.get('/', headers={'X-Forwarded-For': '203.0.113.195'})
         assert resp.status_code == 200
+
+
+# ─── 7. TEST CUSTOM ERROR PAGES (403 & 404) ──────────────────────────────────
+def test_custom_error_pages(client, app_instance):
+    """Memastikan halaman 404 dan 403 menampilkan template kustom."""
+    # 404: Akses URL yang tidak ada
+    resp_404 = client.get('/halaman-tidak-ada-123')
+    assert resp_404.status_code == 404
+    html_404 = resp_404.get_data(as_text=True)
+    assert 'Halaman Tidak Ditemukan' in html_404
+    assert '404' in html_404
+
+    # 403: Mahasiswa mencoba mengakses dashboard admin
+    with client.session_transaction() as sess:
+        with app_instance.app_context():
+            user = db.session.query(User).filter_by(role='mahasiswa').first()
+            sess['_user_id'] = str(user.id)
+            sess['_fresh'] = True
+
+    resp_403 = client.get('/admin/dashboard')
+    assert resp_403.status_code == 403
+    html_403 = resp_403.get_data(as_text=True)
+    assert 'Akses Ditolak' in html_403
+    assert '403' in html_403

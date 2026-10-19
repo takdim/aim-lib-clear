@@ -91,11 +91,11 @@ def verifikasi_surat(code=None, id=None):
     )
 
 
-@main_bp.errorhandler(403)
+@main_bp.app_errorhandler(403)
 def forbidden(e):
     return render_template('errors/403.html'), 403
 
 
-@main_bp.errorhandler(404)
+@main_bp.app_errorhandler(404)
 def not_found(e):
     return render_template('errors/404.html'), 404
