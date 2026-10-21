@@ -4,16 +4,12 @@ from urllib.parse import urlparse, urljoin
 from flask import Blueprint, render_template, redirect, url_for, flash, request, session, current_app
 from flask_login import login_user, logout_user, current_user, login_required
 
-REGISTRATION_ATTEMPTS = {}
-REGISTRATION_BLOCKED = {}
-MAX_REGISTRATION_ATTEMPTS = 5
-REGISTRATION_WINDOW = timedelta(minutes=10)
-REGISTRATION_BLOCK_DURATION = timedelta(minutes=15)
-
 from app import db, limiter
 from app.models.user import User
 from app.models.fakultas import Fakultas
 from app.models.program_studi import ProgramStudi
+from app.utils.validators import validate_password_strength
+from app.utils.security_logger import log_security_event
 
 auth_bp = Blueprint('auth', __name__)
 
@@ -46,28 +42,9 @@ def get_client_ip():
     return 'unknown'
 
 
-def check_registration_rate_limit():
-    ip = get_client_ip()
-    now = datetime.utcnow()
-
-    if REGISTRATION_BLOCKED.get(ip) and REGISTRATION_BLOCKED[ip] > now:
-        remaining = int((REGISTRATION_BLOCKED[ip] - now).total_seconds() // 60) + 1
-        flash(f'Registrasi dibatasi sementara. Coba lagi dalam {remaining} menit.', 'danger')
-        return False
-
-    attempts = REGISTRATION_ATTEMPTS.setdefault(ip, [])
-    attempts[:] = [ts for ts in attempts if now - ts < REGISTRATION_WINDOW]
-
-    if len(attempts) >= MAX_REGISTRATION_ATTEMPTS:
-        REGISTRATION_BLOCKED[ip] = now + REGISTRATION_BLOCK_DURATION
-        flash('Terlalu sering mencoba mendaftar. Silakan tunggu beberapa menit lalu coba lagi.', 'danger')
-        return False
-
-    attempts.append(now)
-    return True
-
-
+# // ASVS 2.4.1: Anti-automation controls for account registration via centralized rate limiter
 @auth_bp.route('/register', methods=['GET', 'POST'])
+@limiter.limit('5 per minute; 20 per hour', methods=['POST'])
 def register():
     if current_user.is_authenticated:
         return redirect(url_for('mahasiswa.dashboard'))
@@ -77,10 +54,9 @@ def register():
     if request.method == 'POST':
         honeypot = request.form.get('website', '').strip()
         if honeypot:
+            # // ASVS 2.4.1: Honeypot bot protection
+            log_security_event('BOT_DETECTED', get_client_ip(), 'Pendaftaran ditolak karena honeypot terisi', status='WARNING')
             flash('Registrasi ditolak: deteksi bot aktif.', 'danger')
-            return render_template('auth/register.html', fakultas_list=fakultas_list)
-
-        if not check_registration_rate_limit():
             return render_template('auth/register.html', fakultas_list=fakultas_list)
 
         nim = request.form.get('nim', '').strip()
@@ -99,8 +75,11 @@ def register():
             errors.append('Nama lengkap minimal 3 karakter.')
         if not email or '@' not in email:
             errors.append('Email tidak valid.')
-        if len(password) < 8:
-            errors.append('Password minimal 8 karakter.')
+
+        # // ASVS 6.2.1, 6.2.4, 6.2.11: Password strength & breach verification
+        pw_errors = validate_password_strength(password, user_context={'nim': nim, 'email': email, 'name': name})
+        errors.extend(pw_errors)
+
         if password != confirm_password:
             errors.append('Konfirmasi password tidak cocok.')
         if not fakultas_id:
@@ -135,8 +114,8 @@ def register():
         db.session.add(user)
         db.session.commit()
 
-        REGISTRATION_ATTEMPTS.pop(get_client_ip(), None)
-        REGISTRATION_BLOCKED.pop(get_client_ip(), None)
+        # // ASVS 8.1.1: Audit log registrasi akun baru
+        log_security_event('USER_REGISTER', email, f'Registrasi akun mahasiswa berhasil: {name} ({nim})', target=nim)
 
         flash('Registrasi berhasil! Silakan login.', 'success')
         return redirect(url_for('auth.login'))
@@ -144,11 +123,16 @@ def register():
     return render_template('auth/register.html', fakultas_list=fakultas_list)
 
 
+
 def verify_turnstile(token, remote_ip=None):
     """
     Verifikasi token Cloudflare Turnstile ke API Cloudflare.
     Jika TURNSTILE_SECRET_KEY belum disetel atau bernilai placeholder, lewati verifikasi.
     """
+    # // ASVS 2.4.1: Lewati verifikasi captcha secara otomatis pada automated test suite
+    if current_app.config.get('TESTING'):
+        return True
+
     secret = current_app.config.get('TURNSTILE_SECRET_KEY', '').strip()
     if not secret or secret in ('YOUR_SECRET_KEY', 'your_secret_key', ''):
         # Secret key belum diisi, bypass agar login tetap berfungsi
@@ -193,6 +177,7 @@ def login():
     if request.method == 'POST':
         turnstile_token = request.form.get('cf-turnstile-response')
         if not verify_turnstile(turnstile_token, get_client_ip()):
+            log_security_event('CAPTCHA_FAILED', get_client_ip(), 'Verifikasi Cloudflare Turnstile gagal saat login', status='FAILURE')
             flash('Verifikasi keamanan (Captcha) gagal atau kedaluwarsa. Silakan coba lagi.', 'danger')
             return render_template('auth/login.html')
 
@@ -205,17 +190,21 @@ def login():
         ).first()
 
         if not user:
+            # // ASVS 8.1.1: Audit log login gagal
+            log_security_event('AUTH_LOGIN_FAIL', identifier, 'Percobaan login dengan akun tidak ditemukan', status='FAILURE')
             flash('Email/NIM atau password salah.', 'danger')
             return render_template('auth/login.html')
 
         # Cek apakah akun aktif
         if not user.is_active:
+            log_security_event('AUTH_INACTIVE_ATTEMPT', user.email, 'Percobaan login pada akun yang dinonaktifkan', status='WARNING', target=str(user.id))
             flash('Akun Anda telah dinonaktifkan. Hubungi admin.', 'danger')
             return render_template('auth/login.html')
 
         # Cek brute-force lock
         if user.is_locked():
             remaining = (user.locked_until - datetime.utcnow()).seconds // 60 + 1
+            log_security_event('AUTH_LOCKED_ATTEMPT', user.email, f'Percobaan login saat akun masih terkunci ({remaining} mnt sisa)', status='WARNING', target=str(user.id))
             flash(f'Akun dikunci sementara. Coba lagi dalam {remaining} menit.', 'danger')
             return render_template('auth/login.html')
 
@@ -226,10 +215,13 @@ def login():
                 user.locked_until = datetime.utcnow() + timedelta(minutes=LOCKOUT_MINUTES)
                 user.login_attempts = 0
                 db.session.commit()
+                # // ASVS 2.4.1 & ASVS 8.1.1: Brute-force lockout triggered
+                log_security_event('AUTH_LOCKOUT_TRIGGERED', user.email, f'Akun dikunci {LOCKOUT_MINUTES} menit karena melebihi batas percobaan salah', status='WARNING', target=str(user.id))
                 flash(f'Terlalu banyak percobaan. Akun dikunci selama {LOCKOUT_MINUTES} menit.', 'danger')
             else:
                 db.session.commit()
                 sisa = MAX_LOGIN_ATTEMPTS - user.login_attempts
+                log_security_event('AUTH_LOGIN_FAIL', user.email, f'Password salah. Percobaan ke-{user.login_attempts}', status='FAILURE', target=str(user.id))
                 flash(f'Password salah. Sisa percobaan: {sisa}.', 'danger')
             return render_template('auth/login.html')
 
@@ -238,7 +230,12 @@ def login():
         user.locked_until = None
         db.session.commit()
 
+        # // ASVS 3.3.1: Bersihkan session lama untuk mencegah session fixation
+        session.clear()
         login_user(user, remember=False)
+
+        # // ASVS 8.1.1: Audit log login berhasil
+        log_security_event('AUTH_LOGIN_SUCCESS', user.email, f'User {user.name} ({user.role}) berhasil login', target=str(user.id))
         flash(f'Selamat datang, {user.name}!', 'success')
 
         next_page = request.args.get('next')
@@ -252,7 +249,10 @@ def login():
 @auth_bp.route('/logout')
 @login_required
 def logout():
+    user_email = current_user.email if current_user.is_authenticated else 'unknown'
     logout_user()
+    session.clear()
+    log_security_event('AUTH_LOGOUT', user_email, 'Pengguna berhasil logout')
     flash('Anda telah berhasil logout.', 'info')
     return redirect(url_for('auth.login'))
 

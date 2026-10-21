@@ -24,7 +24,10 @@ def create_app(config_name=None):
         config_name = os.environ.get('FLASK_ENV', 'development')
 
     app = Flask(__name__)
-    app.config.from_object(config.get(config_name, config['default']))
+    cfg_class = config.get(config_name, config['default'])
+    app.config.from_object(cfg_class)
+    if hasattr(cfg_class, 'init_app'):
+        cfg_class.init_app(app)
 
     # Reverse proxy support (ProxyFix) untuk Nginx, Caddy, atau Cloudflare
     if os.environ.get('USE_PROXY_FIX', 'false').lower() in ('1', 'true', 'yes'):

@@ -17,6 +17,7 @@ from app.utils.decorators import staff_required
 from app.utils.inlislite_client import InlisliteClient
 from app.utils.pdf_generator import generate_template_kartu_mahasiswa
 from app.utils.validators import is_valid_pdf
+from app.utils.security_logger import log_security_event
 
 staff_bp = Blueprint('staff', __name__)
 
@@ -515,6 +516,8 @@ def pengajuan_detail(id):
             # Generate nomor surat
             pengajuan.nomor_surat = pengajuan.generate_nomor_surat()
             db.session.commit()
+            # // ASVS 8.1.1: Log audit persetujuan bebas pustaka
+            log_security_event('SUBMISSION_APPROVE', current_user.email, f'Persetujuan bebas pustaka #{pengajuan.id} ({pengajuan.nomor_surat}) untuk NIM {pengajuan.nim}', target=str(pengajuan.id))
             flash(f'Pengajuan atas nama {pengajuan.nama} telah disetujui.', 'success')
             return redirect(url_for('staff.pengajuan_list'))
 
@@ -528,6 +531,8 @@ def pengajuan_detail(id):
             pengajuan.catatan_penolakan = catatan
             pengajuan.delete_files()  # Hapus file untuk menghemat storage
             db.session.commit()
+            # // ASVS 8.1.1: Log audit penolakan bebas pustaka
+            log_security_event('SUBMISSION_REJECT', current_user.email, f'Penolakan bebas pustaka #{pengajuan.id} untuk NIM {pengajuan.nim}: {catatan}', status='WARNING', target=str(pengajuan.id))
             flash(f'Pengajuan atas nama {pengajuan.nama} telah ditolak. File telah dihapus.', 'warning')
             return redirect(url_for('staff.pengajuan_list'))
 
@@ -652,12 +657,13 @@ def view_file(id, jenis):
         abort(404)
 
     upload_folder = os.path.abspath(current_app.config['UPLOAD_FOLDER'])
-    full_path = os.path.join(upload_folder, rel_path)
-    
+    full_path = os.path.abspath(os.path.join(upload_folder, rel_path))
+
+    # // ASVS 5.3.2: Validasi batasan direktori (Path Traversal Protection)
+    if os.path.commonpath([upload_folder, full_path]) != upload_folder:
+        abort(403)
+
     if not os.path.exists(full_path):
         abort(404)
-        
-    dir_path = os.path.dirname(full_path)
-    filename = os.path.basename(full_path)
 
-    return send_from_directory(dir_path, filename, as_attachment=False)
+    return send_from_directory(upload_folder, rel_path, as_attachment=False)

@@ -13,6 +13,7 @@ def app_instance():
     app.config.update({
         'TESTING': True,
         'WTF_CSRF_ENABLED': False,
+        'HSTS_ENABLED': True,
         'INLISLITE_ENABLED': True,
         'INLISLITE_BASE_URL': 'https://inlislite.example.com',
         'INLISLITE_LOGIN_URL': 'https://inlislite.example.com/backend/site/login',
@@ -20,6 +21,7 @@ def app_instance():
         'INLISLITE_PASSWORD': 'secret',
     })
     return app
+
 
 
 @pytest.fixture
@@ -284,4 +286,40 @@ def test_cloudflare_turnstile_rendered(client):
     # Pastikan Content-Security-Policy membolehkan domain Turnstile
     csp = resp.headers.get('Content-Security-Policy', '')
     assert 'https://challenges.cloudflare.com' in csp
+
+
+# ─── 11. TEST ASVS 6.2 PASSWORD POLICY & BREACH CHECK ────────────────────────
+def test_asvs_password_policy():
+    """Memastikan password divalidasi sesuai standar OWASP ASVS V6.2."""
+    from app.utils.validators import validate_password_strength
+
+    # Terlalu pendek (< 8)
+    assert len(validate_password_strength('abc')) > 0
+
+    # Kata sandi umum (blacklisted)
+    assert any('terlalu umum' in err for err in validate_password_strength('password123'))
+    assert any('terlalu umum' in err for err in validate_password_strength('12345678'))
+
+    # Hanya angka (tidak ada huruf)
+    assert any('kombinasi' in err for err in validate_password_strength('987654321'))
+
+    # Memuat NIM / konteks pengguna
+    user_ctx = {'nim': 'H071201001', 'email': 'budi@unhas.ac.id', 'name': 'Budi Santoso'}
+    assert any('NIM' in err for err in validate_password_strength('SecretH071201001', user_context=user_ctx))
+    assert any('email' in err for err in validate_password_strength('budiSecret!99', user_context=user_ctx))
+
+    # Password kuat yang sah
+    assert len(validate_password_strength('P@ssw0rdKuatDanAman2026', user_context=user_ctx)) == 0
+
+
+# ─── 12. TEST ASVS 7.1 PRODUCTION SECRET KEY ENFORCEMENT ─────────────────────
+def test_production_secret_key_enforced():
+    """Memastikan ProductionConfig menolak penggunaan default SECRET_KEY."""
+    import os
+    from unittest.mock import patch
+
+    with patch.dict(os.environ, {'SECRET_KEY': 'dev-secret-key-ganti-di-produksi'}):
+        with pytest.raises(ValueError, match="SECRET_KEY wajib disetel unik"):
+            create_app('production')
+
 

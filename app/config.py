@@ -69,14 +69,30 @@ class Config:
 
 class DevelopmentConfig(Config):
     DEBUG = True
-    # Di development lokal tanpa HTTPS, cookie secure dinonaktifkan kecuali disetel True via env
+    # Di development lokal tanpa HTTPS, cookie secure dan HSTS dinonaktifkan
     SESSION_COOKIE_SECURE = os.environ.get('SESSION_COOKIE_SECURE', 'false').lower() in ('1', 'true', 'yes')
+    PREFERRED_URL_SCHEME = 'http'
+    HSTS_ENABLED = False
 
 
 class ProductionConfig(Config):
     DEBUG = False
-    # Di environment production, defaultkan ke Secure=True
+    # Di environment production, defaultkan ke Secure=True dan HSTS=True
+    # // ASVS 3.3.1 & ASVS 3.4.1: Cookie Secure & HSTS Enforcement
     SESSION_COOKIE_SECURE = os.environ.get('SESSION_COOKIE_SECURE', 'true').lower() in ('1', 'true', 'yes')
+    PREFERRED_URL_SCHEME = 'https'
+    HSTS_ENABLED = True
+
+    @classmethod
+    def init_app(cls, app):
+        # // ASVS 7.1.1: Pastikan secret key aman dan tidak menggunakan default placeholder
+        secret = os.environ.get('SECRET_KEY') or app.config.get('SECRET_KEY')
+        if not secret or secret == 'dev-secret-key-ganti-di-produksi':
+            raise ValueError(
+                "SECRET_KEY wajib disetel unik dan aman melalui environment variable pada environment production!"
+            )
+
+
 
 
 config = {
