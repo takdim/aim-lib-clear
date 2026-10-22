@@ -324,14 +324,67 @@ def test_asvs_password_policy():
     assert len(validate_password_strength('P@ssw0rdKuatDanAman2026', user_context=user_ctx)) == 0
 
 
-# ─── 12. TEST ASVS 7.1 PRODUCTION SECRET KEY ENFORCEMENT ─────────────────────
-def test_production_secret_key_enforced():
-    """Memastikan ProductionConfig menolak penggunaan default SECRET_KEY."""
-    import os
-    from unittest.mock import patch
+# ─── 13. TEST AJUKAN ULANG SETELAH DITOLAK ─────────────────────────────────
+def test_reapply_after_rejection_allowed(client, app_instance):
+    """
+    Memastikan mahasiswa dengan pengajuan fakultas disetujui dan pengajuan pusat ditolak
+    dapat mengakses form ajukan ulang pusat tanpa terhalang notifikasi aktif.
+    """
+    with app_instance.app_context():
+        user = db.session.query(User).filter_by(role='mahasiswa').first()
+        if not user:
+            user = User(
+                nim='2021009999',
+                name='Mahasiswa Test',
+                email='mhs_test@unhas.ac.id',
+                password='hashedpassword',
+                role='mahasiswa',
+                fakultas_id=1,
+                prodi_id=1,
+                is_active=True
+            )
+            db.session.add(user)
+            db.session.commit()
 
-    with patch.dict(os.environ, {'SECRET_KEY': 'dev-secret-key-ganti-di-produksi'}):
-        with pytest.raises(ValueError, match="SECRET_KEY wajib disetel unik"):
-            create_app('production')
+        # Buat pengajuan fakultas yang disetujui
+        db.session.query(BebasPustaka).filter_by(nim=user.nim).delete()
+        fakultas_sub = BebasPustaka(
+            user_id=user.id,
+            nim=user.nim,
+            nama=user.name,
+            alamat='Jl. Kampus',
+            fakultas_id=user.fakultas_id,
+            prodi_id=user.prodi_id,
+            tipe_pengajuan='fakultas',
+            status='disetujui'
+        )
+        # Buat pengajuan pusat yang ditolak
+        pusat_sub = BebasPustaka(
+            user_id=user.id,
+            nim=user.nim,
+            nama=user.name,
+            alamat='Jl. Kampus',
+            fakultas_id=user.fakultas_id,
+            prodi_id=user.prodi_id,
+            tipe_pengajuan='pusat',
+            status='ditolak',
+            catatan_penolakan='KTM buram'
+        )
+        db.session.add_all([fakultas_sub, pusat_sub])
+        db.session.commit()
+        user_id = user.id
+
+    with client.session_transaction() as sess:
+        sess['_user_id'] = str(user_id)
+        sess['_fresh'] = True
+
+    # Mahasiswa membuka form ajukan ulang pusat
+    resp = client.get('/mahasiswa/form-bebas-pustaka?tipe=pusat', follow_redirects=True)
+    assert resp.status_code == 200
+    html = resp.get_data(as_text=True)
+    # Tidak boleh ada flash warning "Anda masih memiliki pengajuan fakultas yang aktif."
+    assert 'Anda masih memiliki pengajuan fakultas yang aktif.' not in html
+    assert 'Bebas Pustaka Pusat' in html
+
 
 

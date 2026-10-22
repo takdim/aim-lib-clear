@@ -21,7 +21,7 @@
         <div class="empty-icon">📭</div>
         <h2>Belum Ada Pengajuan</h2>
         <p>Anda belum pernah mengajukan surat bebas pustaka.</p>
-        <a href="{{ url_for('mahasiswa.form_bebas_pustaka') }}" class="btn btn-primary mt-2">Ajukan Sekarang</a>
+        <a href="{{ url_for('mahasiswa.form_bebas_pustaka', tipe='fakultas') }}" class="btn btn-primary mt-2">Ajukan Sekarang</a>
     </div>
     {% else %}
 
@@ -57,14 +57,16 @@
     </div>
 
     <!-- Alasan Penolakan -->
-    {% if pengajuan.status == 'ditolak' and pengajuan.catatan_penolakan %}
+    {% if pengajuan.status == 'ditolak' %}
     <div class="alert alert-danger mb-4">
+        {% if pengajuan.catatan_penolakan %}
         <strong>❌ Alasan Penolakan:</strong> {{ pengajuan.catatan_penolakan }}
-        {% if current_user.can_submit() %}
-        <div class="mt-2">
-            <a href="{{ url_for('mahasiswa.form_bebas_pustaka') }}" class="btn btn-sm btn-primary">Ajukan Ulang</a>
-        </div>
+        {% else %}
+        <strong>❌ Pengajuan Ditolak</strong>
         {% endif %}
+        <div class="mt-2">
+            <a href="{{ url_for('mahasiswa.form_bebas_pustaka', tipe=pengajuan.tipe_pengajuan) }}" class="btn btn-sm btn-primary">Ajukan Ulang {{ pengajuan.get_tipe_label() }}</a>
+        </div>
     </div>
     {% endif %}
 

@@ -53,18 +53,22 @@ class User(UserMixin, db.Model):
             return True
         return False
 
-    def get_active_submission(self):
+    def get_active_submission(self, tipe=None):
         """Ambil pengajuan aktif mahasiswa (menunggu/diproses/disetujui)."""
         from app.models.bebas_pustaka import BebasPustaka
-        return BebasPustaka.query.filter(
+        query = BebasPustaka.query.filter(
             BebasPustaka.user_id == self.id,
             BebasPustaka.status.in_(['menunggu_review', 'sedang_diproses', 'disetujui'])
-        ).order_by(BebasPustaka.created_at.desc()).first()
+        )
+        if tipe:
+            query = query.filter(BebasPustaka.tipe_pengajuan == tipe)
+        return query.order_by(BebasPustaka.created_at.desc()).first()
 
-    def can_submit(self):
-        """Apakah mahasiswa boleh mengajukan baru."""
-        active = self.get_active_submission()
+    def can_submit(self, tipe=None):
+        """Apakah mahasiswa boleh mengajukan baru untuk jenis tertentu."""
+        active = self.get_active_submission(tipe=tipe)
         return active is None
+
 
     def __repr__(self):
         return f'<User {self.email}>'

@@ -129,7 +129,8 @@ def form_bebas_pustaka():
     pengajuan_sejenis = pengajuan_fakultas if tipe_pengajuan == 'fakultas' else pengajuan_pusat
     if pengajuan_sejenis and pengajuan_sejenis.status in ('menunggu_review', 'sedang_diproses', 'disetujui'):
         flash(f'Anda masih memiliki pengajuan {tipe_pengajuan} yang aktif.', 'warning')
-        return redirect(url_for('mahasiswa.status'))
+        return redirect(url_for('mahasiswa.status', tipe=tipe_pengajuan))
+
 
     kartu_mahasiswa_lama = (
         reusable_kartu_mahasiswa(pengajuan_fakultas)
@@ -227,12 +228,20 @@ def form_bebas_pustaka():
 @login_required
 @mahasiswa_required
 def status():
-    pengajuan = BebasPustaka.query.filter_by(
+    tipe = request.args.get('tipe')
+    base_query = BebasPustaka.query.filter_by(
         nim=current_user.nim,
         fakultas_id=current_user.fakultas_id,
-    ).order_by(
-        BebasPustaka.created_at.desc()
-    ).first()
+    )
+    if tipe in ('fakultas', 'pusat'):
+        pengajuan = base_query.filter_by(tipe_pengajuan=tipe).order_by(
+            BebasPustaka.created_at.desc()
+        ).first()
+    else:
+        pengajuan = base_query.order_by(
+            BebasPustaka.created_at.desc()
+        ).first()
+
     pengajuan_fakultas = BebasPustaka.query.filter_by(
         nim=current_user.nim,
         fakultas_id=current_user.fakultas_id,
@@ -244,3 +253,4 @@ def status():
         pengajuan=pengajuan,
         pengajuan_fakultas=pengajuan_fakultas,
     )
+
