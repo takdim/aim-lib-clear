@@ -243,18 +243,30 @@ def test_custom_error_pages(client, app_instance):
 
 # ─── 8. TEST RATE LIMITING LOGIN (TEMUAN #1) ─────────────────────────────────
 def test_login_rate_limiting_blocks_bruteforce(client):
-    """Memastikan percobaan brute-force pada /login diblokir dengan 429 setelah 5 percobaan per menit."""
+    """
+    Memastikan:
+    1. Percobaan brute-force pada 1 akun diblokir dengan 429 setelah 5 percobaan per menit.
+    2. User lain (akun berbeda) dari IP yang sama TIDAK terblokir (tetap 200).
+    """
+    target_account = 'spammed_user@unhas.ac.id'
+    other_account = 'innocent_user@unhas.ac.id'
+
     statuses = []
     last_resp = None
     for i in range(6):
-        last_resp = client.post('/login', data={'identifier': f'tester{i}@unhas.ac.id', 'password': 'wrongpassword'})
+        last_resp = client.post('/login', data={'identifier': target_account, 'password': 'wrongpassword'})
         statuses.append(last_resp.status_code)
 
     assert statuses[:5] == [200, 200, 200, 200, 200], f"5 percobaan pertama harus 200: {statuses[:5]}"
-    assert statuses[5] == 429, f"Percobaan ke-6 harus 429 (Too Many Requests), didapat: {statuses[5]}"
+    assert statuses[5] == 429, f"Percobaan ke-6 untuk akun yang sama harus 429 (Too Many Requests), didapat: {statuses[5]}"
     html_429 = last_resp.get_data(as_text=True)
     assert '429' in html_429
     assert 'Terlalu Banyak Permintaan' in html_429
+
+    # User lain mencoba login dari IP yang sama -> HARUS BISA (tidak terlempar ke 429)
+    other_resp = client.post('/login', data={'identifier': other_account, 'password': 'wrongpassword'})
+    assert other_resp.status_code == 200, f"User lain dari IP yang sama tidak boleh terkena 429, didapat: {other_resp.status_code}"
+
 
 
 # ─── 9. TEST SESSION COOKIE HARDENING (TEMUAN #2) ─────────────────────────────

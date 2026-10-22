@@ -168,9 +168,23 @@ def verify_turnstile(token, remote_ip=None):
         return False
 
 
+def get_login_rate_limit_key():
+    """
+    Key untuk pembatasan rate limit login per akun.
+    Menggabungkan IP klien + identifier akun (email/NIM) yang dicoba.
+    // ASVS 2.4.1: Menjaga agar jika 1 akun salah password, user lain dari IP yang sama tidak terblokir.
+    """
+    identifier = request.form.get('identifier', '').strip().lower()
+    return f"{get_client_ip()}:{identifier}"
+
+
 @auth_bp.route('/login', methods=['GET', 'POST'])
-@limiter.limit('5 per minute; 30 per hour', methods=['POST'])
+# Lapis 1 (Per-Akun): Maksimal 5 percobaan per menit untuk akun yang sama
+@limiter.limit('5 per minute; 20 per hour', key_func=get_login_rate_limit_key, methods=['POST'])
+# Lapis 2 (Global Per-IP): 60 percobaan per menit untuk anti-bot flooding/credential spraying
+@limiter.limit('60 per minute; 300 per hour', key_func=get_client_ip, methods=['POST'])
 def login():
+
     if current_user.is_authenticated:
         return _redirect_by_role(current_user)
 
