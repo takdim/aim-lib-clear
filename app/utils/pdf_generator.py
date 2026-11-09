@@ -199,7 +199,6 @@ def generate_surat_bebas_pustaka(pengajuan, nama_institusi, nama_perpustakaan):
         ("Nomor Pokok",  f": {pengajuan.nim}"),
         ("Program Studi",
          f": {pengajuan.program_studi.nama_prodi if pengajuan.program_studi else '-'}"),
-        ("Jenjang",      ": S1"),
         ("Fakultas",
          f": {pengajuan.fakultas.nama_fakultas if pengajuan.fakultas else '-'}"),
         ("Alamat",       f": {pengajuan.alamat}"),
