@@ -138,7 +138,7 @@ function generatePDF() {
     btn.disabled = true;
     btn.innerHTML = '⏳ Menyiapkan PDF...';
 
-    fetch('{{ url_for("api.generate_pdf", id=pengajuan.id) }}', {
+    fetch({{ url_for("api.generate_pdf", id=pengajuan.id)|tojson }}, {
         method: 'GET'
     })
     .then(response => {
@@ -149,7 +149,7 @@ function generatePDF() {
         const url = window.URL.createObjectURL(blob);
         const a = document.createElement('a');
         a.href = url;
-        a.download = 'surat_bebas_pustaka_{{ pengajuan.nim }}.pdf';
+        a.download = {{ ("surat_bebas_pustaka_" ~ (pengajuan.nim or "") ~ ".pdf")|tojson }};
         document.body.appendChild(a);
         a.click();
         window.URL.revokeObjectURL(url);

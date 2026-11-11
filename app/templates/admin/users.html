@@ -79,7 +79,7 @@
                                 </form>
                                 <!-- Hapus -->
                                 <form method="POST" action="{{ url_for('admin.hapus_user', id=u.id) }}" style="display:inline"
-                                    onsubmit="return confirm('Hapus pengguna {{ u.name }}?')">
+                                    onsubmit='return confirm({{ ("Hapus pengguna " ~ (u.name or "") ~ "?")|tojson }})'>
                                     <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                                     <button type="submit" class="btn btn-sm btn-danger" title="Hapus">🗑</button>
                                 </form>

@@ -387,4 +387,135 @@ def test_reapply_after_rejection_allowed(client, app_instance):
     assert 'Bebas Pustaka Pusat' in html
 
 
+def test_apostrophe_in_names_escaped_in_inline_js(client, app_instance):
+    """
+    Memastikan karakter apostrof lurus (') dan kutip ganda (") pada nama mahasiswa,
+    pengguna, fakultas, dan prodi di-escape dengan aman menggunakan |tojson
+    sehingga tidak memutus string JS pada atribut onclick/onsubmit.
+    """
+    from app.models.fakultas import Fakultas
+    from app.models.program_studi import ProgramStudi
+
+    test_nama = "Dita Aviva Al'Hamdah"
+    created_ids = {}
+
+    with app_instance.app_context():
+        admin_user = db.session.query(User).filter_by(role='admin').first()
+        assert admin_user is not None
+
+        fakultas = Fakultas(nama_fakultas="Fakultas Al'Hamdah", kode_fakultas='TST99')
+        db.session.add(fakultas)
+        db.session.flush()
+        created_ids['fakultas_id'] = fakultas.id
+
+        prodi = ProgramStudi(
+            nama_prodi="Prodi Al'Hamdah",
+            kode_prodi='PRD99',
+            fakultas_id=fakultas.id,
+        )
+        db.session.add(prodi)
+        db.session.flush()
+        created_ids['prodi_id'] = prodi.id
+
+        user_apostrof = User(
+            nim='TST990001',
+            name=test_nama,
+            email='dita_apostrof_test@unhas.ac.id',
+            password='hashedpassword',
+            role='mahasiswa',
+            fakultas_id=fakultas.id,
+            prodi_id=prodi.id,
+            is_active=True,
+        )
+        staff_fak = User(
+            name='Staff Fakultas Test',
+            email='staff_fak_apostrof_test@unhas.ac.id',
+            password='hashedpassword',
+            role='staff',
+            fakultas_id=fakultas.id,
+            is_active=True,
+        )
+        db.session.add_all([user_apostrof, staff_fak])
+        db.session.flush()
+        created_ids['user_id'] = user_apostrof.id
+        created_ids['staff_id'] = staff_fak.id
+
+        pengajuan_pending = BebasPustaka(
+            user_id=user_apostrof.id,
+            nim='B022242035',
+            nama=test_nama,
+            alamat='Jl. Kampus',
+            fakultas_id=fakultas.id,
+            prodi_id=prodi.id,
+            tipe_pengajuan='fakultas',
+            status='menunggu_review',
+        )
+        pengajuan_approved = BebasPustaka(
+            user_id=user_apostrof.id,
+            nim='B022242036',
+            nama=test_nama,
+            alamat='Jl. Kampus',
+            fakultas_id=fakultas.id,
+            prodi_id=prodi.id,
+            tipe_pengajuan='fakultas',
+            status='disetujui',
+            nomor_surat='9999/TEST/2026',
+        )
+        db.session.add_all([pengajuan_pending, pengajuan_approved])
+        db.session.commit()
+        created_ids['pending_id'] = pengajuan_pending.id
+        created_ids['approved_id'] = pengajuan_approved.id
+        admin_id = admin_user.id
+
+    try:
+        # Login sebagai staff fakultas untuk cek detail pengajuan fakultas
+        with client.session_transaction() as sess:
+            sess['_user_id'] = str(created_ids['staff_id'])
+            sess['_fresh'] = True
+
+        # 1. Cek halaman detail pengajuan (tombol Setujui)
+        resp_pending = client.get(f"/staff/pengajuan/{created_ids['pending_id']}")
+        assert resp_pending.status_code == 200
+        html_pending = resp_pending.get_data(as_text=True)
+        assert "onclick='confirmAction(\"setujui\", \"Dita Aviva Al\\u0027Hamdah\")'" in html_pending
+
+        # 2. Cek halaman detail pengajuan disetujui (tombol Lihat Surat / openPDFModal)
+        resp_approved = client.get(f"/staff/pengajuan/{created_ids['approved_id']}")
+        assert resp_approved.status_code == 200
+        html_approved = resp_approved.get_data(as_text=True)
+        assert "openPDFModal(" in html_approved
+        assert "Dita Aviva Al\\u0027Hamdah" in html_approved
+        assert "'Surat Bebas Pustaka — Dita Aviva Al'" not in html_approved
+
+        # Login sebagai admin untuk cek halaman admin users & referensi
+        with client.session_transaction() as sess:
+            sess['_user_id'] = str(admin_id)
+            sess['_fresh'] = True
+
+        # 3. Cek halaman admin users (tombol Hapus pengguna)
+        resp_users = client.get("/admin/users?search=Dita")
+        assert resp_users.status_code == 200
+        html_users = resp_users.get_data(as_text=True)
+        assert "onsubmit='return confirm(\"Hapus pengguna Dita Aviva Al\\u0027Hamdah?\")'" in html_users
+
+        # 4. Cek halaman admin referensi (tombol Hapus fakultas & prodi)
+        resp_ref = client.get("/admin/referensi")
+        assert resp_ref.status_code == 200
+        html_ref = resp_ref.get_data(as_text=True)
+        assert "onsubmit='return confirm(\"Hapus fakultas Fakultas Al\\u0027Hamdah?\")'" in html_ref
+        assert "onsubmit='return confirm(\"Hapus prodi Prodi Al\\u0027Hamdah?\")'" in html_ref
+    finally:
+        with app_instance.app_context():
+            db.session.query(BebasPustaka).filter(
+                BebasPustaka.id.in_([created_ids['pending_id'], created_ids['approved_id']])
+            ).delete(synchronize_session=False)
+            db.session.query(User).filter(
+                User.id.in_([created_ids['user_id'], created_ids['staff_id']])
+            ).delete(synchronize_session=False)
+            db.session.query(ProgramStudi).filter_by(id=created_ids['prodi_id']).delete()
+            db.session.query(Fakultas).filter_by(id=created_ids['fakultas_id']).delete()
+            db.session.commit()
+
+
+
 

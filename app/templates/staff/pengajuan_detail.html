@@ -157,7 +157,7 @@
                     </table>
                     <div style="display:flex;gap:0.5rem;flex-wrap:wrap;">
                         <button type="button" class="btn btn-primary"
-                            onclick="openPDFModal('{{ url_for('api.generate_pdf', id=pengajuan.id) }}', 'Surat Bebas Pustaka — {{ pengajuan.nama }}')">
+                            onclick='openPDFModal({{ url_for("api.generate_pdf", id=pengajuan.id)|tojson }}, {{ ("Surat Bebas Pustaka — " ~ (pengajuan.nama or ""))|tojson }})'>
                             👁 Lihat Surat
                         </button>
                         <a href="{{ url_for('api.generate_pdf', id=pengajuan.id, download=1) }}"
@@ -180,7 +180,7 @@
                         <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                         <input type="hidden" name="action" value="setujui">
                         <button type="button" class="btn btn-success btn-block mb-2"
-                            onclick="confirmAction('setujui', '{{ pengajuan.nama }}')">
+                            onclick='confirmAction("setujui", {{ (pengajuan.nama or "")|tojson }})'>
                             ✅ Setujui Pengajuan
                         </button>
                     </form>
