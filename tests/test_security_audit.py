@@ -413,9 +413,15 @@ def test_apostrophe_in_names_escaped_in_inline_js(client, app_instance):
             kode_prodi='PRD99',
             fakultas_id=fakultas.id,
         )
-        db.session.add(prodi)
+        prodi2 = ProgramStudi(
+            nama_prodi="Prodi Kedua",
+            kode_prodi='PRD98',
+            fakultas_id=fakultas.id,
+        )
+        db.session.add_all([prodi, prodi2])
         db.session.flush()
         created_ids['prodi_id'] = prodi.id
+        created_ids['prodi2_id'] = prodi2.id
 
         user_apostrof = User(
             nim='TST990001',
@@ -478,6 +484,9 @@ def test_apostrophe_in_names_escaped_in_inline_js(client, app_instance):
         assert resp_pending.status_code == 200
         html_pending = resp_pending.get_data(as_text=True)
         assert "onclick='confirmAction(\"setujui\", \"Dita Aviva Al\\u0027Hamdah\")'" in html_pending
+        # Pastikan seluruh program studi pada fakultas tampil di dropdown edit data
+        assert f'<option value="{created_ids["prodi_id"]}" selected>Prodi Al&#39;Hamdah</option>' in html_pending
+        assert f'<option value="{created_ids["prodi2_id"]}" >Prodi Kedua</option>' in html_pending or f'value="{created_ids["prodi2_id"]}"' in html_pending
 
         # 2. Cek halaman detail pengajuan disetujui (tombol Lihat Surat / openPDFModal)
         resp_approved = client.get(f"/staff/pengajuan/{created_ids['approved_id']}")
@@ -512,7 +521,9 @@ def test_apostrophe_in_names_escaped_in_inline_js(client, app_instance):
             db.session.query(User).filter(
                 User.id.in_([created_ids['user_id'], created_ids['staff_id']])
             ).delete(synchronize_session=False)
-            db.session.query(ProgramStudi).filter_by(id=created_ids['prodi_id']).delete()
+            db.session.query(ProgramStudi).filter(
+                ProgramStudi.id.in_([created_ids['prodi_id'], created_ids['prodi2_id']])
+            ).delete(synchronize_session=False)
             db.session.query(Fakultas).filter_by(id=created_ids['fakultas_id']).delete()
             db.session.commit()
 

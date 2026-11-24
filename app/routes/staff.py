@@ -11,6 +11,7 @@ from flask_login import login_required, current_user
 from app import db
 from app.models.bebas_pustaka import BebasPustaka
 from app.models.fakultas import Fakultas
+from app.models.program_studi import ProgramStudi
 from app.models.fakultas_setting import FakultasSetting
 from app.models.user import User
 from app.utils.decorators import staff_required
@@ -584,10 +585,18 @@ def pengajuan_detail(id):
         inlislite_data['checked'] = True
 
     fakultas_list = Fakultas.query.order_by(Fakultas.nama_fakultas).all()
+    prodi_list = (
+        ProgramStudi.query.filter_by(fakultas_id=pengajuan.fakultas_id)
+        .order_by(ProgramStudi.nama_prodi)
+        .all()
+        if pengajuan.fakultas_id
+        else []
+    )
     return render_template(
         'staff/pengajuan_detail.html',
         pengajuan=pengajuan,
         fakultas_list=fakultas_list,
+        prodi_list=prodi_list,
         can_process=can_manage_pengajuan(pengajuan),
         inlislite_data=inlislite_data,
     )

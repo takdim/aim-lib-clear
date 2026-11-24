@@ -248,9 +248,15 @@
                         <div class="form-group">
                             <label class="form-label">Program Studi</label>
                             <select name="prodi_id" class="form-input form-select" id="editProdiId">
-                                {% if pengajuan.program_studi %}
-                                <option value="{{ pengajuan.prodi_id }}" selected>{{ pengajuan.program_studi.nama_prodi }}</option>
-                                {% endif %}
+                                {% for p in prodi_list %}
+                                <option value="{{ p.id }}" {{ 'selected' if p.id == pengajuan.prodi_id }}>{{ p.nama_prodi }}</option>
+                                {% else %}
+                                    {% if pengajuan.program_studi %}
+                                    <option value="{{ pengajuan.prodi_id }}" selected>{{ pengajuan.program_studi.nama_prodi }}</option>
+                                    {% else %}
+                                    <option value="">-- Pilih Program Studi --</option>
+                                    {% endif %}
+                                {% endfor %}
                             </select>
                         </div>
                         {% if pengajuan.nomor_surat %}
@@ -331,19 +337,37 @@ function toggleTolakForm() {
 }
 
 // Dropdown prodi dinamis untuk edit
-document.getElementById('editFakultasId').addEventListener('change', function() {
-    const fakultasId = this.value;
-    const prodiSelect = document.getElementById('editProdiId');
-    prodiSelect.innerHTML = '<option>Memuat...</option>';
-    fetch(`/api/prodi-by-fakultas/${fakultasId}`)
-        .then(r => r.json())
-        .then(data => {
-            prodiSelect.innerHTML = '';
-            data.forEach(p => {
-                prodiSelect.innerHTML += `<option value="${p.id}">${p.nama_prodi}</option>`;
+const editFakultasSelect = document.getElementById('editFakultasId');
+if (editFakultasSelect) {
+    editFakultasSelect.addEventListener('change', function() {
+        const fakultasId = this.value;
+        const prodiSelect = document.getElementById('editProdiId');
+        if (!prodiSelect) return;
+        if (!fakultasId) {
+            prodiSelect.innerHTML = '<option value="">-- Pilih Program Studi --</option>';
+            return;
+        }
+        prodiSelect.innerHTML = '<option value="">Memuat...</option>';
+        fetch(`/api/prodi-by-fakultas/${fakultasId}`)
+            .then(r => r.json())
+            .then(data => {
+                prodiSelect.innerHTML = '';
+                if (data.length === 0) {
+                    prodiSelect.innerHTML = '<option value="">Tidak ada program studi</option>';
+                    return;
+                }
+                data.forEach(p => {
+                    const opt = document.createElement('option');
+                    opt.value = p.id;
+                    opt.textContent = p.nama_prodi;
+                    prodiSelect.appendChild(opt);
+                });
+            })
+            .catch(() => {
+                prodiSelect.innerHTML = '<option value="">Gagal memuat prodi</option>';
             });
-        });
-});
+    });
+}
 
 function escapeHtml(text) {
     if (text === null || text === undefined) return '';
